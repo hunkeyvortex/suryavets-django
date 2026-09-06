@@ -1,9 +1,10 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.text import slugify
 import uuid
+from decimal import Decimal
 from .services.pricing import selling_price, discount_percent
 
 
@@ -440,6 +441,50 @@ class CustomerAddress(models.Model):
         return f"{self.full_name} — {self.label}"
 
 
+class Coupon(models.Model):
+    class Kind(models.TextChoices):
+        PERCENT = 'percent', 'Percentage off'
+        FIXED = 'fixed', 'Fixed amount off (₹)'
+
+    code = models.CharField(max_length=40, unique=True, validators=[RegexValidator(r'^[A-Z0-9][A-Z0-9_-]{2,39}$', 'Use 3–40 letters, numbers, hyphens or underscores.')])
+    name = models.CharField(max_length=120, help_text='Internal campaign name.')
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.PERCENT)
+    value = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    minimum_subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    maximum_discount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal('0.01'))])
+    starts_at = models.DateTimeField(null=True, blank=True)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    max_uses = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1)])
+    used_count = models.PositiveIntegerField(default=0, editable=False)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(value__gt=0), name='coupon_positive_value'),
+            models.CheckConstraint(condition=~models.Q(kind='percent') | models.Q(value__lte=100), name='coupon_percent_maximum'),
+            models.CheckConstraint(condition=models.Q(minimum_subtotal__gte=0), name='coupon_nonnegative_minimum'),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.kind == self.Kind.PERCENT and self.value is not None and self.value > 100:
+            raise ValidationError({'value': 'A percentage discount cannot exceed 100%.'})
+        if self.starts_at and self.ends_at and self.ends_at <= self.starts_at:
+            raise ValidationError({'ends_at': 'End time must be after start time.'})
+        if self.max_uses is not None and self.max_uses < self.used_count:
+            raise ValidationError({'max_uses': 'The limit cannot be lower than the number already used.'})
+
+    def save(self, *args, **kwargs):
+        self.code = self.code.strip().upper()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code
+
+
 class Order(models.Model):
     """Checkout snapshot; payment confirmation is a separate operation."""
     class Status(models.TextChoices):
@@ -486,6 +531,8 @@ class Order(models.Model):
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     shipping_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    coupon = models.ForeignKey(Coupon, null=True, blank=True, on_delete=models.PROTECT, related_name='orders', editable=False)
+    coupon_code = models.CharField(max_length=40, blank=True, editable=False)
     total = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -553,7 +600,8 @@ class CRMActivity(models.Model):
     actor = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL)
     order = models.ForeignKey(Order, null=True, blank=True, on_delete=models.PROTECT, related_name='crm_activity')
     customer_email = models.EmailField(blank=True, db_index=True)
-    kind = models.CharField(max_length=20, choices=[('note', 'Internal note'), ('status', 'Order status')])
+    coupon = models.ForeignKey(Coupon, null=True, blank=True, on_delete=models.PROTECT, related_name='activity')
+    kind = models.CharField(max_length=20, choices=[('note', 'Internal note'), ('status', 'Order status'), ('coupon', 'Coupon change')])
     text = models.TextField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -564,4 +612,5 @@ class CRMActivity(models.Model):
             ('manage_crm_orders', 'Process and cancel orders in CRM'),
             ('adjust_crm_inventory', 'Adjust stock through audited CRM workflow'),
             ('write_crm_notes', 'Write internal CRM notes'),
+            ('manage_crm_coupons', 'Create and edit checkout coupons'),
         ]

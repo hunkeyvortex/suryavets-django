@@ -1,21 +1,61 @@
 {% extends 'base_shared.html' %}
 {% load static shop_filters %}
 {% block title %}Checkout | Surya Vets{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/account.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/checkout.css' %}">{% endblock %}
 {% block content %}
-<section class="account-page site-shell">
-  <header><h1>Checkout</h1><p>Payment integration will be selected before launch. Your order is created as payment pending.</p></header>
-  <div class="account-card"><h2>Delivery information</h2>
-    <form method="post" data-checkout-form>
+<section class="checkout-page">
+  <div class="checkout-shell">
+    <nav class="checkout-progress" aria-label="Checkout progress"><a href="{% url 'shop:cart' %}">01 <span>Basket</span></a><span class="progress-line"></span><span aria-current="step">02 <span>Checkout</span></span><span class="progress-line"></span><span class="step-next">03 <span>Confirmation</span></span></nav>
+    <header class="checkout-heading"><div><p class="checkout-eyebrow">GOOD CARE IS ON ITS WAY</p><h1>Let's bring it home.</h1><p>A few details, and we'll take it from here.</p></div><a href="{% url 'shop:cart' %}">← Back to your basket</a></header>
+    <form method="post" class="checkout-layout" data-checkout-form>
       {% csrf_token %}<input type="hidden" name="checkout_token" value="{{ checkout_token }}">
-      {{ form.as_p }}
-      <h2>Order summary</h2>
-      {% for item in cart_items %}<p>{{ item.product.name }}{% if item.product_variant %} — {{ item.product_variant.name }}{% endif %} × {{ item.quantity }} <strong>₹{{ item.total_price|money }}</strong></p>{% endfor %}
-      <p>Subtotal: ₹{{ subtotal|money }}</p><p>Shipping: ₹{{ shipping|money }}</p>
-      <p><strong>Total: ₹{{ total|money }}</strong></p>
-      <p>Availability and prices are checked again when you place your order.</p>
-      <button type="submit" {% if not cart_items %}disabled{% endif %}>Place order</button>
-      <a href="{% url 'shop:cart' %}">Return to cart</a>
+      <div class="checkout-details">
+        {% if form.non_field_errors %}<div class="checkout-alert checkout-alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        <section class="checkout-panel">
+          <div class="checkout-panel-heading"><span class="section-number">1</span><div><h2>How can we reach you?</h2><p>Your contact details for this order.</p></div></div>
+          {% if not request.user.is_authenticated %}<p class="checkout-signin">Already have an account? <a href="{% url 'shop:login' %}?next={% url 'shop:checkout' %}">Sign in</a> for saved details, or continue as a guest.</p>{% endif %}
+          <div class="checkout-fields">{% include 'includes/checkout_field.html' with field=form.email %}{% include 'includes/checkout_field.html' with field=form.phone %}</div>
+        </section>
+        <section class="checkout-panel">
+          <div class="checkout-panel-heading"><span class="section-number">2</span><div><h2>Where are we delivering?</h2><p>Choose your companion's favourite doorstep.</p></div></div>
+          {% include 'includes/checkout_field.html' with field=form.shipping_name %}
+          {% include 'includes/checkout_field.html' with field=form.shipping_address_line_1 %}
+          {% include 'includes/checkout_field.html' with field=form.shipping_address_line_2 %}
+          <div class="checkout-fields">{% include 'includes/checkout_field.html' with field=form.shipping_city %}{% include 'includes/checkout_field.html' with field=form.shipping_state %}{% include 'includes/checkout_field.html' with field=form.shipping_postal_code %}<div class="checkout-field"><label>Country</label><p class="checkout-country">India</p></div></div>
+          {% if request.user.is_authenticated %}<label class="checkout-check">{{ form.save_address }}<span>Save this as my default delivery address</span></label>{% endif %}
+          <div class="checkout-divider"></div>
+          <label class="checkout-check">{{ form.billing_same_as_shipping }}<span>Billing address is the same as delivery</span></label>
+          <div class="checkout-billing" data-billing-fields>
+            <h3>Billing address</h3>
+            {% include 'includes/checkout_field.html' with field=form.billing_name %}
+            {% include 'includes/checkout_field.html' with field=form.billing_address_line_1 %}
+            {% include 'includes/checkout_field.html' with field=form.billing_address_line_2 %}
+            <div class="checkout-fields">{% include 'includes/checkout_field.html' with field=form.billing_city %}{% include 'includes/checkout_field.html' with field=form.billing_state %}{% include 'includes/checkout_field.html' with field=form.billing_postal_code %}</div>
+          </div>
+          {% include 'includes/checkout_field.html' with field=form.notes %}
+        </section>
+        <section class="checkout-panel">
+          <div class="checkout-panel-heading"><span class="section-number">3</span><div><h2>Payment preference</h2><p>No online payment is taken on this page.</p></div></div>
+          <fieldset class="checkout-payment"><legend class="checkout-sr-only">Payment method</legend>{% for choice in form.payment_method %}<label>{{ choice.tag }}<span>{{ choice.choice_label }}</span></label>{% endfor %}</fieldset>
+          {% if form.payment_method.errors %}<div class="checkout-field-error" role="alert">{{ form.payment_method.errors }}</div>{% endif %}
+          <p class="checkout-small">Your order will be recorded as payment pending. For pay-after-confirmation orders, await confirmation before arranging payment.</p>
+        </section>
+      </div>
+      <aside class="checkout-summary"><div class="checkout-summary-card">
+        <div class="summary-heading"><div><p class="checkout-eyebrow">THE GOOD STUFF</p><h2>Your order</h2></div><span>{{ total_items }} item{{ total_items|pluralize }}</span></div>
+        <div class="checkout-items">{% for item in cart_items %}<article class="checkout-item"><div class="checkout-item-image">{% with picture=item.product.images.all.0 %}{% if picture %}<img src="{{ picture.display_url }}" alt="{{ picture.alt_text|default:item.product.name }}" loading="lazy">{% else %}<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14l1 14H4L5 7Z M9 8V6a3 3 0 0 1 6 0v2"/></svg>{% endif %}{% endwith %}</div><div class="checkout-item-info"><h3>{{ item.product.name }}</h3><p>{% if item.product_variant %}{{ item.product_variant.name }} · {% endif %}Qty {{ item.quantity }}</p><strong>₹{{ item.total_price|money }}</strong></div></article>{% empty %}<p>Your basket is empty. <a href="{% url 'shop:index' %}">Continue shopping</a>.</p>{% endfor %}</div>
+        <div class="checkout-coupon"><label for="{{ form.coupon_code.id_for_label }}">Have a coupon?</label><div class="coupon-controls">{{ form.coupon_code }}<button type="submit" name="action" value="apply_coupon" formnovalidate>Apply</button></div>
+          {% if coupon_error %}<p class="coupon-error" role="alert">{{ coupon_error }}</p><button class="coupon-clear" type="submit" name="action" value="remove_coupon" formnovalidate>Clear code</button>{% endif %}
+          {% if form.coupon_code.errors %}<div class="coupon-error">{{ form.coupon_code.errors }}</div>{% endif %}
+          {% if coupon %}<div class="coupon-applied" role="status"><span><strong>{{ coupon.code }}</strong> applied · you save ₹{{ discount_amount|money }}</span><button type="submit" name="action" value="remove_coupon" formnovalidate aria-label="Remove coupon">Remove</button></div>{% elif coupon_message %}<p class="checkout-small" role="status">{{ coupon_message }}</p>{% endif %}
+        </div>
+        <dl class="checkout-totals"><div><dt>Subtotal</dt><dd>₹{{ subtotal|money }}</dd></div><div><dt>Delivery</dt><dd>{% if shipping == 0 %}<span class="checkout-free">Free</span>{% else %}₹{{ shipping|money }}{% endif %}</dd></div>{% if coupon %}<div class="checkout-savings"><dt>Coupon savings</dt><dd>−₹{{ discount_amount|money }}</dd></div>{% endif %}<div class="checkout-grand-total"><dt>Total <small>INR</small></dt><dd data-order-total>₹{{ total|money }}</dd></div></dl>
+        <p class="checkout-small">Delivery is calculated before coupon savings. Prices and availability are checked again when you place your order.</p>
+        <label class="checkout-check checkout-terms">{{ form.terms }}<span>I agree to the <a href="{% url 'shop:terms' %}" target="_blank" rel="noopener">Terms</a> and have read the <a href="{% url 'shop:privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+        {% if form.terms.errors %}<div class="checkout-field-error" role="alert">{{ form.terms.errors }}</div>{% endif %}
+        <button class="checkout-place-order" type="submit" name="action" value="place_order" data-place-order {% if not cart_items %}disabled{% endif %}>Place order</button>
+        <p class="checkout-reassurance"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z M8 12l3 3 5-6"/></svg>No online charge today</p>
+      </div><p class="checkout-help">Need a hand? <a href="{% url 'shop:contact' %}">Talk to the SuryaVets team</a></p></aside>
     </form>
   </div>
 </section>

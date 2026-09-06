@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.views import LoginView, LogoutView, redirect_to_login
 from django.core import signing
 from django.core.paginator import Paginator
-from django.db import OperationalError
+from django.db import IntegrityError, OperationalError, transaction
 from django.db.models import Count, F, Max, Q, Sum
 from django.db.models.functions import Lower
 from django.http import Http404
@@ -14,8 +14,9 @@ from django.urls import reverse, reverse_lazy
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
-from .crm_forms import NoteForm, StaffLoginForm, StatusForm, StockAdjustmentForm
-from .models import CRMActivity, InventoryMovement, Order, Product, ProductVariant
+from .crm_forms import CouponForm, NoteForm, StaffLoginForm, StatusForm, StockAdjustmentForm
+from .models import Coupon, CRMActivity, InventoryMovement, Order, Product, ProductVariant
+from django.utils import timezone
 from .services.crm import CRMError, TRANSITIONS, add_note, adjustment_token, adjust_inventory, require_staff, transition_order
 
 
@@ -224,3 +225,35 @@ def reports(request):
         'payment_totals': Order.objects.order_by().values('payment_status').annotate(count=Count('pk'), amount=Sum('total')).order_by('payment_status'),
         'status_totals': Order.objects.order_by().values('status').annotate(count=Count('pk')).order_by('status'),
         'movements': InventoryMovement.objects.select_related('actor', 'product', 'variant', 'order')[:50]})
+
+
+@staff_page()
+def coupons(request):
+    qs = Coupon.objects.all()
+    q = request.GET.get('q', '').strip()[:120]
+    if q:
+        qs = qs.filter(Q(code__icontains=q) | Q(name__icontains=q))
+    return render(request, 'crm/coupons.html', {**page_context(request, qs), 'title': 'Coupons', 'section': 'coupons', 'now': timezone.now()})
+
+
+@staff_page('manage_crm_coupons')
+def coupon_edit(request, pk=None):
+    instance = get_object_or_404(Coupon, pk=pk) if pk else Coupon()
+    form = CouponForm(instance=instance)
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                instance = get_object_or_404(Coupon.objects.select_for_update(), pk=pk) if pk else Coupon()
+                form = CouponForm(request.POST, instance=instance)
+                if form.is_valid():
+                    changes = ', '.join(name for name in form.changed_data if name != 'version')
+                    coupon = form.save()
+                    CRMActivity.objects.create(actor=request.user, coupon=coupon, kind='coupon',
+                        text=f'{"Updated" if pk else "Created"} coupon {coupon.code}. Fields: {changes or "no rule changes"}.')
+                    messages.success(request, 'Coupon saved. Previous orders keep their original discount.')
+                    return redirect('crm:coupon_edit', pk=coupon.pk)
+        except (IntegrityError, OperationalError):
+            form.add_error(None, 'This code already exists or the record is busy. Reload and review before retrying.')
+    return render(request, 'crm/coupon_edit.html', {'title': 'Edit coupon' if pk else 'Create coupon', 'section': 'coupons',
+        'form': form, 'coupon': instance if pk else None, 'timezone_name': timezone.get_current_timezone_name(),
+        'activity': instance.activity.select_related('actor')[:30] if pk else []})

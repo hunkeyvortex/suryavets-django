@@ -14,6 +14,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
 from .services.checkout import CheckoutError, place_order, review_token
+from .services.coupons import CouponError, checkout_totals
 from .models import (
     Category, Subcategory, Product, ProductVariant, 
     ProductImage, Banner, Cart, CartItem
@@ -301,6 +302,23 @@ def remove_from_cart(request, item_id):
     cart_item.delete()
     return redirect('shop:cart')
 
+def render_checkout(request, cart, form, items, code='', *, token=None, status=200, coupon_message=''):
+    coupon_error = ''
+    try:
+        pricing = checkout_totals(items, code)
+    except CouponError as error:
+        coupon_error = str(error)
+        pricing = checkout_totals(items)
+    if request.method == 'POST' and request.POST.get('action') in ('apply_coupon', 'remove_coupon'):
+        if pricing['coupon']:
+            request.session['checkout_coupon'] = {'cart': str(cart.pk), 'code': pricing['coupon'].code}
+        else:
+            request.session.pop('checkout_coupon', None)
+    return render(request, 'checkout_new.html', {'form': form, 'cart_items': items,
+        'checkout_token': token if token is not None else review_token(cart, items, pricing=pricing),
+        'coupon_error': coupon_error, 'coupon_message': coupon_message, **pricing}, status=status)
+
+
 @never_cache
 def checkout(request):
     """Review and submit an idempotent, stock-checked order."""
@@ -310,7 +328,11 @@ def checkout(request):
     items = list(cart_items(cart))
     if not items and request.method != 'POST':
         return redirect('shop:cart')
-    initial = {'email': request.user.email} if request.user.is_authenticated else {}
+    selection = request.session.get('checkout_coupon', {})
+    selected_code = selection.get('code', '') if selection.get('cart') == str(cart.pk) else ''
+    initial = {'coupon_code': selected_code}
+    if request.user.is_authenticated:
+        initial['email'] = request.user.email
     address = request.user.addresses.filter(is_default_shipping=True).first() if request.user.is_authenticated else None
     if address:
         initial.update({
@@ -320,6 +342,17 @@ def checkout(request):
             'shipping_state': address.state, 'shipping_postal_code': address.postal_code,
         })
     if request.method == 'POST':
+        action = request.POST.get('action', 'place_order')
+        if action in ('apply_coupon', 'remove_coupon'):
+            # Preserve address inputs without validating an unfinished delivery form.
+            initial = request.POST.dict()
+            for checkbox in ('billing_same_as_shipping', 'save_address', 'terms'):
+                initial[checkbox] = checkbox in request.POST
+            code = '' if action == 'remove_coupon' else request.POST.get('coupon_code', '').strip().upper()
+            initial['coupon_code'] = code
+            form = CheckoutForm(initial=initial)
+            message = 'Coupon removed.' if action == 'remove_coupon' else ('Enter a coupon code to apply it.' if not code else '')
+            return render_checkout(request, cart, form, items, code, coupon_message=message)
         form = CheckoutForm(request.POST)
         if form.is_valid():
             try:
@@ -328,15 +361,15 @@ def checkout(request):
                 form.add_error(None, str(error))
             except OperationalError:
                 form.add_error(None, 'Checkout is busy. Please retry in a moment; do not change your cart.')
-                return render(request, 'checkout_new.html', {'form': form, 'cart_items': items,
-                    'checkout_token': request.POST.get('checkout_token', ''), **cart_totals(items)}, status=503)
+                return render_checkout(request, cart, form, items, request.POST.get('coupon_code', ''),
+                    token=request.POST.get('checkout_token', ''), status=503)
             else:
+                request.session.pop('checkout_coupon', None)
                 return redirect('shop:order_confirmation', order_id=order.pk)
     else:
         form = CheckoutForm(initial=initial)
     items = list(cart_items(cart))
-    return render(request, 'checkout_new.html', {'form': form, 'cart_items': items,
-        'checkout_token': review_token(cart, items), **cart_totals(items)})
+    return render_checkout(request, cart, form, items, request.POST.get('coupon_code', '') if request.method == 'POST' else selected_code)
 
 
 def order_confirmation(request, order_id):

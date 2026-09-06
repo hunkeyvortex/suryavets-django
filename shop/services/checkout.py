@@ -10,7 +10,8 @@ from django.db.models import F, Sum
 from django.utils import timezone
 
 from shop.models import Cart, CustomerAddress, InventoryMovement, Order, OrderItem, Product, ProductVariant
-from shop.services.cart import cart_items, cart_totals
+from shop.services.cart import cart_items
+from shop.services.coupons import CouponError, checkout_totals, reserve_coupon
 
 SALT = 'suryavets.checkout.v1'
 
@@ -19,14 +20,16 @@ class CheckoutError(Exception):
     """A recoverable cart/stock problem to display without creating an order."""
 
 
-def fingerprint(items):
+def fingerprint(items, coupon_snapshot=None):
     rows = sorted((str(item.pk), str(item.product_id), str(item.product_variant_id), item.quantity,
                    str((item.product_variant or item.product).current_price) if item.product else 'missing') for item in items)
-    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()
+    return hashlib.sha256(json.dumps({'items': rows, 'coupon': coupon_snapshot}).encode()).hexdigest()
 
 
-def review_token(cart, items):
-    return signing.dumps({'cart': str(cart.pk), 'key': str(uuid.uuid4()), 'snapshot': fingerprint(items)}, salt=SALT)
+def review_token(cart, items, coupon_code='', *, pricing=None):
+    pricing = checkout_totals(items, coupon_code) if pricing is None else pricing
+    return signing.dumps({'cart': str(cart.pk), 'key': str(uuid.uuid4()),
+        'snapshot': fingerprint(items, pricing['coupon_snapshot'])}, salt=SALT)
 
 
 def read_token(token, cart):
@@ -58,6 +61,11 @@ def place_order(cart, user, token, data):
     items = list(cart_items(cart))
     if not items:
         raise CheckoutError('Your cart is empty or this checkout has already completed.')
+    # Consistent lock order: cart, coupon, products, variants. Preview is not a reservation.
+    try:
+        totals = checkout_totals(items, data.get('coupon_code', ''), lock=True)
+    except CouponError as error:
+        raise CheckoutError(str(error)) from error
     # Lock in a stable order across carts. Do not lock nullable select_related joins.
     products = {p.pk: p for p in Product.objects.select_for_update().filter(pk__in=[i.product_id for i in items]).order_by('pk')}
     variants = {v.pk: v for v in ProductVariant.objects.select_for_update().filter(pk__in=[i.product_variant_id for i in items if i.product_variant_id]).order_by('pk')}
@@ -81,8 +89,18 @@ def place_order(cart, user, token, data):
             product_stock[product.pk] += item.quantity
         if (variant or product).current_price < 0:
             raise CheckoutError(f'{product.name}: pricing needs review before purchase.')
-    if fingerprint(items) != expected:
-        raise CheckoutError('Your cart or its prices changed. Please review the updated total before placing your order.')
+    # Refresh prices from the locked product objects, retaining the locked coupon.
+    try:
+        totals = checkout_totals(items, data.get('coupon_code', ''), lock=True)
+    except CouponError as error:
+        raise CheckoutError(str(error)) from error
+    if fingerprint(items, totals['coupon_snapshot']) != expected:
+        raise CheckoutError('Your cart or its prices changed, or your coupon changed. Please review the updated total before placing your order.')
+    if totals['coupon']:
+        try:
+            reserve_coupon(totals['coupon'])
+        except CouponError as error:
+            raise CheckoutError(str(error)) from error
     for pk, quantity in sorted(product_stock.items(), key=lambda pair: str(pair[0])):
         if not Product.objects.filter(pk=pk, is_active=True, stock_quantity__gte=quantity).update(stock_quantity=F('stock_quantity') - quantity, updated_at=timezone.now()):
             raise CheckoutError(f'{products[pk].name}: there is not enough stock. Please update your cart.')
@@ -97,10 +115,11 @@ def place_order(cart, user, token, data):
     if values['billing_same_as_shipping']:
         for suffix in ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'postal_code'):
             values['billing_' + suffix] = values['shipping_' + suffix]
-    totals = cart_totals(items)
     order = Order.objects.create(user_id=user_id, checkout_key=key, checkout_cart=cart,
         stock_deducted=bool(product_stock or variant_stock), inventory_recorded=True,
         subtotal=totals['subtotal'], shipping_cost=totals['shipping'], total=totals['total'],
+        discount_amount=totals['discount_amount'], coupon=totals['coupon'],
+        coupon_code=totals['coupon'].code if totals['coupon'] else '',
         **{field: values[field] for field in (
             'email', 'phone', 'shipping_name', 'shipping_address_line_1', 'shipping_address_line_2',
             'shipping_city', 'shipping_state', 'shipping_postal_code', 'billing_same_as_shipping',

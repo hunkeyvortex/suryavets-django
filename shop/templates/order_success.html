@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block title %}Order Placed Successfully - Surya Vets{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/checkout.css' %}">{% endblock %}
 
 {% block content %}
     <div class="section">
@@ -12,6 +13,7 @@
                 <p style="color: var(--text-light); font-size: 18px; margin-bottom: 40px;">
                     Thank you. Your order {% if order %}{{ order.order_number }}{% endif %} has been received and is pending payment confirmation.
                 </p>
+                {% include 'includes/order_totals.html' %}
                 
                 <div style="display: flex; gap: 15px; justify-content: center;">
                     <a href="{% url 'shop:index' %}" class="btn btn-primary">Continue Shopping</a>

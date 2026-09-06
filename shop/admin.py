@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Category, Subcategory, ProductType, Brand, PetCategory, Product, ProductVariant,
     ProductImage, ProductSpecification, Banner, ContactInfo,
-    Cart, CartItem, CustomerAddress, Order, OrderItem, CRMActivity, InventoryMovement
+    Cart, CartItem, CustomerAddress, Order, OrderItem, CRMActivity, InventoryMovement, Coupon
 )
 
 @admin.register(Category)
@@ -240,7 +240,7 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ['order_number', 'email', 'phone', 'user__username', 'payment_reference']
     readonly_fields = ['id', 'order_number', 'created_at', 'updated_at', 'checkout_key', 'checkout_cart',
                        'stock_deducted', 'inventory_recorded', 'subtotal', 'shipping_cost', 'discount_amount', 'total',
-                       'status', 'payment_status', 'payment_method', 'payment_reference']
+                       'status', 'payment_status', 'payment_method', 'payment_reference', 'coupon', 'coupon_code']
     inlines = [OrderItemInline]
 
 
@@ -267,3 +267,10 @@ class CRMActivityAdmin(ImmutableAuditAdmin):
     list_display = ['created_at', 'actor', 'order', 'kind']
     list_filter = ['kind', 'created_at']
     search_fields = ['order__order_number', 'customer_email', 'text']
+
+
+@admin.register(Coupon)
+class CouponAdmin(ImmutableAuditAdmin):
+    list_display = ['code', 'kind', 'value', 'is_active', 'used_count', 'max_uses', 'ends_at']
+    search_fields = ['code', 'name']
+    list_filter = ['is_active', 'kind']

@@ -1,0 +1,7 @@
+{% load shop_filters %}
+<dl class="order-receipt-totals">
+  <div><dt>Product subtotal</dt><dd>₹{{ order.subtotal|money }}</dd></div>
+  <div><dt>Delivery</dt><dd>₹{{ order.shipping_cost|money }}</dd></div>
+  {% if order.discount_amount %}<div><dt>Coupon {{ order.coupon_code }}</dt><dd>−₹{{ order.discount_amount|money }}</dd></div>{% endif %}
+  <div><dt><strong>Order total</strong></dt><dd><strong>₹{{ order.total|money }}</strong></dd></div>
+</dl>

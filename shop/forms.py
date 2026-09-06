@@ -81,6 +81,27 @@ class CheckoutForm(forms.Form):
     notes = forms.CharField(widget=forms.Textarea, required=False)
     save_address = forms.BooleanField(required=False)
     terms = forms.BooleanField(required=True)
+    coupon_code = forms.CharField(label='Coupon code', max_length=40, required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Enter coupon code', 'autocomplete': 'off', 'autocapitalize': 'characters'}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for prefix in ('shipping', 'billing'):
+            for suffix, label, autocomplete in [
+                ('name', 'Full name', 'name'), ('address_line_1', 'Address', 'address-line1'),
+                ('address_line_2', 'Apartment, suite, landmark (optional)', 'address-line2'),
+                ('city', 'City', 'address-level2'), ('state', 'State', 'address-level1'), ('postal_code', 'PIN code', 'postal-code')]:
+                self.fields[f'{prefix}_{suffix}'].label = label
+                self.fields[f'{prefix}_{suffix}'].widget.attrs['autocomplete'] = f'{prefix} {autocomplete}'
+        self.fields['email'].label = 'Email address'
+        self.fields['email'].widget.attrs.update({'autocomplete': 'email', 'placeholder': 'you@gmail.com'})
+        self.fields['phone'].widget.attrs.update({'autocomplete': 'tel', 'inputmode': 'tel', 'placeholder': 'Mobile number'})
+        self.fields['notes'].label = 'Delivery notes (optional)'
+        self.fields['notes'].widget.attrs.update({'rows': 2, 'placeholder': 'Anything that will help us deliver your order?'})
+        self.fields['payment_method'].widget = forms.RadioSelect(choices=self.PAYMENT_CHOICES)
+
+    def clean_coupon_code(self):
+        return self.cleaned_data['coupon_code'].strip().upper()
 
     def clean(self):
         cleaned_data = super().clean()

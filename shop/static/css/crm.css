@@ -634,3 +634,4 @@ th,td{
    min-width: 650px;
 
 }
+input[type="checkbox"] { display: inline-block; width: 18px; height: 18px; accent-color: var(--green); }

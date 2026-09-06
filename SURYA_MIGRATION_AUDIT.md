@@ -311,3 +311,12 @@ Current preview uses port 8007 with reload enabled; older ports may be stale. Do
 | Customer sign in | Original design requested | /login/ | Reviewed | Reviewed | Django auth, safe return, basket merge | FUNCTIONAL COMPLETE |
 | Customer signup | Original design requested | /register/ | Reviewed | Reviewed | Validation, auth, basket merge | FUNCTIONAL COMPLETE |
 | Payments/refunds/shipping automation | Separate integrations required | — | — | — | Not implemented in CRM | NOT STARTED |
+
+## K. Original checkout and CRM coupons
+
+- User requested an original checkout design rather than copying Shopify. Added grouped contact/delivery/billing/payment panels and a responsive order summary with product thumbnails, coupon application/removal and visible savings.
+- Coupon CRUD is scoped to create/edit/disable through CRM Manager permission; no deletion or use-counter reset. Supports percentage/fixed amounts, minimum subtotal, discount cap, scheduling and total usage limits. No real promotional codes were created automatically.
+- Checkout revalidates coupon revision/savings and reserves uses atomically with stock/order creation. Historical discounts are snapshotted. Cancellation keeps its consumed use. Applied selections persist for the same cart across refreshes.
+- Additive migration 0008 and updated roles applied after a local database backup; baseline source checkpoint `5fc9d64`.
+- Implementation, exact commands, changed-file list, usage policy and limitations: `docs/checkout-and-coupons.md`.
+- Verified 102 tests with browser suites enabled; Django system and migration-drift checks pass through 0008. Desktop/mobile checkout and CRM screenshots reviewed. Coupons, orders and staff accounts used by browser tests were disposable fixtures, not production records.

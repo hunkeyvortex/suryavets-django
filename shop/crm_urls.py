@@ -17,4 +17,7 @@ urlpatterns = [
     path('inventory/<uuid:pk>/', views.inventory_detail, name='inventory_detail'),
     path('inventory/<uuid:pk>/variants/<int:variant_id>/', views.inventory_detail, name='variant_detail'),
     path('reports/', views.reports, name='reports'),
+    path('coupons/', views.coupons, name='coupons'),
+    path('coupons/new/', views.coupon_edit, name='coupon_create'),
+    path('coupons/<int:pk>/', views.coupon_edit, name='coupon_edit'),
 ]
