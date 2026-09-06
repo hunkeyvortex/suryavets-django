@@ -1,0 +1,11 @@
+{% for node in nodes %}
+<li class="category-tree__item{% if node.menu_children %} has-children{% endif %}">
+  <a href="{{ node.get_absolute_url }}"{% if category.pk == node.pk %} aria-current="page"{% endif %}>{{ node.name }}</a>
+  {% if node.menu_children %}
+  <button type="button" class="category-tree__toggle" aria-label="Expand {{ node.name }}" aria-expanded="false" aria-controls="{{ prefix }}-category-{{ node.pk }}" data-tree-toggle><span aria-hidden="true">+</span></button>
+  <ul class="category-tree__branch" id="{{ prefix }}-category-{{ node.pk }}">
+    {% include 'includes/category_tree.html' with nodes=node.menu_children prefix=prefix %}
+  </ul>
+  {% endif %}
+</li>
+{% endfor %}

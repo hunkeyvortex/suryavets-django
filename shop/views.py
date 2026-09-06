@@ -16,7 +16,11 @@ from .models import CustomerAddress, Order, OrderItem
 
 def index(request):
     """Home page view"""
-    categories = Category.objects.filter(is_active=True).order_by('order', 'name')
+    categories = Category.objects.filter(is_active=True, parent__isnull=True).order_by('order', 'name')
+    reference_images = {'cat': 'reference-cat.png', 'dog': 'reference-dog.png', 'farm-animals': 'reference-farm.jpg', 'fish-and-reptiles': 'reference-reptiles.png', 'vaccination': 'reference-vaccination.jpg', 'pet-grooming': 'reference-grooming.jpg'}
+    categories = list(categories)
+    for category in categories:
+        category.reference_image = 'images/' + reference_images[category.slug] if category.slug in reference_images else ''
     banners = Banner.objects.filter(is_active=True).order_by('order')[:3]
     top_products = Product.objects.filter(
         is_active=True

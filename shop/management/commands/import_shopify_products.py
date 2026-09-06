@@ -167,6 +167,7 @@ class Command(BaseCommand):
         variant_rows = [row for row in rows if row.get('Variant Price') or row.get('Variant SKU') or option_name(row) != 'Default Title']
         total_stock = sum(self._stock_for(row, inventory) for row in variant_rows) if variant_rows else 0
         payload = {
+            'shopify_tags': sorted(tags),
             'name': title,
             'description': clean_text(primary.get('Body (HTML)')),
             'short_description': clean_text(primary.get('Body (HTML)'))[:500],
@@ -208,6 +209,10 @@ class Command(BaseCommand):
             if product_type is None:
                 product_type, _ = ProductType.objects.get_or_create(name=product_type_name)
         product, created = Product.objects.update_or_create(slug=handle, defaults={**payload, 'category': category, 'subcategory': subcategory, 'brand': brand, 'product_type': product_type})
+        from shop.services.taxonomy import collection_tag_index, matching_collections
+        if not hasattr(self, '_collection_index'):
+            self._collection_index = collection_tag_index()
+        product.collections.add(*matching_collections(tags, self._collection_index))
         pets = []
         for name in pet_names:
             pet, _ = PetCategory.objects.get_or_create(name=name, defaults={'order': CATEGORY_ORDER[name], 'is_active': True})

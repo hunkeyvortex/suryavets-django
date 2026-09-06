@@ -7,6 +7,46 @@ from django.urls import reverse
 from .models import Brand, Category, Order, OrderItem, PetCategory, Product, ProductVariant, Subcategory
 
 
+class CategoryHierarchyTests(TestCase):
+    def setUp(self):
+        self.root = Category.objects.create(name='Cat')
+        self.group = Category.objects.create(name='Medicine For Cats', parent=self.root)
+        self.leaf = Category.objects.create(name='Allergy Relief For Cats', parent=self.group)
+        self.deep = Category.objects.create(name='Deeper category', parent=self.leaf)
+        self.product = Product.objects.create(name='Category test item', category=self.root, base_price=Decimal('100'), stock_quantity=2)
+        self.product.collections.add(self.deep, self.leaf)
+
+    def test_descendants_are_included_once_in_each_parent_listing(self):
+        for node in (self.root, self.group, self.leaf, self.deep):
+            response = self.client.get(node.get_absolute_url())
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.context['total_count'], 1)
+            self.assertEqual(list(response.context['products']), [self.product])
+
+    def test_cycles_are_rejected_and_ancestors_are_ordered(self):
+        from django.core.exceptions import ValidationError
+        self.assertEqual(self.deep.get_ancestors(), [self.root, self.group, self.leaf])
+        self.root.parent = self.deep
+        with self.assertRaises(ValidationError):
+            self.root.full_clean()
+
+    def test_inactive_ancestor_hides_descendants(self):
+        self.group.is_active = False
+        self.group.save()
+        response = self.client.get(self.leaf.get_absolute_url())
+        self.assertEqual(response.status_code, 404)
+        response = self.client.get('/')
+        self.assertNotContains(response, 'Expand Medicine For Cats')
+
+    def test_exact_tag_matching_does_not_guess_medical_classification(self):
+        from shop.services.taxonomy import collection_tag_index, matching_collections
+        self.leaf.reference_path = '/collections/allergy-relief-for-cats'
+        self.leaf.save()
+        index = collection_tag_index()
+        self.assertEqual(matching_collections(['allergy-relief-for-cats'], index), {self.leaf.pk})
+        self.assertEqual(matching_collections(['allergy'], index), set())
+
+
 class CatalogueAndOrderModelTests(TestCase):
     def setUp(self):
         self.category = Category.objects.create(name='Nutrition')

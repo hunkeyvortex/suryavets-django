@@ -27,3 +27,6 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+*.log
+catalog_exports/*.zip
+backups/

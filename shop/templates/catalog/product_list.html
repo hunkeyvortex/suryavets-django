@@ -7,6 +7,7 @@
 
 {% block content %}
 <div class="catalog-page site-shell">
+  {% if category %}<nav class="catalog-breadcrumb" aria-label="Breadcrumb"><a href="{% url 'shop:index' %}">Home</a>{% for ancestor in category.get_ancestors %}<span aria-hidden="true">/</span><a href="{{ ancestor.get_absolute_url }}">{{ ancestor.name }}</a>{% endfor %}<span aria-hidden="true">/</span><span aria-current="page">{{ category.name }}</span></nav>{% endif %}
   <header class="catalog-results__header"><div><h1>{% if search_query %}Search results for “{{ search_query }}”{% elif catalog_title %}{{ catalog_title }}{% elif subcategory %}{{ subcategory.name }}{% elif category %}{{ category.name }}{% else %}Shop all products{% endif %}</h1></div><p>{{ total_count }} product{{ total_count|pluralize }}</p></header>
   <form class="catalog-mobile-toolbar" method="get" data-mobile-filter-form aria-label="Product filters and sorting">
     {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
@@ -18,7 +19,7 @@
   </form>
   <div class="catalog-layout">
     <aside class="catalog-sidebar" aria-label="Product filters">
-      <details class="catalog-filter catalog-filter--browse" open><summary>Filter by</summary><ul>{% for item in categories %}<li><a href="{% url 'shop:category_detail' item.slug %}" {% if category.pk == item.pk %}aria-current="page"{% endif %}>{{ item.name }}</a>{% if category.pk == item.pk %}<ul>{% for child in item.subcategories.all %}<li><a href="{% url 'shop:subcategory_detail' item.slug child.slug %}" {% if subcategory.pk == child.pk %}aria-current="page"{% endif %}>{{ child.name }}</a></li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul></details>
+      <details class="catalog-filter catalog-filter--browse" open><summary>Filter by</summary><ul>{% include 'includes/catalog_category_tree.html' with nodes=navigation_categories %}</ul></details>
       <form class="catalog-filters" method="get">
         {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
         <details class="catalog-filter" open><summary>Price</summary><div class="catalog-price-fields"><label>Min ₹<input name="min_price" inputmode="decimal" value="{{ selected_filters.min_price }}"></label><label>Max ₹<input name="max_price" inputmode="decimal" value="{{ selected_filters.max_price }}"></label></div></details>
@@ -37,3 +38,5 @@
   </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/catalog.js' %}" defer></script>{% endblock %}

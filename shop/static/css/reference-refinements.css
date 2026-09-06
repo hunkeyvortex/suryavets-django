@@ -1,0 +1,62 @@
+/* Measurements and section treatment from the September 2026 reference audit. */
+.announcement-bar { font-weight: 400; }
+.header-search { background: #f5f5f5; border-color: #00bf63; }
+.header-search input { background: transparent; }
+.header-action--account { border: 2px solid #00bf63; border-radius: 10px; background: #00a651; color: white; padding: 10px 15px; font-weight: 500; }
+.cart-badge { background: #000; }
+.home-hero { height: auto; aspect-ratio: 2000 / 664; margin-top: 18px; }
+.home-hero__slide img { object-fit: contain; }
+.home-hero__slide:not(.is-active) { pointer-events: none; visibility: hidden; }
+.trust-strip { padding: 0; }
+.trust-strip__grid { background: #f5f5f5; border-block: 1px solid #e5e5e5; padding: 20px 0; }
+.trust-strip__grid > div { border: 0; font-weight: 400; color: #111; }
+.home-pet-section { padding: 40px 0; }
+.home-section__heading h1, .home-section__heading h2 { color: #00bf63; font-size: 26px; font-weight: 700; }
+.home-section__heading p { font-size: 14px; }
+.pet-category-card img { border-radius: 10px; height: auto; aspect-ratio: 1; }
+.pet-category-card { color: #000; font-family: Poppins, sans-serif; font-size: 14px; }
+.home-delivery-banner img { display: block; width: 100%; height: auto; }
+.home-products-section { padding: 0 0 50px; }
+.newsletter-band { background: #fff; color: #111; padding: 40px 0; }
+.newsletter-band h2 { color: #111; font-family: Poppins, sans-serif; font-size: 24px; font-weight: 500; }
+.newsletter-form { border: 1px solid #ddd; border-radius: 40px; padding: 5px; }
+.newsletter-form input { background: transparent; border-radius: 40px; min-width: 0; }
+.newsletter-form button { background: transparent; color: #111; border-radius: 40px; }
+.newsletter-form__message:empty { display: none; }
+.store-footer { background: #000; color: #fff; }
+.footer-grid h2, .footer-grid h3, .footer-grid p, .footer-grid a { color: #fff; font-family: Poppins, sans-serif; }
+.footer-grid h2, .footer-grid h3 { font-size: 14px; }
+.footer-bottom { color: #fff; border-top-color: #333; }
+@media(max-width: 860px) {
+ .header-row { min-height: 74px; }
+ .header-action--account { background: transparent; color: #00a651; border: 0; padding: 0; }
+ .header-search--mobile-wrap { padding-top: 12px; padding-bottom: 12px; border-top: 1px solid #eee; }
+ .brand-logo img { height: 62px; max-width: 180px; }
+ .home-hero { height: auto; margin-top: 15px; }
+ .trust-strip__grid { gap: 8px; padding: 10px 0; border: 0; grid-template-columns: repeat(4,minmax(0,1fr)); }
+ .trust-strip__grid > div, .trust-strip__grid > div:last-child { border: 1px solid #ffb400; background: #f5f5f5; border-radius: 8px; min-height: 68px; padding: 5px 3px; gap: 4px; font-size: 11px; line-height: 1.2; text-align: center; }
+ .trust-strip svg { width: 24px; height: 24px; }
+ .home-section__heading { margin-bottom: 30px; }
+ .home-section__heading h1, .home-section__heading h2 { font-size: 24px; }
+ .home-section__heading p { font-size: 13px; }
+ .home-pet-section { padding: 32px 0 40px; }
+ .pet-category-grid { display: grid; grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: calc((100% - 30px)/3); gap: 15px; overflow-x: auto; padding: 0 0 6px; scrollbar-width: none; scroll-snap-type: x mandatory; }
+ .pet-category-grid::-webkit-scrollbar { display: none; }
+ .pet-category-card { min-width: 0; font-size: 12px; scroll-snap-align: start; }
+ .pet-category-card img { height: auto; }
+ .pet-category-card > span:last-child { padding: 10px 0 0; }
+ .home-products-section { padding: 0 0 40px; }
+ .home-hero__arrow { height: 32px; width: 32px; font-size: 26px; background: #ffffffb3; }
+ .home-hero__dots { bottom: 5px; }
+ .newsletter-band__inner { gap: 18px; }
+ .newsletter-band h2 { font-size: 22px; }
+ .newsletter-band p { font-size: 14px; }
+ .footer-grid { display: block; padding-top: 36px; }
+ .footer-grid section { margin-bottom: 24px; }
+ .footer-grid ul { display: flex; gap: 8px 12px; flex-wrap: wrap; }
+ .footer-grid p, .footer-grid a { font-size: 13px; }
+ .footer-bottom { font-size: 11px; }
+}
+@media(max-width: 680px) {
+ .catalog-mobile-control__panel { position: fixed; max-width: calc(100vw - 28px); max-height: calc(100dvh - 28px); overflow-y: auto; }
+}

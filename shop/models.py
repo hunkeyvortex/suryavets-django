@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
+from django.urls import reverse
 from django.utils.text import slugify
 import uuid
 
@@ -8,6 +10,8 @@ class Category(models.Model):
     """Main pet categories (Cat, Dog, Farm Animals, etc.)"""
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=120, unique=True, blank=True)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.PROTECT, related_name='children')
+    reference_path = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='categories/', blank=True, null=True)
     order = models.IntegerField(default=0)
@@ -26,6 +30,28 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
+    def clean(self):
+        super().clean()
+        seen = {self.pk} if self.pk else set()
+        node = self.parent
+        while node:
+            if node.pk in seen:
+                raise ValidationError({'parent': 'A category cannot contain itself or one of its ancestors.'})
+            seen.add(node.pk)
+            node = node.parent
+
+    def get_absolute_url(self):
+        return reverse('shop:category_detail', args=[self.slug])
+
+    def get_ancestors(self):
+        ancestors, seen, node = [], {self.pk}, self.parent
+        while node and node.pk not in seen:
+            ancestors.append(node)
+            seen.add(node.pk)
+            node = node.parent
+        return list(reversed(ancestors))
 
 
 class Subcategory(models.Model):
@@ -92,7 +118,6 @@ class Brand(models.Model):
     def __str__(self):
         return self.name
 
-
 class PetCategory(models.Model):
     """Animal groups to which a product can apply, such as Cat or Dog."""
     name = models.CharField(max_length=100, unique=True)
@@ -126,6 +151,8 @@ class Product(models.Model):
     short_description = models.TextField(blank=True)
     sku = models.CharField(max_length=100, blank=True, db_index=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    collections = models.ManyToManyField(Category, related_name='collection_products', blank=True)
+    shopify_tags = models.JSONField(default=list, blank=True)
     subcategory = models.ForeignKey(Subcategory, on_delete=models.CASCADE, related_name='products', blank=True, null=True)
     product_type = models.ForeignKey(ProductType, on_delete=models.SET_NULL, null=True, blank=True)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, related_name='products', null=True, blank=True)

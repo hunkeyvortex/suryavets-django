@@ -1,22 +1,13 @@
-<nav id="primary-navigation" class="primary-navigation" aria-label="Primary navigation" data-primary-navigation>
-  <div class="site-shell">
-    <ul class="primary-navigation__list">
-      {% for category in categories %}
-        <li class="primary-navigation__item {% if category.subcategories.all %}has-children{% endif %}">
-          <a href="{% url 'shop:category_detail' category.slug %}">{{ category.name }}</a>
-          {% if category.subcategories.all %}
-            <button class="submenu-toggle" type="button" aria-label="Open {{ category.name }} menu" aria-controls="submenu-{{ category.slug }}" aria-expanded="false" data-submenu-toggle><span aria-hidden="true">⌄</span></button>
-            <div id="submenu-{{ category.slug }}" class="mega-menu" role="region" aria-label="{{ category.name }} menu">
-              <ul class="mega-menu__categories">
-                <li><a href="{% url 'shop:category_detail' category.slug %}"><span>Shop all {{ category.name }}</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
-                {% for subcategory in category.subcategories.all %}<li><a href="{% url 'shop:subcategory_detail' category.slug subcategory.slug %}"><span>{{ subcategory.name }}</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>{% endfor %}
-              </ul>
-              <section class="mega-menu__products"><p>Shop {{ category.name }} products</p>{% if category.menu_product_types %}<ul>{% for product_type in category.menu_product_types %}<li><a href="{% url 'shop:category_detail' category.slug %}?product_type={{ product_type.slug|urlencode }}">{{ product_type.name }}</a></li>{% endfor %}</ul>{% else %}<a class="mega-menu__browse" href="{% url 'shop:category_detail' category.slug %}">Browse {{ category.name }} products</a>{% endif %}</section>
-            </div>
-          {% endif %}
-        </li>
-      {% endfor %}
-      <li class="primary-navigation__item"><a href="{% url 'shop:contact' %}">Contact us</a></li>
-    </ul>
-  </div>
+<nav id="primary-navigation" class="category-navigation" aria-label="Primary navigation">
+  <div class="site-shell"><ul class="category-tree category-tree--desktop" data-category-tree>
+    {% include 'includes/category_tree.html' with nodes=navigation_categories prefix='desktop' %}
+    <li class="category-tree__item"><a href="{% url 'shop:contact' %}">Contact Us</a></li>
+  </ul></div>
 </nav>
+<dialog class="mobile-navigation" id="mobile-navigation" aria-label="Shop categories" data-mobile-navigation>
+  <div class="mobile-navigation__heading"><span>Shop by category</span><button type="button" aria-label="Close navigation" data-mobile-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+  <nav aria-label="Mobile categories"><ul class="category-tree category-tree--mobile" data-category-tree>
+    {% include 'includes/category_tree.html' with nodes=navigation_categories prefix='mobile' %}
+    <li class="category-tree__item"><a href="{% url 'shop:contact' %}">Contact Us</a></li>
+  </ul></nav>
+</dialog>

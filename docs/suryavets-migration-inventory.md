@@ -1,5 +1,7 @@
 # Surya Vets Shopify → Django migration inventory
 
+> Historical audit. The current verified hierarchy, import counts, screenshots and remaining blockers are tracked in [SURYA_MIGRATION_AUDIT.md](../SURYA_MIGRATION_AUDIT.md). Earlier implementation-status statements below are superseded by that audit.
+
 Audit date: 2026-09-07  
 Reference: public pages at `https://suryavets.com/`. This is an audit record, not a claim of visual completion.
 

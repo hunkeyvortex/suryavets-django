@@ -8,6 +8,7 @@ from .models import (
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'order', 'is_active', 'product_count']
+    autocomplete_fields = ['parent']
     list_filter = ['is_active', 'created_at']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
@@ -94,7 +95,7 @@ class ProductAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'slug', 'sku', 'short_description', 'description', 'brand', 'category', 'subcategory', 'pet_categories', 'product_type')
+            'fields': ('name', 'slug', 'sku', 'short_description', 'description', 'brand', 'category', 'collections', 'shopify_tags', 'subcategory', 'pet_categories', 'product_type')
         }),
         ('Pricing', {
             'fields': ('base_price', 'discount_percentage', 'current_price', 'original_price')

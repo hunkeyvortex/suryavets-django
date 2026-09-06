@@ -7,13 +7,14 @@ from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404, render
 
 from .models import Brand, Category, PetCategory, Product, ProductType, ProductVariant, Subcategory
+from .services.navigation import descendant_ids
 
 
 CATALOG_PAGE_SIZE = 12
 
 
 def _categories_with_counts():
-    return Category.objects.filter(is_active=True).annotate(
+    return Category.objects.filter(is_active=True, parent__isnull=True).annotate(
         product_count=Count('products', filter=Q(products__is_active=True))
     ).prefetch_related('subcategories').order_by('order', 'name')
 
@@ -26,7 +27,8 @@ def _product_queryset():
 
 def _valid_decimal(value):
     try:
-        return Decimal(value) if value else None
+        amount = Decimal(value) if value else None
+        return amount if amount is not None and amount.is_finite() and amount >= 0 else None
     except (InvalidOperation, TypeError):
         return None
 
@@ -120,11 +122,13 @@ def product_list(request):
 
 def category_detail(request, category_slug):
     """Browse products assigned to one category."""
-    category = get_object_or_404(
-        _categories_with_counts(), slug=category_slug
-    )
+    category = get_object_or_404(Category, slug=category_slug, is_active=True)
+    if any(not ancestor.is_active for ancestor in category.get_ancestors()):
+        from django.http import Http404
+        raise Http404('Category unavailable')
+    ids = descendant_ids(category)
     return _render_product_list(
-        request, _product_queryset().filter(category=category), category=category
+        request, _product_queryset().filter(Q(category_id__in=ids) | Q(collections__id__in=ids)).distinct(), category=category
     )
 
 

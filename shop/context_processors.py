@@ -1,6 +1,5 @@
-from collections import defaultdict
-
-from .models import Category, ProductType
+from .models import Category
+from .services.navigation import navigation_tree
 from .services.cart import cart_items, get_cart
 
 def cart_count(request):
@@ -10,23 +9,8 @@ def cart_count(request):
 
 def get_categories(request):
     """Add categories to context"""
-    categories = list(Category.objects.filter(is_active=True).prefetch_related(
-        'subcategories'
-    ).order_by('order', 'name'))
-    product_types_by_category = defaultdict(list)
-    product_types = ProductType.objects.filter(
-        product__is_active=True,
-        product__category__in=categories,
-    ).order_by('name').distinct()
-    for product_type in product_types:
-        category_ids = product_type.product_set.filter(
-            is_active=True, category__in=categories
-        ).values_list('category_id', flat=True).distinct()
-        for category_id in category_ids:
-            product_types_by_category[category_id].append(product_type)
-    for category in categories:
-        category.menu_product_types = product_types_by_category[category.id]
-    return {'categories': categories}
+    tree = navigation_tree()
+    return {'categories': tree, 'navigation_categories': tree}
 
 def get_banners(request):
     """Add active banners to context"""
