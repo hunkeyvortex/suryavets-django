@@ -66,6 +66,32 @@ class CheckoutSafetyTests(TestCase):
         self.assertTrue(self.cart.items.exists())
         self.product.refresh_from_db(); self.assertEqual(self.product.stock_quantity, 1)
 
+    def test_unavailable_payment_methods_cannot_place_orders(self):
+        for method in ('online', 'manual', 'tampered'):
+            response = self.submit(payment_method=method)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('payment_method', response.context['form'].errors)
+            self.assertFalse(Order.objects.exists())
+            self.assertEqual(self.cart.items.get().quantity, 2)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock_quantity, 5)
+
+    def test_service_rejects_online_payment_without_stock_changes(self):
+        with self.assertRaisesMessage(CheckoutError, 'Online payments are not available yet'):
+            place_order(self.cart, AnonymousUser(), self.token, {**CHECKOUT_DATA, 'payment_method': 'online'})
+        self.assertFalse(Order.objects.exists())
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock_quantity, 5)
+
+    def test_checkout_shows_cod_and_disabled_online(self):
+        response = self.client.get(reverse('shop:checkout'))
+        self.assertContains(response, 'Cash on Delivery (COD)')
+        self.assertContains(response, 'Online Payment')
+        self.assertNotContains(response, 'Pay after order confirmation')
+        field = response.context['form']['payment_method']
+        online = next(choice for choice in field if choice.data['value'] == 'online')
+        self.assertTrue(online.data['attrs']['disabled'])
+
     def test_price_changes_require_fresh_review(self):
         Product.objects.filter(pk=self.product.pk).update(selling_price='95')
         response = self.submit()

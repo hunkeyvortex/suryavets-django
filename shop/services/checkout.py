@@ -58,6 +58,11 @@ def place_order(cart, user, token, data):
     if existing:
         return existing
 
+    # Until a verified gateway flow exists, never create unpaid online orders.
+    # Guard the service too, so bypassing the form cannot reserve stock/coupons.
+    if data.get('payment_method') != 'cash_on_delivery':
+        raise CheckoutError('Online payments are not available yet. Please choose Cash on Delivery.')
+
     items = list(cart_items(cart))
     if not items:
         raise CheckoutError('Your cart is empty or this checkout has already completed.')

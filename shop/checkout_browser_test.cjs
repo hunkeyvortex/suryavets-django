@@ -40,10 +40,43 @@ const path = require('node:path');
       }
       await page.getByRole('button', {name: 'Sign out'}).click();
     }
+    await page.goto(origin + '/cart/');
+    await page.locator('.basket-empty').waitFor();
+    if (output) {
+      fs.mkdirSync(output, {recursive: true});
+      await page.locator('.basket-shell').screenshot({path: path.join(output, 'basket-empty-390.png')});
+    }
     await page.goto(origin + '/product/browser-checkout-fixture/', {waitUntil: 'domcontentloaded'});
     await page.locator('.product-form [name="quantity"]').fill('2');
     await page.locator('.product-form button[type="submit"]').click();
+    await page.locator('.basket-product').waitFor();
+    await page.locator('[data-step="1"]').click();
+    assert.equal(await page.locator('[data-basket-quantity] [name="quantity"]').inputValue(), '3');
+    await page.getByRole('button', {name: 'Update', exact: true}).click();
+    await page.waitForURL('**/cart/');
+    assert.match(await page.locator('[data-basket-total]').innerText(), /320/);
+    await page.locator('[data-step="-1"]').click();
+    await page.getByRole('button', {name: 'Update', exact: true}).click();
+    await page.waitForURL('**/cart/');
+    assert.match(await page.locator('[data-basket-total]').innerText(), /230/);
+    for (const width of [375, 390, 430, 768, 1024, 1440]) {
+      await page.setViewportSize({width, height: 900});
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+      const items = await page.locator('.basket-products').boundingBox();
+      const summary = await page.locator('.basket-summary').boundingBox();
+      if (width < 901) assert(summary.y > items.y + items.height, 'Mobile items must precede the summary');
+      if (output && [390, 1440].includes(width)) {
+        await page.locator('.basket-shell').screenshot({path: path.join(output, `basket-${width}.png`)});
+      }
+    }
+    await page.getByRole('button', {name: 'Remove Browser checkout fixture', exact: true}).click();
+    await page.locator('.basket-empty').waitFor();
+    await page.goto(origin + '/product/browser-checkout-fixture/');
+    await page.locator('.product-form [name="quantity"]').fill('2');
+    await page.locator('.product-form button[type="submit"]').click();
     await page.getByRole('link', {name: 'Proceed to checkout'}).click();
+    assert(await page.getByRole('radio', {name: 'Cash on Delivery (COD)', exact: false}).isChecked());
+    assert(await page.getByRole('radio', {name: 'Online Payment', exact: false}).isDisabled());
     const values = {email:'browser-test@example.com',phone:'9999999999',shipping_name:'Test Buyer',shipping_address_line_1:'1 Test Street',shipping_city:'Mumbai',shipping_state:'Maharashtra',shipping_postal_code:'400001'};
     for (const [name, value] of Object.entries(values)) await page.locator(`[data-checkout-form] [name="${name}"]`).fill(value);
     await page.locator('[name="billing_same_as_shipping"]').check();

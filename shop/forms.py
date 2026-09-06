@@ -60,8 +60,16 @@ class RegistrationForm(UserCreationForm):
         return email
 
 
+class PaymentRadioSelect(forms.RadioSelect):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if str(value) == 'online':
+            option['attrs']['disabled'] = True
+        return option
+
+
 class CheckoutForm(forms.Form):
-    PAYMENT_CHOICES = (('cash_on_delivery', 'Cash on Delivery'), ('manual', 'Pay after order confirmation'))
+    PAYMENT_CHOICES = (('cash_on_delivery', 'Cash on Delivery (COD)'), ('online', 'Online Payment'))
     email = forms.EmailField()
     phone = forms.CharField(max_length=20)
     shipping_name = forms.CharField(max_length=150)
@@ -98,7 +106,13 @@ class CheckoutForm(forms.Form):
         self.fields['phone'].widget.attrs.update({'autocomplete': 'tel', 'inputmode': 'tel', 'placeholder': 'Mobile number'})
         self.fields['notes'].label = 'Delivery notes (optional)'
         self.fields['notes'].widget.attrs.update({'rows': 2, 'placeholder': 'Anything that will help us deliver your order?'})
-        self.fields['payment_method'].widget = forms.RadioSelect(choices=self.PAYMENT_CHOICES)
+        self.fields['payment_method'].widget = PaymentRadioSelect(choices=self.PAYMENT_CHOICES)
+
+    def clean_payment_method(self):
+        method = self.cleaned_data['payment_method']
+        if method == 'online':
+            raise forms.ValidationError('Online payments are not available yet. Please choose Cash on Delivery.')
+        return method
 
     def clean_coupon_code(self):
         return self.cleaned_data['coupon_code'].strip().upper()

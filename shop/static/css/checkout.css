@@ -52,6 +52,12 @@
 .checkout-payment label { display: flex; align-items: center; gap: 12px; border: 1px solid #d5e0cb; border-radius: 9px; padding: 15px; font-size: 12px; cursor: pointer; }
 .checkout-payment label:has(input:checked) { background: #eef7e9; border-color: #2c9959; }
 .checkout-payment input { accent-color: #15914c; width: 17px; height: 17px; margin: 0; }
+.checkout-payment input { flex: 0 0 17px; }
+.checkout-payment strong { display: block; font-weight: 600; }
+.checkout-payment small { display: block; margin-top: 5px; font-size: 11px; line-height: 1.6; color: #6f7b68; }
+.checkout-payment label:has(input:disabled) { cursor: not-allowed; background: #f8f9f5; border-style: dashed; flex-wrap: wrap; }
+.checkout-payment label > span { flex: 1; min-width: 150px; }
+.checkout-payment em { font-style: normal; font-size: 9px; color: #806831; background: #f5ecd1; padding: 4px 8px; border-radius: 20px; white-space: nowrap; }
 .checkout-small { font-size: 10px; color: #73806a; line-height: 1.8; margin: 12px 0 0; }
 .checkout-summary { position: sticky; top: 24px; min-width: 0; }
 .checkout-summary-card { border-top: 4px solid #d7b351; box-shadow: 0 10px 35px #29452c08; }

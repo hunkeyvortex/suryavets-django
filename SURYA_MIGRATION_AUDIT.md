@@ -314,9 +314,24 @@ Current preview uses port 8007 with reload enabled; older ports may be stale. Do
 
 ## K. Original checkout and CRM coupons
 
+Latest payment UI update: new checkouts now offer COD with an unavailable Online Payment card, replacing the manual payment preference. See section L; historical records are retained.
+
 - User requested an original checkout design rather than copying Shopify. Added grouped contact/delivery/billing/payment panels and a responsive order summary with product thumbnails, coupon application/removal and visible savings.
 - Coupon CRUD is scoped to create/edit/disable through CRM Manager permission; no deletion or use-counter reset. Supports percentage/fixed amounts, minimum subtotal, discount cap, scheduling and total usage limits. No real promotional codes were created automatically.
 - Checkout revalidates coupon revision/savings and reserves uses atomically with stock/order creation. Historical discounts are snapshotted. Cancellation keeps its consumed use. Applied selections persist for the same cart across refreshes.
 - Additive migration 0008 and updated roles applied after a local database backup; baseline source checkpoint `5fc9d64`.
 - Implementation, exact commands, changed-file list, usage policy and limitations: `docs/checkout-and-coupons.md`.
 - Verified 102 tests with browser suites enabled; Django system and migration-drift checks pass through 0008. Desktop/mobile checkout and CRM screenshots reviewed. Coupons, orders and staff accounts used by browser tests were disposable fixtures, not production records.
+
+## L. Original cart redesign and payment availability
+
+- Original cart design requested by the user: delivery progress, product cards, quantity stepper/Update, remove controls, summary and empty basket. Existing cart backend retained.
+- COD is available. Online Payment is visibly disabled until a gateway exists; tampered online/manual submissions are blocked before reserving stock or coupons. No gateway/payment processing is claimed.
+- 105 tests pass with browser suites enabled, including basket interactions and COD/coupon order placement. Six viewport widths checked; desktop/mobile screenshots reviewed. Django checks pass and no migrations are required.
+- Existing preview verified at `/cart/` on port 8007. Source checkpoint created before changes; no Shopify/DNS changes.
+- Changed files, commands and limitations: `docs/cart-redesign.md`.
+
+| Page/component | Reference | Django URL | Desktop | Mobile | Functional | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Basket | Original design requested | /cart/ | Reviewed | Reviewed | Add/update/remove and totals | FUNCTIONAL COMPLETE |
+| Payment preference | Original design requested | /checkout/ | Reviewed | Reviewed | COD; online intentionally unavailable | NEEDS GATEWAY INTEGRATION |

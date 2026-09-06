@@ -189,7 +189,7 @@ class CatalogViewTests(TestCase):
 
         cart_response = self.client.get(reverse('shop:cart'))
         self.assertContains(cart_response, self.product.name)
-        self.assertContains(cart_response, '₹1598.00')
+        self.assertContains(cart_response, '₹1,598.00')
         item = cart_response.context['cart_items'].get()
 
         update_response = self.client.post(

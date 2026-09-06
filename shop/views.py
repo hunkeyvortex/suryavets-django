@@ -218,7 +218,7 @@ def cart_detail(request):
     cart = get_cart(request, create=False)
     items = cart_items(cart)
     context = {'cart': cart, 'cart_items': items, **cart_totals(items)}
-    return render(request, 'cart_new.html', context)
+    return render(request, 'basket.html', context)
 
 def _cart_return_url(request):
     target = request.POST.get('next', '')

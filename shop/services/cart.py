@@ -47,4 +47,5 @@ def cart_totals(items):
         'total': subtotal + shipping,
         'total_items': sum(item.quantity for item in items),
         'amount_until_free_delivery': max(FREE_DELIVERY_THRESHOLD - subtotal, Decimal('0.00')),
+        'free_delivery_threshold': FREE_DELIVERY_THRESHOLD,
     }

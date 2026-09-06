@@ -35,10 +35,10 @@
           {% include 'includes/checkout_field.html' with field=form.notes %}
         </section>
         <section class="checkout-panel">
-          <div class="checkout-panel-heading"><span class="section-number">3</span><div><h2>Payment preference</h2><p>No online payment is taken on this page.</p></div></div>
-          <fieldset class="checkout-payment"><legend class="checkout-sr-only">Payment method</legend>{% for choice in form.payment_method %}<label>{{ choice.tag }}<span>{{ choice.choice_label }}</span></label>{% endfor %}</fieldset>
+          <div class="checkout-panel-heading"><span class="section-number">3</span><div><h2>Payment preference</h2><p>Choose how you'd like to pay.</p></div></div>
+          <fieldset class="checkout-payment"><legend class="checkout-sr-only">Payment method</legend>{% for choice in form.payment_method %}<label>{{ choice.tag }}<span><strong>{{ choice.choice_label }}</strong>{% if choice.data.value == 'cash_on_delivery' %}<small>Pay in cash when your order arrives.</small>{% else %}<small>UPI, cards &amp; net banking — coming soon.</small><small>Not available until our payment gateway is connected.</small>{% endif %}</span>{% if choice.data.value == 'online' %}<em>Coming soon</em>{% endif %}</label>{% endfor %}</fieldset>
           {% if form.payment_method.errors %}<div class="checkout-field-error" role="alert">{{ form.payment_method.errors }}</div>{% endif %}
-          <p class="checkout-small">Your order will be recorded as payment pending. For pay-after-confirmation orders, await confirmation before arranging payment.</p>
+          <p class="checkout-small">COD orders are recorded as payment pending. No payment is collected on this page.</p>
         </section>
       </div>
       <aside class="checkout-summary"><div class="checkout-summary-card">
