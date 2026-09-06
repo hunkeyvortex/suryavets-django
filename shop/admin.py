@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Category, Subcategory, ProductType, Brand, PetCategory, Product, ProductVariant,
     ProductImage, ProductSpecification, Banner, ContactInfo,
-    Cart, CartItem, CustomerAddress, Order, OrderItem
+    Cart, CartItem, CustomerAddress, Order, OrderItem, CRMActivity, InventoryMovement
 )
 
 @admin.register(Category)
@@ -79,6 +79,7 @@ class ProductSpecificationInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
+    readonly_fields = ['stock_quantity']
     fields = ['name', 'sku', 'barcode', 'size_code', 'weight_info', 'price_override', 'selling_price', 'discount_percentage',
               'stock_quantity', 'low_stock_threshold', 'is_active']
 
@@ -91,7 +92,7 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline, ProductSpecificationInline, ProductVariantInline]
     list_editable = ['is_featured', 'is_bestseller', 'is_active']
-    readonly_fields = ['current_price', 'original_price', 'is_in_stock', 'availability_label']
+    readonly_fields = ['current_price', 'original_price', 'is_in_stock', 'availability_label', 'stock_quantity']
 
     fieldsets = (
         ('Basic Information', {
@@ -125,7 +126,7 @@ class ProductVariantAdmin(admin.ModelAdmin):
     list_filter = ['product__category', 'size_code', 'is_active']
     search_fields = ['product__name', 'sku', 'barcode', 'name', 'weight_info']
     list_editable = ['is_active']
-    readonly_fields = ['current_price', 'original_price', 'is_in_stock', 'is_low_stock']
+    readonly_fields = ['current_price', 'original_price', 'is_in_stock', 'is_low_stock', 'stock_quantity']
 
     def current_price(self, obj):
         return f"₹{obj.current_price}"
@@ -238,5 +239,31 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ['status', 'payment_status', 'payment_method', 'created_at']
     search_fields = ['order_number', 'email', 'phone', 'user__username', 'payment_reference']
     readonly_fields = ['id', 'order_number', 'created_at', 'updated_at', 'checkout_key', 'checkout_cart',
-                       'stock_deducted', 'subtotal', 'shipping_cost', 'discount_amount', 'total']
+                       'stock_deducted', 'inventory_recorded', 'subtotal', 'shipping_cost', 'discount_amount', 'total',
+                       'status', 'payment_status', 'payment_method', 'payment_reference']
     inlines = [OrderItemInline]
+
+
+class ImmutableAuditAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(InventoryMovement)
+class InventoryMovementAdmin(ImmutableAuditAdmin):
+    list_display = ['created_at', 'product', 'variant', 'kind', 'delta', 'quantity_before', 'quantity_after', 'actor']
+    list_filter = ['kind', 'created_at']
+    search_fields = ['product__name', 'product__sku', 'variant__sku', 'order__order_number', 'reason']
+
+
+@admin.register(CRMActivity)
+class CRMActivityAdmin(ImmutableAuditAdmin):
+    list_display = ['created_at', 'actor', 'order', 'kind']
+    list_filter = ['kind', 'created_at']
+    search_fields = ['order__order_number', 'customer_email', 'text']

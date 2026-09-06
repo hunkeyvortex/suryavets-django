@@ -460,6 +460,7 @@ class Order(models.Model):
     checkout_key = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     checkout_cart = models.ForeignKey(Cart, null=True, blank=True, on_delete=models.SET_NULL, related_name='orders', editable=False)
     stock_deducted = models.BooleanField(default=False, editable=False)
+    inventory_recorded = models.BooleanField(default=False, editable=False)
     user = models.ForeignKey('auth.User', on_delete=models.SET_NULL, related_name='orders', null=True, blank=True)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
@@ -522,3 +523,45 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product_name} × {self.quantity}"
+
+
+class InventoryMovement(models.Model):
+    """Append-only stock history from CRM adjustments and checkout, not opening balances."""
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='stock_movements')
+    variant = models.ForeignKey(ProductVariant, null=True, blank=True, on_delete=models.PROTECT)
+    order = models.ForeignKey(Order, null=True, blank=True, on_delete=models.PROTECT, related_name='stock_movements')
+    actor = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL)
+    kind = models.CharField(max_length=20, choices=[('checkout', 'Checkout'), ('cancellation', 'Cancellation'), ('adjustment', 'Adjustment')])
+    delta = models.IntegerField()
+    quantity_before = models.PositiveIntegerField()
+    quantity_after = models.PositiveIntegerField()
+    reason = models.CharField(max_length=500)
+    request_key = models.UUIDField(unique=True, null=True, blank=True, editable=False)
+    reversal_of = models.OneToOneField('self', null=True, blank=True, on_delete=models.PROTECT, related_name='reversal')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+        constraints = [
+            models.CheckConstraint(condition=~models.Q(delta=0), name='stock_movement_nonzero'),
+            models.CheckConstraint(condition=models.Q(quantity_after=models.F('quantity_before') + models.F('delta')), name='stock_movement_balances'),
+        ]
+
+
+class CRMActivity(models.Model):
+    """Internal notes and immutable operational history; never shown on the storefront."""
+    actor = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL)
+    order = models.ForeignKey(Order, null=True, blank=True, on_delete=models.PROTECT, related_name='crm_activity')
+    customer_email = models.EmailField(blank=True, db_index=True)
+    kind = models.CharField(max_length=20, choices=[('note', 'Internal note'), ('status', 'Order status')])
+    text = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+        permissions = [
+            ('access_crm', 'Access customer and order CRM'),
+            ('manage_crm_orders', 'Process and cancel orders in CRM'),
+            ('adjust_crm_inventory', 'Adjust stock through audited CRM workflow'),
+            ('write_crm_notes', 'Write internal CRM notes'),
+        ]

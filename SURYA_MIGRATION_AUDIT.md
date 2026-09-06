@@ -291,3 +291,21 @@ Local commands (PowerShell, project folder):
 ```
 
 Current preview uses port 8007 with reload enabled; older ports may be stale. Do not start another server on 8007 while this one is running.
+
+## J. Staff CRM and original account UI — September 7, 2026
+
+- User approved an internal SuryaVets CRM and explicitly requested a new themed customer login/signup design instead of copying Shopify's account UI.
+- Added `/crm/` inside the existing Django application: overview, orders, order contacts, inventory and reports, with Viewer/Operations/Manager permissions.
+- Transactional stock ledger, staff notes, safe pre-shipment cancellation/restocking and stale/duplicate stock adjustment protections. Historical deductions without a complete ledger are not guessed. Payment records remain read-only; no refund/payment gateway operation is implemented here.
+- New `/login/` and `/register/` layouts use green/gold/white, original SVG decoration and shared fields. Added safe redirect handling, POST logout and guest-to-account basket merging without transferring old guest orders.
+- Migration 0007 applied after a local database backup. Baseline source checkpoint was `0796f17`.
+- Compared screenshots of the new designs at desktop/mobile sizes, not against Shopify because these account/CRM pages are intentionally original. Automated browser coverage uses six widths and disposable records, including actual signup, staff adjustment and cancellation.
+- Setup, changed files, exact commands, screenshots and remaining production limitations: `docs/crm-and-accounts.md`.
+- Final verification for this milestone: all 79 tests pass with browser tests enabled; Django check and migration-drift check pass through 0007. The existing 8007 preview serves customer login/signup and staff login successfully.
+
+| Page/component | Reference | Django URL | Desktop | Mobile | Functional | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Staff CRM | Boww & Meow workflow; original SuryaVets UI | /crm/ | Reviewed | Reviewed | Initial operational scope | FUNCTIONAL COMPLETE (v1) |
+| Customer sign in | Original design requested | /login/ | Reviewed | Reviewed | Django auth, safe return, basket merge | FUNCTIONAL COMPLETE |
+| Customer signup | Original design requested | /register/ | Reviewed | Reviewed | Validation, auth, basket merge | FUNCTIONAL COMPLETE |
+| Payments/refunds/shipping automation | Separate integrations required | — | — | — | Not implemented in CRM | NOT STARTED |

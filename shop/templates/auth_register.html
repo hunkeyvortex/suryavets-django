@@ -1,0 +1,8 @@
+{% extends 'auth_base.html' %}
+{% block title %}Create your account | SuryaVets{% endblock %}
+{% block auth_content %}
+<p class="auth-kicker">A HAPPY LITTLE BEGINNING</p><h1>For you.<br>For your companion.</h1><p class="auth-intro">Create an account for easier shopping and a little less paperwork.</p>
+<div class="auth-tabs"><a href="{% url 'shop:login' %}?next={{ next|urlencode }}">Sign in</a><a href="{% url 'shop:register' %}?next={{ next|urlencode }}" aria-current="page">Create account</a></div>
+<form method="post" class="auth-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{% include 'includes/auth_fields.html' %}<p class="auth-legal">By creating an account, you agree to our <a href="{% url 'shop:terms' %}">Terms</a>. Read how we handle your information in our <a href="{% url 'shop:privacy' %}">Privacy Policy</a>.</p><button class="auth-submit" type="submit">Create my account <span aria-hidden="true">→</span></button></form>
+<p class="auth-switch">Already part of the family? <a href="{% url 'shop:login' %}?next={{ next|urlencode }}">Sign in</a></p>
+{% endblock %}

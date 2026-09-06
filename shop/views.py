@@ -5,8 +5,11 @@ from django.db.models import Q, Count, Sum, F
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.forms import AuthenticationForm
+from .services.accounts import CartMergeError, merge_guest_cart
 from django.db import transaction
-from django.db import OperationalError
+from django.db import IntegrityError, OperationalError
+from urllib.parse import urlsplit
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
@@ -375,30 +378,50 @@ def search(request):
     }
     return render(request, 'search.html', context)
 
-def login_view(request):
-    """Login page"""
-    if request.method == 'POST':
-        from django.contrib.auth import authenticate, login
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            next_url = request.GET.get('next', 'shop:index')
-            return redirect(next_url)
-        else:
-            return render(request, 'login.html', {'error': 'Invalid credentials'})
-    
-    return render(request, 'login.html')
+def account_next(request):
+    target = request.POST.get('next') or request.GET.get('next', '')
+    if not url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return reverse('shop:profile')
+    if urlsplit(target).path in [reverse('shop:login'), reverse('shop:register'), reverse('shop:logout')]:
+        return reverse('shop:profile')
+    return target
 
+
+@never_cache
+def login_view(request):
+    target = account_next(request)
+    if request.user.is_authenticated:
+        return redirect(target)
+    form = AuthenticationForm(request, data=request.POST if request.method == 'POST' else None)
+    form.fields['username'].widget.attrs.update({'autocomplete': 'username', 'placeholder': 'Your username'})
+    form.fields['password'].widget.attrs.update({'autocomplete': 'current-password', 'placeholder': 'Your password'})
+    if request.method == 'POST' and form.is_valid():
+        try:
+            merge_guest_cart(request, form.get_user())
+        except (CartMergeError, OperationalError) as exc:
+            form.add_error(None, str(exc) if isinstance(exc, CartMergeError) else 'Your basket is busy. Please try signing in again.')
+        else:
+            login(request, form.get_user())
+            return redirect(target)
+    return render(request, 'auth_login.html', {'form': form, 'next': target})
+
+@never_cache
 def register_view(request):
+    target = account_next(request)
+    if request.user.is_authenticated:
+        return redirect(target)
     form = RegistrationForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        user = form.save()
-        login(request, user)
-        return redirect('shop:profile')
-    return render(request, 'register.html', {'form': form})
+        try:
+            with transaction.atomic():
+                user = form.save()
+                merge_guest_cart(request, user)
+        except (CartMergeError, OperationalError, IntegrityError) as exc:
+            form.add_error(None, str(exc) if isinstance(exc, CartMergeError) else 'Your account could not be created. Review the username and try again.')
+        else:
+            login(request, user)
+            return redirect(target)
+    return render(request, 'auth_register.html', {'form': form, 'next': target})
 
 @login_required
 def profile_view(request):
@@ -422,6 +445,7 @@ def order_detail(request, order_id):
     order = get_object_or_404(request.user.orders.prefetch_related('items'), id=order_id)
     return render(request, 'order_detail.html', {'order': order})
 
+@require_POST
 def logout_view(request):
     """Logout view"""
     from django.contrib.auth import logout

@@ -1,0 +1,29 @@
+{% extends 'base_shared.html' %}{% load static %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/auth.css' %}"><script src="{% static 'js/auth.js' %}" defer></script>{% endblock %}
+{% block content %}
+<section class="auth-page">
+  <div class="auth-shell">
+    <aside class="auth-story">
+      <span class="auth-story-label">SURYAVETS · PET'S LIFELINE</span>
+      <div>
+        <svg class="auth-sun" aria-hidden="true" viewBox="0 0 40 40"><path d="M20 0 25 15 40 20 25 25 20 40 15 25 0 20 15 15Z" fill="currentColor"/></svg>
+        <h2>Big love. <br>Little paws. <br><em>Every day.</em></h2>
+        <p>From everyday essentials to thoughtful care, we're here for your companion.</p>
+      </div>
+      <div class="auth-paw" aria-hidden="true">
+        <svg viewBox="0 0 180 160" fill="none">
+          <ellipse cx="40" cy="58" rx="19" ry="26" transform="rotate(-24 40 58)"/>
+          <ellipse cx="76" cy="34" rx="18" ry="25" transform="rotate(-8 76 34)"/>
+          <ellipse cx="116" cy="38" rx="18" ry="25" transform="rotate(13 116 38)"/>
+          <ellipse cx="148" cy="67" rx="17" ry="24" transform="rotate(28 148 67)"/>
+          <path d="M54 101c10-15 21-34 39-34s30 21 42 37c12 16 13 35-2 40-12 5-22-4-38-4s-28 9-40 3c-15-7-12-25-1-42Z"/>
+        </svg>
+        <span>Care starts here.</span>
+      </div>
+      <ul class="auth-benefits"><li>Keep your orders together</li><li>Save your delivery addresses</li><li>Shop for every companion</li></ul>
+    </aside>
+    <div class="auth-content">{% block auth_content %}{% endblock %}</div>
+  </div>
+  <a class="auth-back" href="{% url 'shop:index' %}">← Back to exploring SuryaVets</a>
+</section>
+{% endblock %}

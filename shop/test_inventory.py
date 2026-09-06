@@ -7,10 +7,19 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-from shop.models import Category, Order, Product, ProductVariant
+from shop.models import Category, Order, Product, ProductVariant, InventoryMovement
 
 
 class InventoryReconciliationTests(TestCase):
+    def test_snapshot_writes_blocked_after_crm_adjustment_but_preview_remains_available(self):
+        InventoryMovement.objects.create(product=self.product, variant=self.variant, kind='adjustment',
+            delta=1, quantity_before=1, quantity_after=2, reason='Opening stock correction')
+        with self.assertRaisesMessage(CommandError, 'Local CRM stock movements exist'):
+            self.reconcile(apply=True)
+        with self.assertRaisesMessage(CommandError, 'Local CRM stock movements exist'):
+            call_command('import_shopify_products', 'not-opened.csv')
+        self.assertIn('matched=1', self.reconcile())
+
     def setUp(self):
         self.product = Product.objects.create(name='Inventory test', category=Category.objects.create(name='Dog'), base_price=100, stock_quantity=2)
         self.variant = ProductVariant.objects.create(product=self.product, name='1 KG', sku='SKU-1', stock_quantity=2)

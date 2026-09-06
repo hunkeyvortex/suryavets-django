@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.models import Sum
 
 from shop.management.commands.import_shopify_products import option_name
-from shop.models import Order, Product, ProductVariant
+from shop.models import Order, Product, ProductVariant, InventoryMovement
 
 
 class Command(BaseCommand):
@@ -23,6 +23,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['apply'] and Order.objects.filter(stock_deducted=True).exists():
             raise CommandError('Local orders have deducted stock. Reconcile order movements before applying an external snapshot.')
+        if options['apply'] and InventoryMovement.objects.exists():
+            raise CommandError('Local CRM stock movements exist. Reconcile these before applying an external snapshot.')
         with Path(options['source']).open(encoding='utf-8-sig', newline='') as source:
             reader = csv.DictReader(source)
             if not {'Handle', 'SKU', 'Option1 Value', options['location']}.issubset(reader.fieldnames or []):
@@ -62,8 +64,8 @@ class Command(BaseCommand):
         if options['apply']:
             # Recheck after taking product locks: an order may have committed
             # between the initial guard and this snapshot's lock acquisition.
-            if Order.objects.filter(stock_deducted=True).exists():
-                raise CommandError('An order deducted stock during reconciliation. No snapshot quantities were applied.')
+            if Order.objects.filter(stock_deducted=True).exists() or InventoryMovement.objects.exists():
+                raise CommandError('Stock changed during reconciliation. No snapshot quantities were applied.')
             for target, quantity in updates:
                 target.stock_quantity = quantity
                 target.save(update_fields=['stock_quantity', 'updated_at'])

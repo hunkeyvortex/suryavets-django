@@ -1,0 +1,8 @@
+{% extends 'auth_base.html' %}
+{% block title %}Welcome back | SuryaVets{% endblock %}
+{% block auth_content %}
+<p class="auth-kicker">GOOD TO HAVE YOU BACK</p><h1>Your pet's care,<br>all in one place.</h1><p class="auth-intro">Sign in to see your orders and saved addresses.</p>
+<div class="auth-tabs"><a href="{% url 'shop:login' %}?next={{ next|urlencode }}" aria-current="page">Sign in</a><a href="{% url 'shop:register' %}?next={{ next|urlencode }}">Create account</a></div>
+<form method="post" class="auth-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{% include 'includes/auth_fields.html' %}<button class="auth-submit" type="submit">Sign in <span aria-hidden="true">→</span></button></form>
+<p class="auth-switch">New to SuryaVets? <a href="{% url 'shop:register' %}?next={{ next|urlencode }}">Create your account</a></p><p class="auth-support">Need help signing in? <a href="{% url 'shop:contact' %}">Contact our team</a></p>
+{% endblock %}

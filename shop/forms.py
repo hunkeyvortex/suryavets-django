@@ -8,6 +8,13 @@ from .models import CustomerAddress
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({'autocomplete': 'username', 'placeholder': 'Choose a username'})
+        self.fields['email'].widget.attrs.update({'autocomplete': 'email', 'placeholder': 'you@example.com'})
+        self.fields['password1'].widget.attrs.update({'autocomplete': 'new-password', 'placeholder': 'Create a strong password'})
+        self.fields['password2'].widget.attrs.update({'autocomplete': 'new-password', 'placeholder': 'Enter your password again'})
+
     class Meta:
         model = get_user_model()
         fields = ('username', 'email', 'password1', 'password2')

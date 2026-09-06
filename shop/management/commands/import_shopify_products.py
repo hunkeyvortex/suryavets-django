@@ -12,7 +12,7 @@ from django.db import transaction
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 
-from shop.models import Brand, Category, PetCategory, Product, ProductImage, ProductType, ProductVariant, Subcategory, Order
+from shop.models import Brand, Category, PetCategory, Product, ProductImage, ProductType, ProductVariant, Subcategory, Order, InventoryMovement
 from shop.services.pricing import export_prices
 
 
@@ -205,6 +205,11 @@ class Command(BaseCommand):
         if dry_run:
             return category_name, pet_names, subcategory_name, product_type_name, len(variant_rows), len({row.get('Image Src') for row in rows if row.get('Image Src')})
 
+        # Wait for stock operations on this product, then recheck before writing.
+        Product.objects.select_for_update().filter(slug=handle).first()
+        if Order.objects.filter(stock_deducted=True).exists() or InventoryMovement.objects.exists():
+            raise CommandError('Stock movements occurred during import. No snapshot was applied to this product; reconcile first.')
+
         category, _ = Category.objects.get_or_create(
             name=category_name,
             defaults={'order': CATEGORY_ORDER[category_name], 'is_active': category_name != 'Uncategorized'},
@@ -272,6 +277,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if not options['dry_run'] and Order.objects.filter(stock_deducted=True).exists():
             raise CommandError('Local checkout orders have deducted stock. Do not overwrite it with a full product export; reconcile stock movements first. Price-only repair remains available.')
+        if not options['dry_run'] and InventoryMovement.objects.exists():
+            raise CommandError('Local CRM stock movements exist. A full export would overwrite operational stock; reconcile first.')
         inventory = self._inventory(options.get('inventory'))
         dry_run = options['dry_run']
         limit = options.get('limit')

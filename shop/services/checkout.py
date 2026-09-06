@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import F, Sum
 from django.utils import timezone
 
-from shop.models import Cart, CustomerAddress, Order, OrderItem, Product, ProductVariant
+from shop.models import Cart, CustomerAddress, InventoryMovement, Order, OrderItem, Product, ProductVariant
 from shop.services.cart import cart_items, cart_totals
 
 SALT = 'suryavets.checkout.v1'
@@ -99,7 +99,7 @@ def place_order(cart, user, token, data):
             values['billing_' + suffix] = values['shipping_' + suffix]
     totals = cart_totals(items)
     order = Order.objects.create(user_id=user_id, checkout_key=key, checkout_cart=cart,
-        stock_deducted=bool(product_stock or variant_stock),
+        stock_deducted=bool(product_stock or variant_stock), inventory_recorded=True,
         subtotal=totals['subtotal'], shipping_cost=totals['shipping'], total=totals['total'],
         **{field: values[field] for field in (
             'email', 'phone', 'shipping_name', 'shipping_address_line_1', 'shipping_address_line_2',
@@ -110,6 +110,16 @@ def place_order(cart, user, token, data):
         product_name=item.product.name, sku=(item.product_variant or item.product).sku,
         variant_name=item.product_variant.name if item.product_variant else '',
         unit_price=(item.product_variant or item.product).current_price, quantity=item.quantity) for item in items])
+    # Record only quantities actually deducted, inside the same transaction.
+    movements = []
+    for pk, quantity in product_stock.items():
+        movements.append(InventoryMovement(product=products[pk], order=order, kind='checkout', delta=-quantity,
+            quantity_before=products[pk].stock_quantity, quantity_after=products[pk].stock_quantity - quantity, reason='Checkout reservation'))
+    for pk, quantity in variant_stock.items():
+        movements.append(InventoryMovement(product_id=variants[pk].product_id, variant=variants[pk], order=order,
+            kind='checkout', delta=-quantity, quantity_before=variants[pk].stock_quantity,
+            quantity_after=variants[pk].stock_quantity - quantity, reason='Checkout reservation'))
+    InventoryMovement.objects.bulk_create(movements)
     if values['save_address'] and user_id:
         address = CustomerAddress.objects.filter(user_id=user_id, is_default_shipping=True).first()
         if address is None:
