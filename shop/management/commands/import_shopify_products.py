@@ -12,7 +12,7 @@ from django.db import transaction
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 
-from shop.models import Brand, Category, PetCategory, Product, ProductImage, ProductType, ProductVariant, Subcategory
+from shop.models import Brand, Category, PetCategory, Product, ProductImage, ProductType, ProductVariant, Subcategory, Order
 from shop.services.pricing import export_prices
 
 
@@ -270,6 +270,8 @@ class Command(BaseCommand):
         return created, len(variant_rows), len(images)
 
     def handle(self, *args, **options):
+        if not options['dry_run'] and Order.objects.filter(stock_deducted=True).exists():
+            raise CommandError('Local checkout orders have deducted stock. Do not overwrite it with a full product export; reconcile stock movements first. Price-only repair remains available.')
         inventory = self._inventory(options.get('inventory'))
         dry_run = options['dry_run']
         limit = options.get('limit')

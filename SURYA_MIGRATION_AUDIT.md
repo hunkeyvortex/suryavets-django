@@ -226,11 +226,11 @@ The stored source tree is shop/data/reference_navigation.json. This is the curre
 | Liquid product | /products/arnica-montana-30ml | /product/arnica-montana-30ml/ | Not matched | Reference inspected | Prescription enforcement requires review | IN PROGRESS |
 | Search | /search?q=cat | /search/?q=cat | Not matched | Reference inspected | Database search works | IN PROGRESS |
 | Empty cart | /cart | /cart/ | Not matched | Reference inspected | Session cart exists | IN PROGRESS |
-| Populated cart | /cart | /cart/ | Pending | Pending | Local add/update/remove tests pass; live cart not mutated | NEEDS REVIEW |
+| Populated cart | /cart | /cart/ | Visual parity pending | Visual parity pending | POST/CSRF/ownership checks and browser purchase test pass | NEEDS REVIEW |
 | Customer login | /account | /login/, /register/ | Pending | Reference auth redirect timed out | Django auth exists | NEEDS REVIEW |
 | About/contact/policies | /pages/about-us, /pages/contact, /pages/shipping-policy, /pages/privacy-policy, /pages/terms-and-conditions, /pages/return-and-refund-policy | /about/, /contact/, /shipping/, /privacy/, /terms/, /returns/ | Pending | Reference retry recorded separately | Local templates exist | NEEDS REVIEW |
 | Accounts/addresses/orders | Customer area | /account/, /account/addresses/ | Pending | Pending | Basic local flow exists | NEEDS REVIEW |
-| Checkout/payment | Shopify checkout | /checkout/ | Pending | Pending | Pending order only, no gateway | IN PROGRESS |
+| Checkout/payment | Shopify checkout | /checkout/ | Local 1440px flow tested | Local 390px flow tested | Atomic stock deduction, retry-safe orders/private receipts; no gateway | IN PROGRESS |
 | SEO/redirects | Shopify URL structure | Current local singular URLs | N/A | N/A | Missing sitemap/canonicals/redirect rollout | NOT STARTED |
 | Production media/Render | Future deployment | Local only | N/A | N/A | Filesystem media/CDN references only | NOT STARTED |
 
@@ -248,6 +248,7 @@ Product images currently use local media or Shopify source_url fallback (2,619 P
 - Baseline migrations 0001–0003 applied. Baseline checks and 11 tests passed.
 - 6,697 products were already imported. Existing importer understands ZIP/CSV and variants, but initially discarded tags, rounded discounts, deleted/recreated variants and images, and assigned untracked inventory a placeholder quantity of 1.
 - Supplied inventory_export_1.csv has only 12 rows, location Andheri West. It is not the full catalogue inventory export. Never treat placeholder availability as verified sellable stock.
+- Revalidated the supplied inventory: 162 total units, 12 exact handle/pack matches, all quantities already equal the database. No stock snapshot was applied. Read-only reconciliation command and spreadsheet validation agree.
 - Theme archive includes templates/index.json, sections/header-group.json, config/settings_data.json. Use artwork/settings as reference; do not execute Shopify scripts or copy Liquid backend logic.
 - Additive migration 0004 adds Category.parent, reference_path, Product.collections M2M and shopify_tags. Legacy category FK/Subcategory records remain for compatibility. Category model validation rejects parent cycles.
 - Restored 169 navigation nodes, tags for 6,697 products, 30,545 exact tag memberships across 6,090 products. 126 exported products have blank tags; 607 products have no match to the current navigation handles. A missing match is not permission to guess treatment classifications.
@@ -257,10 +258,10 @@ Product images currently use local media or Shopify source_url fallback (2,619 P
 
 1. Collection membership needs reconciliation against Shopify collection rules/manual membership, especially unmatched products and collections with no exact tag match. Exact tag matches are evidence-based, but not a guarantee that all Shopify smart-collection rules are reproduced.
 2. Exact-price milestone completed: nullable selling_price fields added; 2,428 product prices and 2,424 variant prices corrected from exports, with zero remaining price mismatches on revalidation. Variants/images are updated rather than deleted on reimport. Rename reconciliation and full inventory synchronization remain; see docs/exact-pricing-and-cards.md.
-3. Full inventory, stock reservation/recheck on checkout, transaction-safe decrement, order idempotency, payment verification/refunds and prescription workflow remain.
-4. Login next redirects and cart return URLs need validation; remove/logout currently accept GET. Authenticated cart helper creates carts during reads; guest-to-user cart merge missing.
+3. Checkout stock rechecks, conditional decrement and order idempotency are implemented and tested on SQLite. Full inventory, cancellation/expiry/restocking, PostgreSQL load tests, payment verification/refunds and prescription workflow remain. Pending COD/manual orders deduct tracked stock immediately; a status change alone does not replenish it.
+4. Cart return URLs are now restricted to the current host; add/update/remove require POST and CSRF. Empty authenticated cart reads no longer create carts. Login next redirects, logout GET behavior and guest-to-user cart merge still need attention.
 5. Newsletter currently returns success without saving or emailing; contact is a static template. Do not call these operational integrations complete.
-6. Selling-price filters/sorting and variant price/quantity controls are implemented and regression-tested. Mobile filters load and popovers are bounded. Accurate inventory, backorder rules and concurrent stock safety remain unverified.
+6. Selling-price filters/sorting and variant price/quantity controls are implemented and regression-tested. Mobile filters load and popovers are bounded. Concurrent stock and duplicate-submit tests pass locally, but accurate stock/tracking/backorder rules and PostgreSQL-specific behavior remain launch gates.
 7. Hero pause/swipe/accessibility, full homepage visual alignment, product-card details, footer and content pages remain.
 8. Persistent media, missing image report, static manifest, PostgreSQL test, email service, backups/restore, monitoring, production secret/host/security validation remain.
 9. SEO sitemap, robots, canonical tags and Shopify 301 mapping remain. Use Category.reference_path and original product handles for redirects.
@@ -272,12 +273,13 @@ Product images currently use local media or Shopify source_url fallback (2,619 P
 - Phase 1/2 audit and inventory captured. About, Contact, shipping, privacy, terms, returns and Grooming were revisited successfully (HTTP 200), recorded in extra-pages.json. Account redirect and populated live cart remain pending; local content-page visual parity remains unverified.
 - Phase 3 additive hierarchy, tag restoration and descendant browsing implemented.
 - Phase 4 real recursive menus and modal mobile drawer implemented. Browser test passed nested navigation at 375,390,430,768,1024,1440; no document overflow or JavaScript errors in tested states. Six roots, care leaf and search return HTTP 200.
-- 29 Django tests pass, including hierarchy coverage and 14 added exact-price/import/card/variant tests. Migration drift check passes through migration 0005. Full importer dry run validates all 6,697 handles.
+- 56 tests pass with the optional browser runtime enabled: hierarchy/pricing coverage, checkout rollback and concurrency races, inventory reconciliation and an isolated real-browser purchase/duplicate POST test. Without the runtime configured the browser test is skipped. Migration drift check passes through 0006. Full importer dry run previously validated all 6,697 handles.
 - Final mobile interaction check at 390px: four trust cards share one row with no scroll overflow (362px content width); hero next changes slide; every expandable root opens; Escape collapses the active group then closes the drawer; minimum-price submission and automatic sort submission succeed. Verification script: C:/Users/danyb/Documents/ChatGPT/suryavets-django/verify-mobile-controls.cjs.
 - These are functional checks, not a claim that all pages visually match. Screenshots show remaining homepage/header/footer differences.
 - Phase 5 partial: original hero proportions, category artwork, missing delivery banner, four fixed trust cards, white newsletter and black footer treatment restored. Live/local full-page comparisons captured at all six widths. Shared product-card refinement now includes measured dimensions, red badges, outline buttons, two-line titles, grouped exact prices and 2/3/4/5-card responsive layouts. Merchandising order, footer contact formatting and page-level spacing remain IN PROGRESS.
 - Latest evidence and file/command list: docs/exact-pricing-and-cards.md. Card screenshots and product-card-verification.json record same-viewport comparisons, without claiming matching product order or full-page parity. Isolated browser fixture also verifies variant controls; local Arnica renders Rs. 95.00.
-- Next: inventory/cart/order integrity, remaining same-width collection/product/global alignment and security/SEO. Deploy to a temporary Render hostname only after these gates, then review domain cutover.
+- Checkout milestone details, changed files, commands and limitations: docs/checkout-safety.md. Database backed up before changes; browser orders were confined to a disposable test database. New migration adds checkout key/cart and stock-deduction metadata without changing historical order totals.
+- Next: complete stock/tracking rules, cancellation/restocking, remaining authentication/security issues, payment architecture and same-width collection/product/global alignment. PostgreSQL, security/SEO and temporary-host tests precede any domain cutover.
 
 Local commands (PowerShell, project folder):
 

@@ -441,7 +441,7 @@ class CustomerAddress(models.Model):
 
 
 class Order(models.Model):
-    """An immutable checkout record; payment processing is added in Phase 8."""
+    """Checkout snapshot; payment confirmation is a separate operation."""
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
         PROCESSING = 'processing', 'Processing'
@@ -457,6 +457,9 @@ class Order(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.CharField(max_length=20, unique=True, blank=True, db_index=True)
+    checkout_key = models.UUIDField(null=True, blank=True, unique=True, editable=False)
+    checkout_cart = models.ForeignKey(Cart, null=True, blank=True, on_delete=models.SET_NULL, related_name='orders', editable=False)
+    stock_deducted = models.BooleanField(default=False, editable=False)
     user = models.ForeignKey('auth.User', on_delete=models.SET_NULL, related_name='orders', null=True, blank=True)
     email = models.EmailField()
     phone = models.CharField(max_length=20)

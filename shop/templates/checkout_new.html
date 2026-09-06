@@ -1,1 +1,23 @@
-{% extends 'base_shared.html' %}{% load static %}{% block title %}Checkout | Surya Vets{% endblock %}{% block extra_css %}<link rel="stylesheet" href="{% static 'css/account.css' %}">{% endblock %}{% block content %}<section class="account-page site-shell"><header><h1>Checkout</h1><p>Payment integration will be selected before launch. Your order is created as payment pending.</p></header><div class="account-card"><h2>Delivery information</h2><form method="post">{% csrf_token %}{{ form.as_p }}<h2>Order summary</h2>{% for item in cart_items %}<p>{{ item.product.name }} × {{ item.quantity }} <strong>₹{{ item.total_price }}</strong></p>{% endfor %}<p><strong>Total: ₹{{ total }}</strong></p><button type="submit">Place order</button></form></div></section>{% endblock %}
+{% extends 'base_shared.html' %}
+{% load static shop_filters %}
+{% block title %}Checkout | Surya Vets{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/account.css' %}">{% endblock %}
+{% block content %}
+<section class="account-page site-shell">
+  <header><h1>Checkout</h1><p>Payment integration will be selected before launch. Your order is created as payment pending.</p></header>
+  <div class="account-card"><h2>Delivery information</h2>
+    <form method="post" data-checkout-form>
+      {% csrf_token %}<input type="hidden" name="checkout_token" value="{{ checkout_token }}">
+      {{ form.as_p }}
+      <h2>Order summary</h2>
+      {% for item in cart_items %}<p>{{ item.product.name }}{% if item.product_variant %} — {{ item.product_variant.name }}{% endif %} × {{ item.quantity }} <strong>₹{{ item.total_price|money }}</strong></p>{% endfor %}
+      <p>Subtotal: ₹{{ subtotal|money }}</p><p>Shipping: ₹{{ shipping|money }}</p>
+      <p><strong>Total: ₹{{ total|money }}</strong></p>
+      <p>Availability and prices are checked again when you place your order.</p>
+      <button type="submit" {% if not cart_items %}disabled{% endif %}>Place order</button>
+      <a href="{% url 'shop:cart' %}">Return to cart</a>
+    </form>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/checkout.js' %}" defer></script>{% endblock %}

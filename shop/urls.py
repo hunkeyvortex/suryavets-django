@@ -23,6 +23,7 @@ urlpatterns = [
     
     # Checkout
     path('checkout/', views.checkout, name='checkout'),
+    path('checkout/confirmation/<uuid:order_id>/', views.order_confirmation, name='order_confirmation'),
     
     # Search
     path('search/', catalog_views.product_search, name='search'),

@@ -222,11 +222,21 @@ class OrderItemInline(admin.TabularInline):
     readonly_fields = ['product', 'product_variant', 'product_name', 'sku', 'variant_name', 'unit_price', 'quantity', 'line_total']
     can_delete = False
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     list_display = ['order_number', 'email', 'status', 'payment_status', 'total', 'created_at']
     list_filter = ['status', 'payment_status', 'payment_method', 'created_at']
     search_fields = ['order_number', 'email', 'phone', 'user__username', 'payment_reference']
-    readonly_fields = ['id', 'order_number', 'created_at', 'updated_at']
+    readonly_fields = ['id', 'order_number', 'created_at', 'updated_at', 'checkout_key', 'checkout_cart',
+                       'stock_deducted', 'subtotal', 'shipping_cost', 'discount_amount', 'total']
     inlines = [OrderItemInline]

@@ -204,12 +204,14 @@ class CatalogViewTests(TestCase):
 
     def test_guest_checkout_creates_a_pending_order_and_clears_the_cart(self):
         self.client.post(reverse('shop:add_to_cart', args=[self.product.id]), {'quantity': 2})
+        token = self.client.get(reverse('shop:checkout')).context['checkout_token']
         response = self.client.post(reverse('shop:checkout'), {
+            'checkout_token': token,
             'email': 'guest@example.com', 'phone': '9999999999', 'shipping_name': 'Guest Customer',
             'shipping_address_line_1': '1 Test Street', 'shipping_city': 'Mumbai',
             'shipping_state': 'Maharashtra', 'shipping_postal_code': '400001',
             'billing_same_as_shipping': 'on', 'payment_method': 'cash_on_delivery', 'terms': 'on',
-        })
+        }, follow=True)
 
         self.assertEqual(response.status_code, 200)
         order = Order.objects.get(email='guest@example.com')

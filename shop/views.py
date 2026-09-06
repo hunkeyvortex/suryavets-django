@@ -6,6 +6,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import login
 from django.db import transaction
+from django.db import OperationalError
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
+from django.views.decorators.cache import never_cache
+from .services.checkout import CheckoutError, place_order, review_token
 from .models import (
     Category, Subcategory, Product, ProductVariant, 
     ProductImage, Banner, Cart, CartItem
@@ -203,21 +209,31 @@ def product_detail(request, product_slug):
     }
     return render(request, 'product_detail_new.html', context)
 
+@never_cache
 def cart_detail(request):
     """Display the current cart for an anonymous or authenticated shopper."""
-    cart = get_cart(request)
+    cart = get_cart(request, create=False)
     items = cart_items(cart)
     context = {'cart': cart, 'cart_items': items, **cart_totals(items)}
     return render(request, 'cart_new.html', context)
 
+def _cart_return_url(request):
+    target = request.POST.get('next', '')
+    return target if url_has_allowed_host_and_scheme(target, {request.get_host()}, require_https=request.is_secure()) else reverse('shop:cart')
+
+
+@require_POST
+@transaction.atomic
 def add_to_cart(request, product_id):
     """Add a product to a session cart, respecting variant and stock choices."""
-    if request.method != 'POST':
-        return redirect('shop:product_detail', product_slug='')
+    cart = Cart.objects.select_for_update().get(pk=get_cart(request).pk)
     try:
-        quantity = max(1, int(request.POST.get('quantity', 1)))
+        quantity = int(request.POST.get('quantity', 1))
+        if not 1 <= quantity <= 10000:
+            raise ValueError
     except (TypeError, ValueError):
-        quantity = 1
+        messages.error(request, 'Please enter a quantity between 1 and 10000.')
+        return redirect(_cart_return_url(request))
     product = get_object_or_404(Product, id=product_id, is_active=True)
     variant_id = request.POST.get('variant_id')
     variant = None
@@ -233,9 +249,8 @@ def add_to_cart(request, product_id):
     available_quantity = variant.stock_quantity if variant else product.stock_quantity
     if (variant or product.track_inventory) and available_quantity < quantity:
         messages.error(request, 'The requested quantity is not currently available.')
-        return redirect(request.POST.get('next') or 'shop:cart')
+        return redirect(_cart_return_url(request))
 
-    cart = get_cart(request)
     item, created = CartItem.objects.get_or_create(
         cart=cart, product=product, product_variant=variant, defaults={'quantity': quantity}
     )
@@ -243,21 +258,26 @@ def add_to_cart(request, product_id):
         desired_quantity = item.quantity + quantity
         if (variant or product.track_inventory) and desired_quantity > available_quantity:
             messages.error(request, 'There is not enough stock to add more of this item.')
-            return redirect(request.POST.get('next') or 'shop:cart')
+            return redirect(_cart_return_url(request))
         item.quantity = desired_quantity
         item.save(update_fields=['quantity'])
     messages.success(request, f'{product.name} was added to your cart.')
-    return redirect(request.POST.get('next') or 'shop:cart')
+    return redirect(_cart_return_url(request))
 
+@require_POST
+@transaction.atomic
 def update_cart_item(request, item_id):
     """Change a cart quantity through a normal CSRF-protected form post."""
-    if request.method != 'POST':
-        return redirect('shop:cart')
-    item = get_object_or_404(CartItem, id=item_id, cart=get_cart(request))
+    cart = get_cart(request, create=False)
+    cart = get_object_or_404(Cart.objects.select_for_update(), pk=cart.pk if cart else None)
+    item = get_object_or_404(CartItem, id=item_id, cart=cart)
     try:
         quantity = int(request.POST.get('quantity', 1))
+        if not 0 <= quantity <= 10000:
+            raise ValueError
     except (TypeError, ValueError):
-        quantity = 1
+        messages.error(request, 'Please enter a quantity between 0 and 10000.')
+        return redirect('shop:cart')
     if quantity < 1:
         item.delete()
     else:
@@ -269,66 +289,64 @@ def update_cart_item(request, item_id):
             item.save(update_fields=['quantity'])
     return redirect('shop:cart')
 
+@require_POST
+@transaction.atomic
 def remove_from_cart(request, item_id):
     """Remove item from cart"""
-    cart_item = get_object_or_404(CartItem, id=item_id, cart=get_cart(request))
+    cart = get_cart(request, create=False)
+    cart = get_object_or_404(Cart.objects.select_for_update(), pk=cart.pk if cart else None)
+    cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
     cart_item.delete()
     return redirect('shop:cart')
 
+@never_cache
 def checkout(request):
-    """Create a pending order from an anonymous or authenticated shopper's cart."""
-    cart = get_cart(request)
-    items = cart_items(cart)
-    if not items:
+    """Review and submit an idempotent, stock-checked order."""
+    cart = get_cart(request, create=False)
+    if not cart:
         return redirect('shop:cart')
-
-    totals = cart_totals(items)
+    items = list(cart_items(cart))
+    if not items and request.method != 'POST':
+        return redirect('shop:cart')
     initial = {'email': request.user.email} if request.user.is_authenticated else {}
     address = request.user.addresses.filter(is_default_shipping=True).first() if request.user.is_authenticated else None
     if address:
         initial.update({
             'phone': address.phone, 'shipping_name': address.full_name,
             'shipping_address_line_1': address.address_line_1,
-            'shipping_address_line_2': address.address_line_2,
-            'shipping_city': address.city, 'shipping_state': address.state,
-            'shipping_postal_code': address.postal_code,
+            'shipping_address_line_2': address.address_line_2, 'shipping_city': address.city,
+            'shipping_state': address.state, 'shipping_postal_code': address.postal_code,
         })
     if request.method == 'POST':
         form = CheckoutForm(request.POST)
         if form.is_valid():
-            checkout_data = form.cleaned_data.copy()
-            if checkout_data['billing_same_as_shipping']:
-                checkout_data.update({
-                    'billing_name': checkout_data['shipping_name'],
-                    'billing_address_line_1': checkout_data['shipping_address_line_1'],
-                    'billing_address_line_2': checkout_data['shipping_address_line_2'],
-                    'billing_city': checkout_data['shipping_city'],
-                    'billing_state': checkout_data['shipping_state'],
-                    'billing_postal_code': checkout_data['shipping_postal_code'],
-                })
-            with transaction.atomic():
-                order = Order.objects.create(
-                    user=request.user if request.user.is_authenticated else None,
-                    payment_method=checkout_data['payment_method'],
-                    subtotal=totals['subtotal'], shipping_cost=totals['shipping'], total=totals['total'],
-                    **{key: checkout_data[key] for key in (
-                        'email', 'phone', 'shipping_name', 'shipping_address_line_1',
-                        'shipping_address_line_2', 'shipping_city', 'shipping_state',
-                        'shipping_postal_code', 'billing_same_as_shipping', 'billing_name',
-                        'billing_address_line_1', 'billing_address_line_2', 'billing_city',
-                        'billing_state', 'billing_postal_code', 'notes',
-                    )},
-                )
-                for item in items:
-                    unit_price = item.product_variant.current_price if item.product_variant else item.product.current_price
-                    OrderItem.objects.create(order=order, product=item.product, product_variant=item.product_variant, product_name=item.product.name, sku=item.product_variant.sku if item.product_variant else item.product.sku, variant_name=item.product_variant.name if item.product_variant else '', unit_price=unit_price, quantity=item.quantity)
-                if form.cleaned_data['save_address'] and request.user.is_authenticated:
-                    CustomerAddress.objects.update_or_create(user=request.user, is_default_shipping=True, defaults={'label': 'Home', 'full_name': form.cleaned_data['shipping_name'], 'phone': form.cleaned_data['phone'], 'address_line_1': form.cleaned_data['shipping_address_line_1'], 'address_line_2': form.cleaned_data['shipping_address_line_2'], 'city': form.cleaned_data['shipping_city'], 'state': form.cleaned_data['shipping_state'], 'postal_code': form.cleaned_data['shipping_postal_code']})
-                cart.items.all().delete()
-            return render(request, 'order_success.html', {'order': order})
+            try:
+                order = place_order(cart, request.user, request.POST.get('checkout_token'), form.cleaned_data)
+            except CheckoutError as error:
+                form.add_error(None, str(error))
+            except OperationalError:
+                form.add_error(None, 'Checkout is busy. Please retry in a moment; do not change your cart.')
+                return render(request, 'checkout_new.html', {'form': form, 'cart_items': items,
+                    'checkout_token': request.POST.get('checkout_token', ''), **cart_totals(items)}, status=503)
+            else:
+                return redirect('shop:order_confirmation', order_id=order.pk)
     else:
         form = CheckoutForm(initial=initial)
-    return render(request, 'checkout_new.html', {'form': form, 'cart_items': items, **totals})
+    items = list(cart_items(cart))
+    return render(request, 'checkout_new.html', {'form': form, 'cart_items': items,
+        'checkout_token': review_token(cart, items), **cart_totals(items)})
+
+
+def order_confirmation(request, order_id):
+    if request.user.is_authenticated:
+        orders = Order.objects.filter(user=request.user)
+    else:
+        cart = get_cart(request, create=False)
+        orders = Order.objects.filter(user__isnull=True, checkout_cart=cart) if cart else Order.objects.none()
+    order = get_object_or_404(orders, pk=order_id)
+    response = render(request, 'order_success.html', {'order': order})
+    response['Cache-Control'] = 'private, no-store'
+    return response
 
 def search(request):
     """Product search"""
