@@ -63,6 +63,10 @@ No accounts were created in the development database and no existing user was pr
 
 ## Customer account safeguards
 
+- Customer login is email + SuryaVets password; Gmail and other email providers are supported. This is not Google OAuth: customers use their SuryaVets password, not their Google account password.
+- Signup asks only for email, password and confirmation. Existing usernames/accounts are untouched. New accounts receive an opaque internal username required by Django's existing User model; a normalized-email hash makes simultaneous same-email registrations hit its unique database constraint rather than create duplicate accounts. This internal identifier is never requested from customers.
+- Email matching is case-insensitive. Ambiguous duplicate-email accounts fail closed with a generic login error; staff must reconcile duplicate identities rather than choosing an arbitrary account. Existing data was checked using counts only: no blank or duplicate email groups were found.
+- Staff CRM and Django Admin retain their separate username-based staff login. No Google OAuth credentials or email-verification service were configured. Administrator-driven email changes must review email uniqueness and internal identifiers; there is no self-service email-change workflow yet.
 - Django password validation and authentication; explicit field errors and Show/Hide controls.
 - Safe same-host return URLs; login/signup/logout self-redirects rejected.
 - Anonymous basket lines merge into the account basket on login/signup; stock is checked again at checkout. Guest order ownership is not reassigned by matching email.
@@ -71,7 +75,7 @@ No accounts were created in the development database and no existing user was pr
 
 ## Verification
 
-Final local result: **79 tests passed**, including both optional browser suites. `manage.py check` passes and `makemigrations --check --dry-run` reports no changes. Login, signup and CRM login each returned HTTP 200 on the existing port 8007 preview. An active existing administrator was confirmed without reading or changing credentials.
+Final local result after the email-login update: **83 tests passed**, including both optional browser suites and a Gmail-address signup followed by case-insensitive email login. `manage.py check` passes and `makemigrations --check --dry-run` reports no changes. Login, signup and CRM login each returned HTTP 200 on the existing port 8007 preview. An active existing administrator was confirmed without reading or changing credentials.
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py test

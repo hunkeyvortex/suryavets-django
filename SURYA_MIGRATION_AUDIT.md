@@ -294,6 +294,8 @@ Current preview uses port 8007 with reload enabled; older ports may be stale. Do
 
 ## J. Staff CRM and original account UI — September 7, 2026
 
+- Follow-up: customer login/signup now use email (including Gmail) instead of a customer-facing username. Existing accounts remain unchanged; new users get internal identifiers. Staff login remains separate. Google OAuth is not implemented.
+- Email follow-up verified: all 83 tests pass with browser tests enabled, including email-only signup, case-insensitive login, ambiguous/inactive account rejection and duplicate-signup protection. No database migration was needed.
 - User approved an internal SuryaVets CRM and explicitly requested a new themed customer login/signup design instead of copying Shopify's account UI.
 - Added `/crm/` inside the existing Django application: overview, orders, order contacts, inventory and reports, with Viewer/Operations/Manager permissions.
 - Transactional stock ledger, staff notes, safe pre-shipment cancellation/restocking and stale/duplicate stock adjustment protections. Historical deductions without a complete ledger are not guessed. Payment records remain read-only; no refund/payment gateway operation is implemented here.

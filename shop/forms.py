@@ -1,28 +1,62 @@
 from django import forms
-from django.contrib.auth import get_user_model
+from hashlib import sha256
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.forms import UserCreationForm
 
 from .models import CustomerAddress
 
 
+class EmailLoginForm(forms.Form):
+    email = forms.EmailField(label='Email address', max_length=254,
+        widget=forms.EmailInput(attrs={'autocomplete': 'email', 'placeholder': 'you@gmail.com', 'autocapitalize': 'none'}))
+    password = forms.CharField(strip=False, widget=forms.PasswordInput(
+        attrs={'autocomplete': 'current-password', 'placeholder': 'Your password'}))
+
+    def __init__(self, request=None, *args, **kwargs):
+        self.request = request
+        self.user_cache = None
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned = super().clean()
+        email, password = cleaned.get('email'), cleaned.get('password')
+        if email and password:
+            users = list(get_user_model().objects.filter(email__iexact=email)[:2])
+            # Never pick an arbitrary account if historical emails are duplicated.
+            if len(users) == 1:
+                self.user_cache = authenticate(self.request, username=users[0].get_username(), password=password)
+            else:
+                # Match the password-hashing work for nonexistent/ambiguous accounts.
+                get_user_model()().set_password(password)
+            if self.user_cache is None:
+                raise forms.ValidationError('The email address or password is incorrect.', code='invalid_login')
+        return cleaned
+
+    def get_user(self):
+        return self.user_cache
+
+
 class RegistrationForm(UserCreationForm):
-    email = forms.EmailField()
+    email = forms.EmailField(label='Email address', max_length=254)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({'autocomplete': 'username', 'placeholder': 'Choose a username'})
-        self.fields['email'].widget.attrs.update({'autocomplete': 'email', 'placeholder': 'you@example.com'})
+        self.fields['email'].widget.attrs.update({'autocomplete': 'email', 'placeholder': 'you@gmail.com', 'autocapitalize': 'none'})
         self.fields['password1'].widget.attrs.update({'autocomplete': 'new-password', 'placeholder': 'Create a strong password'})
         self.fields['password2'].widget.attrs.update({'autocomplete': 'new-password', 'placeholder': 'Enter your password again'})
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ('email', 'password1', 'password2')
 
     def clean_email(self):
         email = self.cleaned_data['email'].lower()
         if get_user_model().objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('An account already uses this email address.')
+        # Django's existing User model still requires a unique username internally.
+        # A deterministic opaque ID also makes simultaneous same-email signups
+        # collide on the database's existing unique constraint, not create twins.
+        self.instance.username = 'customer_' + sha256(email.encode('utf-8')).hexdigest()
         return email
 
 

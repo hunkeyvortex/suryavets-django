@@ -26,14 +26,21 @@ const output = process.env.SURYA_BROWSER_ARTIFACTS;
       }
     }
     await page.goto(base + '/register/');
-    await page.getByLabel('Username', {exact: true}).fill('browser-parent');
-    await page.getByLabel('Email', {exact: true}).fill('browser-parent@example.com');
+    assert.equal(await page.locator('input[name="username"]').count(), 0);
+    await page.locator('.auth-form').getByLabel('Email address', {exact: true}).fill('browser-parent@gmail.com');
     await page.getByLabel('Password', {exact: true}).fill('Care-browser-fixture-482!');
     await page.getByLabel('Password confirmation', {exact: true}).fill('Care-browser-fixture-482!');
     await page.getByRole('button', {name: 'Show password', exact: true}).click();
     assert.equal(await page.locator('#id_password1').getAttribute('type'), 'text');
     await page.getByRole('button', {name: 'Hide password', exact: true}).click();
     await page.getByRole('button', {name: 'Create my account'}).click();
+    await page.waitForURL('**/account/');
+    await page.getByRole('button', {name: 'Log out'}).click();
+    await page.goto(base + '/login/');
+    assert.equal(await page.locator('input[name="username"]').count(), 0);
+    await page.locator('.auth-form').getByLabel('Email address', {exact: true}).fill('BROWSER-PARENT@gmail.com');
+    await page.getByLabel('Password', {exact: true}).fill('Care-browser-fixture-482!');
+    await page.getByRole('button', {name: 'Sign in', exact: true}).click();
     await page.waitForURL('**/account/');
     await page.getByRole('button', {name: 'Log out'}).click();
     await page.goto(base + '/crm/login/');

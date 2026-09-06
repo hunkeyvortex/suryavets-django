@@ -5,7 +5,6 @@ from django.db.models import Q, Count, Sum, F
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.auth.forms import AuthenticationForm
 from .services.accounts import CartMergeError, merge_guest_cart
 from django.db import transaction
 from django.db import IntegrityError, OperationalError
@@ -20,7 +19,7 @@ from .models import (
     ProductImage, Banner, Cart, CartItem
 )
 from .services.cart import cart_items, cart_totals, get_cart
-from .forms import AddressForm, CheckoutForm, RegistrationForm
+from .forms import AddressForm, CheckoutForm, EmailLoginForm, RegistrationForm
 from .models import CustomerAddress, Order, OrderItem
 
 def index(request):
@@ -392,9 +391,7 @@ def login_view(request):
     target = account_next(request)
     if request.user.is_authenticated:
         return redirect(target)
-    form = AuthenticationForm(request, data=request.POST if request.method == 'POST' else None)
-    form.fields['username'].widget.attrs.update({'autocomplete': 'username', 'placeholder': 'Your username'})
-    form.fields['password'].widget.attrs.update({'autocomplete': 'current-password', 'placeholder': 'Your password'})
+    form = EmailLoginForm(request, data=request.POST if request.method == 'POST' else None)
     if request.method == 'POST' and form.is_valid():
         try:
             merge_guest_cart(request, form.get_user())
@@ -417,7 +414,7 @@ def register_view(request):
                 user = form.save()
                 merge_guest_cart(request, user)
         except (CartMergeError, OperationalError, IntegrityError) as exc:
-            form.add_error(None, str(exc) if isinstance(exc, CartMergeError) else 'Your account could not be created. Review the username and try again.')
+            form.add_error(None, str(exc) if isinstance(exc, CartMergeError) else 'Your account could not be created. Try signing in with this email, or contact our team.')
         else:
             login(request, user)
             return redirect(target)

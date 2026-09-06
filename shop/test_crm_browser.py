@@ -34,4 +34,4 @@ class CRMBrowserTest(StaticLiveServerTestCase):
         self.assertEqual(order.status, 'cancelled')
         self.assertEqual(order.payment_status, 'pending')
         self.assertEqual(InventoryMovement.objects.count(), 3)
-        self.assertFalse(get_user_model().objects.get(username='browser-parent').is_staff)
+        self.assertFalse(get_user_model().objects.get(email='browser-parent@gmail.com').is_staff)
