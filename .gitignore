@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Django local state
+db.sqlite3
+media/*
+!media/.gitkeep
+staticfiles/
+tmp/*
+!tmp/.gitkeep
+catalog_exports/*.csv
+
+# Environment and editor files
+.env
+.env.*
+!.env.example
+.idea/
+
+# Test and build artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+build/
+dist/
+*.egg-info/

@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Surya Vets - Pet Pharmacy & Supplies{% endblock %}
+{% block og_title %}Surya Vets - Pet Pharmacy & Supplies{% endblock %}
+{% block og_description %}Your trusted online pet pharmacy and supplies store{% endblock %}
+{% block twitter_title %}Surya Vets - Pet Pharmacy & Supplies{% endblock %}
+{% block twitter_description %}Your trusted online pet pharmacy and supplies store{% endblock %}
+
+{% block content_class %}content-for-layout--home{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ai-slider-container-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    margin-top: 15px;
+  }
+
+  .ai-slider-wrapper-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ai-slider-track-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .ai-slider-slide-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    min-width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-slider-image-wrapper-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ai-slider-image-desktop-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .ai-slider-image-mobile-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    display: none;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .ai-slider-nav-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #ffffff;
+    color: #000000;
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    transition: all 0.3s ease;
+    opacity: 0.8;
+  }
+
+  .ai-slider-nav-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn:hover {
+    opacity: 1;
+    background-color: #f5f5f5;
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .ai-slider-nav-prev-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    left: 20px;
+  }
+
+  .ai-slider-nav-next-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    right: 20px;
+  }
+
+  .ai-slider-nav-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ai-slider-dots-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 3;
+    padding: 8px;
+    background-color: rgba(0,0,0,0);
+    border-radius: 20px;
+  }
+
+  .ai-slider-dot-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+    width: 12px;
+    height: 12px;
+    border-radius: 12px;
+    background-color: #ffffff;
+    border: 0px solid #ffffff;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+  }
+
+  .ai-slider-dot-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn.active {
+    opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    .ai-slider-image-desktop-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+      display: none;
+    }
+    .ai-slider-image-mobile-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {
+      display: block;
+    }
+  }
+
+  /* Collection Carousel Styles */
+  .ai-collection-carousel-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    padding: 40px 0;
+  }
+
+  .ai-collection-carousel-container-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    max-width: var(--page-content-width, 120rem);
+    margin: 0 auto;
+    padding: 0 var(--page-margin, 40px);
+  }
+
+  .ai-collection-carousel-header-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .ai-collection-carousel-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    font-size: 32px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: #000;
+  }
+
+  .ai-collection-carousel-subtitle-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+  }
+
+  .ai-collection-carousel-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .ai-collection-carousel-track-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 10px 0;
+  }
+
+  .ai-collection-carousel-card-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    text-decoration: none;
+    color: inherit;
+    min-width: 200px;
+  }
+
+  .ai-collection-carousel-image-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 15px;
+  }
+
+  .ai-collection-carousel-image-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ai-collection-carousel-image-placeholder-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #007bff;
+  }
+
+  .ai-collection-carousel-card-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: #000;
+  }
+
+  .ai-collection-carousel-nav-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ddd;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: all 0.3s ease;
+  }
+
+  .ai-collection-carousel-nav-adhowk0zov1pownzgzaigenblocka587ae0bk9ght:hover {
+    background-color: #f5f5f5;
+  }
+
+  .ai-collection-carousel-nav-prev-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    left: -20px;
+  }
+
+  .ai-collection-carousel-nav-next-adhowk0zov1pownzgzaigenblocka587ae0bk9ght {
+    right: -20px;
+  }
+
+  /* Product Carousel Styles */
+  .ai-products-carousel-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    padding: 40px 0;
+    background: #f8f9fa;
+  }
+
+  .ai-products-carousel-container-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    max-width: var(--page-content-width, 120rem);
+    margin: 0 auto;
+    padding: 0 var(--page-margin, 40px);
+  }
+
+  .ai-products-carousel-header-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .ai-products-carousel-title-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    font-size: 32px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: #000;
+  }
+
+  .ai-products-carousel-subtitle-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+  }
+
+  .ai-products-carousel-wrapper-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    position: relative;
+  }
+
+  .ai-products-carousel-track-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 30px;
+  }
+
+  .ai-product-card-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s;
+  }
+
+  .ai-product-card-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+
+  .ai-product-link-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .ai-product-image-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+  }
+
+  .ai-product-placeholder-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    width: 100%;
+    height: 250px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #007bff;
+  }
+
+  .ai-discount-badge-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #dc3545;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .ai-product-type-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #007bff;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .ai-product-card-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid h3 {
+    padding: 15px;
+    margin: 0;
+    font-size: 14px;
+    min-height: 40px;
+    color: #000;
+  }
+
+  .ai-product-price-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    padding: 0 15px 15px;
+  }
+
+  .ai-current-price-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+  }
+
+  .ai-original-price-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    text-decoration: line-through;
+    color: #999;
+    margin-left: 10px;
+    font-size: 14px;
+  }
+
+  .ai-add-to-cart-form-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    padding: 15px;
+    border-top: 1px solid #eee;
+  }
+
+  .ai-btn-add-cart-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s;
+  }
+
+  .ai-btn-add-cart-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid:hover {
+    background: #0056b3;
+  }
+
+  .no-products {
+    text-align: center;
+    color: #666;
+    padding: 40px;
+    grid-column: 1 / -1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div id="shopify-section-template--25548245336382__17631232732f912e2a" class="shopify-section section-wrapper">
+        <div class="section-background color-scheme-1"></div>
+        <div class="section section--page-width color-scheme-1" data-testid="ui-test-section">
+            <div class="custom-section-background"></div>
+            <div class="border-style custom-section-content" style="--border-width: 1px; --border-style: none; --border-color: rgb(var(--color-border-rgb) / 1.0); --border-radius: 0px;">
+                <div class="spacing-style layout-panel-flex layout-panel-flex--column section-content-wrapper mobile-column" style="--flex-direction: column; --flex-wrap: nowrap; --flex-wrap-mobile: wrap; --gap: 12px; --horizontal-alignment: flex-start; --vertical-alignment: center; --vertical-alignment-mobile: center; --padding-block-start: 0px;--padding-block-end: 0px;" data-testid="section-content">
+                    
+                    <!-- Banner Slider -->
+                    <div class="ai-slider-container-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                        <div class="ai-slider-wrapper-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                            <div class="ai-slider-track-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn" id="sliderTrack">
+                                {% for banner in banners %}
+                                <div class="ai-slider-slide-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {% if forloop.first %}active{% endif %}">
+                                    <div class="ai-slider-image-wrapper-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                        <img src="{{ banner.image.url }}" alt="{{ banner.title }}" loading="lazy" width="2000" height="664" class="ai-slider-image-desktop-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                        <img src="{{ banner.image.url }}" alt="{{ banner.title }}" loading="lazy" width="2000" height="664" class="ai-slider-image-mobile-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="ai-slider-slide-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn active">
+                                    <div class="ai-slider-image-wrapper-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                        <img src="{% static 'images/Banner-1_jpg.jpg' %}" alt="Surya Vets" loading="lazy" width="2000" height="664" class="ai-slider-image-desktop-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                        <img src="{% static 'images/Banner-1_jpg.jpg' %}" alt="Surya Vets" loading="lazy" width="2000" height="664" class="ai-slider-image-mobile-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                    </div>
+                                </div>
+                                <div class="ai-slider-slide-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                    <div class="ai-slider-image-wrapper-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                        <img src="{% static 'images/Banner-2_jpg.jpg' %}" alt="Surya Vets" loading="lazy" width="2000" height="664" class="ai-slider-image-desktop-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                        <img src="{% static 'images/Banner-2_jpg.jpg' %}" alt="Surya Vets" loading="lazy" width="2000" height="664" class="ai-slider-image-mobile-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                    </div>
+                                </div>
+                                <div class="ai-slider-slide-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                    <div class="ai-slider-image-wrapper-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                        <img src="{% static 'images/Banner-3_jpg.jpg' %}" alt="Surya Vets" loading="lazy" width="2000" height="664" class="ai-slider-image-desktop-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                        <img src="{% static 'images/Banner-3_jpg.jpg' %}" alt="Surya Vets" loading="lazy" width="2000" height="664" class="ai-slider-image-mobile-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn">
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <button class="ai-slider-nav-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn ai-slider-nav-prev-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn" aria-label="Previous slide" onclick="moveSlide(-1)">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            
+                            <button class="ai-slider-nav-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn ai-slider-nav-next-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn" aria-label="Next slide" onclick="moveSlide(1)">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            
+                            <div class="ai-slider-dots-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn" id="sliderDots">
+                                {% for banner in banners %}
+                                <div class="ai-slider-dot-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn {% if forloop.first %}active{% endif %}" onclick="goToSlide({{ forloop.counter0 }})"></div>
+                                {% empty %}
+                                <div class="ai-slider-dot-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn active" onclick="goToSlide(0)"></div>
+                                <div class="ai-slider-dot-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn" onclick="goToSlide(1)"></div>
+                                <div class="ai-slider-dot-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn" onclick="goToSlide(2)"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop By Pets Section -->
+    <collection-carousel-adhowk0zov1pownzgzaigenblocka587ae0bk9ght class="ai-collection-carousel-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+        <div class="ai-collection-carousel-container-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+            <div class="ai-collection-carousel-header-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                <h2 class="ai-collection-carousel-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">Shop By Pets</h2>
+                <p class="ai-collection-carousel-subtitle-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">All pet categories, one click—find what your pet loves!</p>
+            </div>
+
+            <div class="ai-collection-carousel-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                <button class="ai-collection-carousel-nav-adhowk0zov1pownzgzaigenblocka587ae0bk9ght ai-collection-carousel-nav-prev-adhowk0zov1pownzgzaigenblocka587ae0bk9ght" aria-label="Previous collections">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <div class="ai-collection-carousel-track-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                    <a href="{% url 'shop:category_detail' 'cat' %}" class="ai-collection-carousel-card-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                        <div class="ai-collection-carousel-image-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                            <img src="{% static 'images/Collection-Cat.png' %}" alt="Cat" class="ai-collection-carousel-image-adhowk0zov1pownzgzaigenblocka587ae0bk9ght" loading="lazy" width="400" height="400">
+                        </div>
+                        <h3 class="ai-collection-carousel-card-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">Cat</h3>
+                    </a>
+                    <a href="{% url 'shop:category_detail' 'dog' %}" class="ai-collection-carousel-card-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                        <div class="ai-collection-carousel-image-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                            <img src="{% static 'images/Collection-Dog.png' %}" alt="Dog" class="ai-collection-carousel-image-adhowk0zov1pownzgzaigenblocka587ae0bk9ght" loading="lazy" width="400" height="400">
+                        </div>
+                        <h3 class="ai-collection-carousel-card-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">Dog</h3>
+                    </a>
+                    <a href="{% url 'shop:category_detail' 'farm-animals' %}" class="ai-collection-carousel-card-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                        <div class="ai-collection-carousel-image-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                            <div class="ai-collection-carousel-image-placeholder-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">🐄</div>
+                        </div>
+                        <h3 class="ai-collection-carousel-card-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">Farm Animals</h3>
+                    </a>
+                    <a href="{% url 'shop:category_detail' 'fish-and-reptiles' %}" class="ai-collection-carousel-card-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                        <div class="ai-collection-carousel-image-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                            <div class="ai-collection-carousel-image-placeholder-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">🐟</div>
+                        </div>
+                        <h3 class="ai-collection-carousel-card-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">Fish & Reptiles</h3>
+                    </a>
+                    <a href="{% url 'shop:category_detail' 'vaccination' %}" class="ai-collection-carousel-card-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                        <div class="ai-collection-carousel-image-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                            <div class="ai-collection-carousel-image-placeholder-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">💉</div>
+                        </div>
+                        <h3 class="ai-collection-carousel-card-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">Vaccination</h3>
+                    </a>
+                    <a href="{% url 'shop:contact' %}" class="ai-collection-carousel-card-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                        <div class="ai-collection-carousel-image-wrapper-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">
+                            <div class="ai-collection-carousel-image-placeholder-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">✂️</div>
+                        </div>
+                        <h3 class="ai-collection-carousel-card-title-adhowk0zov1pownzgzaigenblocka587ae0bk9ght">Pet Grooming</h3>
+                    </a>
+                </div>
+
+                <button class="ai-collection-carousel-nav-adhowk0zov1pownzgzaigenblocka587ae0bk9ght ai-collection-carousel-nav-next-adhowk0zov1pownzgzaigenblocka587ae0bk9ght" aria-label="Next collections">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </collection-carousel-adhowk0zov1pownzgzaigenblocka587ae0bk9ght>
+
+    <!-- Top Selling Products -->
+    <product-carousel-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid class="ai-products-carousel-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+        <div class="ai-products-carousel-container-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+            <div class="ai-products-carousel-header-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                <div class="ai-products-carousel-titles-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                    <h2 class="ai-products-carousel-title-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">Top Selling</h2>
+                    <p class="ai-products-carousel-subtitle-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">Products Frequently Bought</p>
+                </div>
+            </div>
+
+            <div class="ai-products-carousel-wrapper-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                <div class="ai-products-carousel-track-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                    {% for product in featured_products %}
+                    <div class="ai-product-card-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                        <a href="{% url 'shop:product_detail' product.slug %}" class="ai-product-link-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                            <div style="position: relative;">
+                                {% if product.images.first %}
+                                <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="ai-product-image-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                                {% else %}
+                                <div class="ai-product-placeholder-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">{{ product.name|first }}</div>
+                                {% endif %}
+                                
+                                {% if product.discount_percentage > 0 %}
+                                <span class="ai-discount-badge-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">{{ product.discount_percentage }}% OFF</span>
+                                {% endif %}
+                                
+                                {% if product.product_type %}
+                                <span class="ai-product-type-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">{{ product.product_type.name }}</span>
+                                {% endif %}
+                            </div>
+                            
+                            <h3>{{ product.name }}</h3>
+                            
+                            <div class="ai-product-price-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                                {% if product.discount_percentage > 0 %}
+                                <span class="ai-current-price-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">₹{{ product.current_price }}</span>
+                                <span class="ai-original-price-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">₹{{ product.original_price }}</span>
+                                {% else %}
+                                <span class="ai-current-price-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">₹{{ product.current_price }}</span>
+                                {% endif %}
+                            </div>
+                        </a>
+                        
+                        <form action="{% url 'shop:add_to_cart' %}" method="post" class="ai-add-to-cart-form-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            {% if product.variants.first %}
+                            <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}">
+                            {% endif %}
+                            <button type="submit" class="ai-btn-add-cart-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid">Add to Cart</button>
+                        </form>
+                    </div>
+                    {% empty %}
+                    <p class="no-products">No products available at the moment.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    <!-- Email Signup -->
+    <div class="email-signup-section" style="padding: 60px 20px; background: #f8f9fa;">
+        <div class="section-container">
+            <h2 style="text-align: center; margin-bottom: 10px;">Join our email list</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">Get exclusive deals and early access to new products.</p>
+            
+            <form action="{% url 'shop:newsletter_signup' %}" method="post" class="newsletter-form" style="max-width: 500px; margin: 0 auto;">
+                {% csrf_token %}
+                <div class="form-group" style="display: flex; gap: 10px;">
+                    <input type="email" name="email" placeholder="Email" required style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Subscribe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.ai-slider-slide-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn');
+    const dots = document.querySelectorAll('.ai-slider-dot-an1pya1drbnrerex6taigenblockdf8c8c8mcx7dn');
+    const track = document.getElementById('sliderTrack');
+    const totalSlides = slides.length;
+
+    function updateSlider() {
+        if (track) {
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
+        
+        slides.forEach((slide, index) => {
+            slide.classList.toggle('active', index === currentSlide);
+        });
+        
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentSlide);
+        });
+    }
+
+    function moveSlide(direction) {
+        currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+        updateSlider();
+    }
+
+    function goToSlide(index) {
+        currentSlide = index;
+        updateSlider();
+    }
+
+    // Auto-advance slides every 5 seconds
+    if (totalSlides > 1) {
+        setInterval(() => moveSlide(1), 5000);
+    }
+
+    // Add to cart form handling
+    document.querySelectorAll('.ai-add-to-cart-form-aejhmvwrdwtzyrergdaigenblock89a5352mkfmid').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('cart-count-display').textContent = data.cart_count;
+                    alert('Product added to cart!');
+                } else {
+                    alert('Error adding product to cart');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding product to cart');
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,413 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}Surya Vets - Your trusted online pet pharmacy and supplies store{% endblock %}">
+    <title>{% block title %}Surya Vets - Pet Pharmacy & Supplies{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/shopify_v2.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-top">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" aria-label="Menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                
+                <a href="{% url 'shop:index' %}" class="logo">
+                    <img src="{% static 'images/Suryavets-Logo-Pets.jpg' %}" alt="Surya Vets">
+                </a>
+            </div>
+            
+            <div class="header-center">
+                <form action="{% url 'shop:search' %}" method="get" class="search-form">
+                    <input type="search" name="q" placeholder="Search products..." aria-label="Search">
+                    <button type="submit" aria-label="Search">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+            
+            <div class="header-right">
+                <a href="{% url 'shop:cart' %}" class="header-icon" aria-label="Cart">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                    <span class="cart-count">{{ cart_count }}</span>
+                </a>
+                
+                <a href="{% url 'shop:login' %}" class="header-icon" aria-label="Account">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span>LogIn/SignUp</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="main-nav">
+            <ul class="nav-list">
+                <li class="nav-item has-dropdown">
+                    <a href="{% url 'shop:category_detail' 'cat' %}">Cat</a>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-section">
+                            <h4>Medicine For Cats</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'allergy-relief-for-cats' %}">Allergy Relief For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'anti-biotic-for-cats' %}">Anti Biotic For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'anxiety-care-for-cats' %}">Anxiety Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'cancer-care-for-cats' %}">Cancer Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'cardiac-care-for-cats' %}">Cardiac Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'dewormers-for-cats' %}">Dewormers For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'diabetes-for-cats' %}">Diabetes For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'eye-ear-care-for-cats' %}">Eye & Ear Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'fleas-ticks-for-cats' %}">Fleas & Ticks For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'gastro-intestinal-digestive-care-for-cats' %}">Gastro Intestinal & Digestive Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'hip-joint-care-for-cats' %}">Hip & Joint Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'injectable-for-cats' %}">Injectable For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'liver-care-for-cats' %}">Liver Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'neural-care-for-cats' %}">Neural Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'post-natal-care-for-cats' %}">Post Natal Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'pre-natal-care-for-cats' %}">Pre Natal Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'respiratory-care-for-cats' %}">Respiratory Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'skin-coat-care-for-cats' %}">Skin & Coat Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'thyroid-for-cats' %}">Thyroid For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'urinary-tract-renal-care-for-cats' %}">Urinary Tract & Renal Care For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'vaccine-for-cats' %}">Vaccine For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'wound-pain-relief-for-cats' %}">Wound & Pain Relief For Cats</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Cat Supplements</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'calcium-supplements-for-cats' %}">Calcium supplements For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'liver-supplements-for-cats' %}">Liver supplements For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'renal-urinary-supplements-for-cats' %}">Renal & Urinary supplements For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'hip-joint-supplements-for-cats' %}">Hip & Joint supplements For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'immunity-supplements-for-cats' %}">Immunity supplements For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'skin-coat-supplements-for-cats' %}">Skin & Coat supplements For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'intestinal-digestive-supplements-for-cats' %}">Intestinal & Digestive supplements For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'multi-vitamin-for-cats' %}">Multi Vitamin For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'dental-care-mouth-hygine-for-cats' %}">Dental Care/Mouth Hygine For Cats</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Cat Food</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'dry-food-for-cats' %}">Dry Food For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'infant-food-for-cats' %}">Infant Food For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'premium-food-for-cats' %}">Premium Food For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'veterinary-diets-for-cats' %}">Veterinary Diets For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'wet-food-for-cats' %}">Wet Food For Cats</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Treats For Cats</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'biscuits-crunchy-treats-for-cats' %}">Biscuits & Crunchy Treats For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'soft-treat-for-cats' %}">Soft Treat For Cats</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Cat Supplies</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'beds-for-cats' %}">Beds For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'cleaning-product-for-cats' %}">Cleaning Product For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'crates-carriers-penns-for-cats' %}">Crates/Carriers/Penns For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'deos-fragrance-for-cats' %}">Deos/Fragrance For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'grooming-for-cats' %}">Grooming For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'leash-collars-harnesses-for-cats' %}">Leash/Collars & Harnesses For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'medical-accessory-for-cats' %}">Medical Accessory For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'medicated-shampoo-for-cats' %}">Medicated Shampoo For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'potty-articals-for-cats' %}">Potty Articals For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'surgical-accessory-for-cats' %}">Surgical Accessory For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'toys-for-cats' %}">Toys For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'cat' 'bowls-feeders-for-cats' %}">Bowls & Feeders For Cats</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item has-dropdown">
+                    <a href="{% url 'shop:category_detail' 'dog' %}">Dog</a>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-section">
+                            <h4>Medicine For Dogs</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'allergy-relief-for-dogs' %}">Allergy Relief For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'anti-biotic-for-dogs' %}">Anti Biotic For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'anxiety-care-for-dogs' %}">Anxiety Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'cancer-care-for-dogs' %}">Cancer Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'cardiac-care-for-dogs' %}">Cardiac Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'dewormers-for-dogs' %}">Dewormers For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'diabetes-for-dogs' %}">Diabetes For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'eye-ear-care-for-dogs' %}">Eye & Ear Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'fleas-ticks-for-dogs' %}">Fleas & Ticks For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'gastro-intestinal-digestive-care-for-dogs' %}">Gastro Intestinal & Digestive Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'hip-joint-care-for-dogs' %}">Hip & Joint Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'injectable-for-dogs' %}">Injectable For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'liver-care-for-dogs' %}">Liver Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'neural-care-for-dogs' %}">Neural Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'post-natal-care-for-dogs' %}">Post Natal Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'pre-natal-care-for-dogs' %}">Pre Natal Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'respiratory-care-for-dogs' %}">Respiratory Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'skin-coat-care-for-dogs' %}">Skin & Coat Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'thyroid-for-dogs' %}">Thyroid For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'urinary-tract-renal-care-for-dogs' %}">Urinary Tract & Renal Care For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'vaccine-for-dogs' %}">Vaccine For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'wound-pain-relief-for-dogs' %}">Wound & Pain Relief For Dogs</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Dog Supplements</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'anxiety-supplements-for-dogs' %}">Anxiety supplements For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'calcium-supplements-for-dogs' %}">Calcium Supplements For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'dental-care-mouth-hygine-for-dogs' %}">Dental Care/Mouth Hygine For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'immunity-supplements-for-dogs' %}">Immunity supplements For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'intestinal-digestive-supplements-for-dogs' %}">Intestinal & Digestive supplements For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'liver-supplements-for-dogs' %}">Liver supplements For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'multi-vitamin-for-dogs' %}">Multi Vitamin For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'renal-urinary-supplements-for-dogs' %}">Renal & Urinary supplements For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'skin-coat-supplements-for-dogs' %}">Skin & Coat supplements For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'hip-joint-supplements-for-dogs' %}">Hip & Joint supplements For Dogs</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Dog Food</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'dry-food-for-dogs' %}">Dry Food For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'infant-food-for-dogs' %}">Infant Food For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'premium-food-for-dogs' %}">Premium Food For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'veterinary-diets-for-dogs' %}">Veterinary Diets For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'wet-food-for-dogs' %}">Wet Food For Dogs</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Treats For Dogs</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'biscuits-crunchy-treats-for-dogs' %}">Biscuits & Crunchy Treats For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'bones-natural-chew-for-dogs' %}">Bones & Natural Chew For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'dental-treat-for-dogs' %}">Dental Treat For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'soft-treat-for-dogs' %}">Soft Treat For Dogs</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Dog Supplies</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'beds-for-dogs' %}">Beds For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'cleaning-product-for-dogs' %}">Cleaning Product For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'clothing-for-dogs' %}">Clothing For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'crates-carriers-penns-for-dogs' %}">Crates/Carriers/Penns For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'deos-fragrance-for-dogs' %}">Deos/Fragrance For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'gifting-for-dogs' %}">Gifting For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'grooming-for-dogs' %}">Grooming For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'leash-collars-harnesses-for-dogs' %}">Leash/Collars & Harnesses For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'medical-accessory-for-dogs' %}">Medical Accessory For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'medicated-shampoo-for-dogs' %}">Medicated Shampoo For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'potty-articals-for-dogs' %}">Potty Articals For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'surgical-accessory-for-dogs' %}">Surgical Accessory For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'toys-for-dogs' %}">Toys For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'training-behaviour-for-dogs' %}">Training & Behaviour For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'dog' 'bowls-feeders-for-dogs' %}">Bowls & Feeders For Dogs</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item has-dropdown">
+                    <a href="{% url 'shop:category_detail' 'farm-animals' %}">Farm Animals</a>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-section">
+                            <h4>Medicine For Farm Animals</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'allergy-relief-for-farm-animals' %}">Allergy Relief For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'antibiotic-for-farm-animals' %}">Antibiotic For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'cancer-care-for-farm-animals' %}">Cancer Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'cardiac-care-for-farm-animals' %}">Cardiac Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'dewormers-for-farm-animals' %}">Dewormers For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'eye-ear-care-for-farm-animals' %}">Eye & Ear Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'fleas-ticks-for-farm-animals' %}">Fleas & Ticks For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'gastro-intestinal-digestive-care-for-farm-animals' %}">Gastro Intestinal & Digestive Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'hip-joint-care-for-farm-animals' %}">Hip & Joint Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'injectable-for-farm-animals' %}">Injectable For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'liver-care-for-farm-animals' %}">Liver Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'neural-care-for-farm-animals' %}">Neural Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'post-natal-care-for-farm-animals' %}">Post Natal Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'pre-natal-care-for-farm-animals' %}">Pre Natal Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'respiratory-care-for-farm-animals' %}">Respiratory Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'skin-coat-care-for-farm-animals' %}">Skin & Coat Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'thyroid-for-farm-animals' %}">Thyroid For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'urinary-tract-renal-care-for-farm-animals' %}">Urinary Tract & Renal Care For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'vaccine-for-farm-animals' %}">Vaccine For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'wound-pain-relief-for-farm-animals' %}">Wound & Pain Relief For Farm Animals</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Supplements For Farm Animals</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'calcium-supplements-for-farm-animals' %}">Calcium supplements For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'dental-care-mouth-hygine-for-farm-animals' %}">Dental Care/Mouth Hygine For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'hip-joint-supplements-for-farm-animals' %}">Hip & Joint supplements For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'immunity-supplements-for-farm-animals' %}">Immunity supplements For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'intestinal-digestive-supplements-for-farm-animals' %}">Intestinal & Digestive supplements For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'liver-supplements-for-farm-animals' %}">Liver supplements For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'multi-vitamin-for-farm-animals' %}">Multi Vitamin For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'skin-coat-supplements-for-farm-animals' %}">Skin & Coat supplements For Farm Animals</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Supplies For Farm Animals</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'cleaning-product-for-farm-animals' %}">Cleaning Product For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'feeders-bowls-for-farm-animals' %}">Feeders & Bowls For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'grooming-for-farm-animals' %}">Grooming For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'leash-collars-harnesses-for-farm-animals' %}">Leash/Collars & Harnesses For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'medical-accessory-for-farm-animals' %}">Medical Accessory For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'medicated-shampoo-for-farm-animals' %}">Medicated Shampoo For Farm Animals</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'surgical-accessory-for-farm-animals' %}">Surgical Accessory For Farm Animals</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item has-dropdown">
+                    <a href="{% url 'shop:category_detail' 'fish-and-reptiles' %}">Fish & Reptiles</a>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-section">
+                            <h4>Supplements For Fish & Reptiles</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-calcium-supplements-for-fish-and-reptiles' %}">Calcium supplements For Fish/Reptiles</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-immunity-supplements-for-fish-and-reptiles' %}">Immunity supplements For Fish/Reptiles</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-multi-vitamin-for-fish-and-reptiles' %}">Multi Vitamin For Fish/Reptiles</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown-section">
+                            <h4>Food For Fish & Reptiles</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-dry-food-for-fish-and-reptiles' %}">Dry Food For Fish/Reptiles</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item has-dropdown">
+                    <a href="{% url 'shop:category_detail' 'vaccination' %}">Vaccination</a>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-section">
+                            <h4>Vaccination Services</h4>
+                            <ul>
+                                <li><a href="{% url 'shop:subcategory_detail' 'vaccination' 'vaccination-services' %}">Vaccination For Dogs</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'vaccination' 'vaccination-services' %}">Vaccination For Cats</a></li>
+                                <li><a href="{% url 'shop:subcategory_detail' 'vaccination' 'vaccination-services' %}">Vaccination For Farm Animals</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'shop:contact' %}">Pet Grooming</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'shop:contact' %}">Contact Us</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="footer-section">
+                    <h3>Surya Vets</h3>
+                    <p>Mumbai, Maharashtra, India</p>
+                    <p>Phone: 9820854449/9619799900</p>
+                    <p>Email: suryavets@gmail.com</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Popular Categories</h3>
+                    <ul>
+                        <li><a href="{% url 'shop:category_detail' 'cat' %}">Cat</a></li>
+                        <li><a href="{% url 'shop:category_detail' 'dog' %}">Dog</a></li>
+                        <li><a href="{% url 'shop:category_detail' 'farm-animals' %}">Farm Animals</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="{% url 'shop:about' %}">About us</a></li>
+                        <li><a href="{% url 'shop:help' %}">Help Center</a></li>
+                        <li><a href="{% url 'shop:contact' %}">Contact</a></li>
+                        <li><a href="{% url 'shop:shipping' %}">Shipping Policy</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Customer Policy</h3>
+                    <ul>
+                        <li><a href="{% url 'shop:privacy' %}">Privacy Policy</a></li>
+                        <li><a href="{% url 'shop:terms' %}">Terms & Conditions</a></li>
+                        <li><a href="{% url 'shop:returns' %}">Return & Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="medical-disclaimer">
+                    <strong>Medical Disclaimer</strong>
+                    <p>Products sold on Surya Vets are veterinary products intended for use in animals. Pet owners should consult a qualified veterinarian before administering medicines or treatments to pets.</p>
+                </div>
+                
+                <div class="copyright">
+                    <p>© {% now "Y" %} SuryaVets. All Rights Reserved</p>
+                    <p>Made in India, for the World 🌏</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{% static 'js/critical.js' %}"></script>
+    <script src="{% static 'js/product-card.js' %}"></script>
+    <script src="{% static 'js/cart-drawer.js' %}"></script>
+    <script src="{% static 'js/predictive-search.js' %}"></script>
+    
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-toggle')?.addEventListener('click', function() {
+            document.querySelector('.main-nav').classList.toggle('active');
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

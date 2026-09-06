@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ category.name }} - Surya Vets{% endblock %}
+{% block og_title %}{{ category.name }} - Surya Vets{% endblock %}
+{% block og_description %}{{ category.description|truncatewords:30 }}{% endblock %}
+{% block twitter_title %}{{ category.name }} - Surya Vets{% endblock %}
+{% block twitter_description %}{{ category.description|truncatewords:30 }}{% endblock %}
+
+{% block content %}
+    <div class="category-page">
+        <!-- Category Header -->
+        <div class="category-header">
+            <div class="category-header-content">
+                <h1>{{ category.name }}</h1>
+                {% if category.description %}
+                <p>{{ category.description }}</p>
+                {% endif %}
+            </div>
+            {% if category.image %}
+            <div class="category-header-image">
+                <img src="{{ category.image.url }}" alt="{{ category.name }}">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Subcategories -->
+        {% if category.subcategories.exists %}
+        <div class="subcategories-section">
+            <h2>Browse by {{ category.name|lower }} categories</h2>
+            <div class="subcategory-grid">
+                {% for subcategory in category.subcategories.all %}
+                <a href="{% url 'shop:subcategory_detail' category.slug subcategory.slug %}" class="subcategory-card">
+                    <h3>{{ subcategory.name }}</h3>
+                    <span class="product-count">{{ subcategory.products.count }} products</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Products Grid -->
+        <div class="products-section">
+            <div class="section-header">
+                <h2>All {{ category.name }} Products</h2>
+                <div class="sort-options">
+                    <label>Sort by:</label>
+                    <select id="sortSelect" onchange="sortProducts()">
+                        <option value="newest">Newest</option>
+                        <option value="price_low">Price: Low to High</option>
+                        <option value="price_high">Price: High to Low</option>
+                        <option value="name">Name A-Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="product-grid" id="productGrid">
+                {% for product in products %}
+                <div class="product-card" data-price="{{ product.current_price }}" data-name="{{ product.name }}" data-date="{{ product.created_at|date:'U' }}">
+                    <a href="{% url 'shop:product_detail' product.slug %}" class="product-link">
+                        {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="product-image">
+                        {% else %}
+                        <div class="product-placeholder">{{ product.name|first }}</div>
+                        {% endif %}
+                        
+                        {% if product.discount_percentage > 0 %}
+                        <span class="discount-badge">{{ product.discount_percentage }}% OFF</span>
+                        {% endif %}
+                        
+                        {% if product.product_type %}
+                        <span class="product-type">{{ product.product_type.name }}</span>
+                        {% endif %}
+                        
+                        <h3>{{ product.name }}</h3>
+                        
+                        <div class="product-price">
+                            {% if product.discount_percentage > 0 %}
+                            <span class="current-price">₹{{ product.current_price }}</span>
+                            <span class="original-price">₹{{ product.original_price }}</span>
+                            {% else %}
+                            <span class="current-price">₹{{ product.current_price }}</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    
+                    <form action="{% url 'shop:add_to_cart' %}" method="post" class="add-to-cart-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        {% if product.variants.first %}
+                        <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}">
+                        {% endif %}
+                        <button type="submit" class="btn btn-add-cart">Add to Cart</button>
+                    </form>
+                </div>
+                {% empty %}
+                <p class="no-products">No products available in this category at the moment.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link">Previous</a>
+                {% endif %}
+                
+                <span class="pagination-info">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="pagination-link">Next</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function sortProducts() {
+        const sortValue = document.getElementById('sortSelect').value;
+        const productGrid = document.getElementById('productGrid');
+        const products = Array.from(productGrid.children);
+        
+        products.sort((a, b) => {
+            switch(sortValue) {
+                case 'price_low':
+                    return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                case 'price_high':
+                    return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                case 'name':
+                    return a.dataset.name.localeCompare(b.dataset.name);
+                case 'newest':
+                default:
+                    return parseFloat(b.dataset.date) - parseFloat(a.dataset.date);
+            }
+        });
+        
+        products.forEach(product => productGrid.appendChild(product));
+    }
+
+    // Add to cart form handling
+    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.cart-count').textContent = data.cart_count;
+                    alert('Product added to cart!');
+                } else {
+                    alert('Error adding product to cart');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding product to cart');
+            });
+        });
+    });
+</script>
+{% endblock %}

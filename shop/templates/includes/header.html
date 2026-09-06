@@ -1,0 +1,27 @@
+{% load static %}
+<header class="store-header">
+  <div class="site-shell header-row">
+    <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="primary-navigation" data-menu-toggle>
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <a class="brand-logo" href="{% url 'shop:index' %}" aria-label="Surya Vets home">
+      <img src="{% static 'images/Suryavets-Logo-Pets.jpg' %}" alt="Surya Vets — Pet's Lifeline">
+    </a>
+    <form class="header-search header-search--desktop" action="{% url 'shop:search' %}" method="get" role="search">
+      <label class="sr-only" for="desktop-search">Search products</label>
+      <input id="desktop-search" type="search" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search products..." autocomplete="off">
+      <button type="submit" aria-label="Search products"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
+    </form>
+    <div class="header-actions">
+      <a class="header-action header-action--cart" href="{% url 'shop:cart' %}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 4h2l2.2 11h10.6l2-8H6.1"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg><span class="header-action__label">Cart</span><span class="cart-badge">{{ cart_count|default:0 }}</span></a>
+      <a class="header-action header-action--account" href="{% url 'shop:login' %}"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg><span class="header-action__label">{% if request.user.is_authenticated %}Account{% else %}LogIn/SignUp{% endif %}</span></a>
+    </div>
+  </div>
+  <div class="site-shell header-search--mobile-wrap">
+    <form class="header-search header-search--mobile" action="{% url 'shop:search' %}" method="get" role="search">
+      <label class="sr-only" for="mobile-search">Search products</label>
+      <input id="mobile-search" type="search" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search products..." autocomplete="off">
+      <button type="submit" aria-label="Search products"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
+    </form>
+  </div>
+</header>

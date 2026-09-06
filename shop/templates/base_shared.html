@@ -1,0 +1,35 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{% block meta_description %}Surya Vets — trusted pet pharmacy, food and supplies.{% endblock %}">
+  <title>{% block title %}Surya Vets | Pet's Lifeline{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <link rel="stylesheet" href="{% static 'css/storefront.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  {% include 'includes/announcement_bar.html' %}
+  {% include 'includes/header.html' %}
+  {% include 'includes/navigation.html' %}
+
+  <main id="main-content" class="store-main">
+    {% if messages %}
+      <div class="site-shell flash-messages" aria-live="polite">
+        {% for message in messages %}<p class="flash-message {{ message.tags }}">{{ message }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include 'includes/footer.html' %}
+  <script src="{% static 'js/storefront.js' %}" defer></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}All Categories - Surya Vets{% endblock %}
+
+{% block content %}
+    <div class="category-list-page">
+        <div class="section-container">
+            <h1>All Categories</h1>
+            
+            <div class="category-grid">
+                {% for category in categories %}
+                <a href="{% url 'shop:category_detail' category.slug %}" class="category-card">
+                    {% if category.image %}
+                    <img src="{{ category.image.url }}" alt="{{ category.name }}" class="category-image">
+                    {% else %}
+                    <div class="category-placeholder">{{ category.name|first }}</div>
+                    {% endif %}
+                    <h3>{{ category.name }}</h3>
+                    {% if category.description %}
+                    <p>{{ category.description|truncatewords:10 }}</p>
+                    {% endif %}
+                </a>
+                {% empty %}
+                <p class="no-categories">No categories available at the moment.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

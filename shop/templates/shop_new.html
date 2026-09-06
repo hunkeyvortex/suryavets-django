@@ -1,0 +1,169 @@
+{% extends 'base_shared.html' %}
+{% load static %}
+
+{% block title %}Shop - {{ category.name|default:"All Products" }}{% endblock %}
+
+{% block content %}
+    <div class="section">
+        <div class="section-container">
+            <!-- Breadcrumb -->
+            <nav style="margin-bottom: 30px; font-size: 14px; color: var(--text-light);">
+                <a href="{% url 'shop:index' %}">Home</a>
+                {% if category %}
+                    <span style="margin: 0 10px;">/</span>
+                    <a href="{% url 'shop:category_detail' category.slug %}">{{ category.name }}</a>
+                {% endif %}
+                {% if subcategory %}
+                    <span style="margin: 0 10px;">/</span>
+                    <span>{{ subcategory.name }}</span>
+                {% endif %}
+            </nav>
+
+            <div style="display: grid; grid-template-columns: 250px 1fr; gap: 40px;">
+                <!-- Sidebar Filters -->
+                <aside class="filters-sidebar">
+                    <div style="background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 25px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 20px; font-size: 18px;">Categories</h3>
+                        <ul style="list-style: none;">
+                            <li style="margin-bottom: 10px;">
+                                <a href="{% url 'shop:category_list' %}" style="display: flex; justify-content: space-between; align-items: center; {% if not category %}color: var(--primary-color); font-weight: 600;{% endif %}">
+                                    All Categories
+                                    {% if not category %}<span style="background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">{{ total_count }}</span>{% endif %}
+                                </a>
+                            </li>
+                            {% for cat in categories %}
+                            <li style="margin-bottom: 10px;">
+                                <a href="{% url 'shop:category_detail' cat.slug %}" style="display: flex; justify-content: space-between; align-items: center; {% if category.id == cat.id %}color: var(--primary-color); font-weight: 600;{% endif %}">
+                                    {{ cat.name }}
+                                    {% if category.id == cat.id %}<span style="background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">{{ cat.product_count }}</span>{% endif %}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    {% if category %}
+                    <div style="background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 25px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 20px; font-size: 18px;">Subcategories</h3>
+                        <ul style="list-style: none;">
+                            <li style="margin-bottom: 10px;">
+                                <a href="{% url 'shop:category_detail' category.slug %}" style="display: flex; justify-content: space-between; align-items: center; {% if not subcategory %}color: var(--primary-color); font-weight: 600;{% endif %}">
+                                    All
+                                    {% if not subcategory %}<span style="background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">{{ category.product_count }}</span>{% endif %}
+                                </a>
+                            </li>
+                            {% for sub in category.subcategories.all %}
+                            <li style="margin-bottom: 10px;">
+                                <a href="{% url 'shop:subcategory_detail' category.slug sub.slug %}" style="display: flex; justify-content: space-between; align-items: center; {% if subcategory.id == sub.id %}color: var(--primary-color); font-weight: 600;{% endif %}">
+                                    {{ sub.name }}
+                                    {% if subcategory.id == sub.id %}<span style="background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">{{ sub.product_count }}</span>{% endif %}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div style="background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 25px;">
+                        <h3 style="margin-bottom: 20px; font-size: 18px;">Price Range</h3>
+                        <form method="get" style="display: flex; flex-direction: column; gap: 15px;">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="number" name="min_price" placeholder="Min" value="{{ request.GET.min_price }}" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                                <span>-</span>
+                                <input type="number" name="max_price" placeholder="Max" value="{{ request.GET.max_price }}" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Apply Filter</button>
+                        </form>
+                    </div>
+                </aside>
+
+                <!-- Product Grid -->
+                <div class="products-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h1 style="font-size: 28px;">
+                            {% if subcategory %}{{ subcategory.name }}{% elif category %}{{ category.name }}{% else %}All Products{% endif %}
+                        </h1>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="color: var(--text-light);">{{ products.count }} products</span>
+                            <select style="padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" onchange="window.location.href='?sort='+this.value">
+                                <option value="">Sort by</option>
+                                <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                                <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                                <option value="name_asc" {% if request.GET.sort == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
+                                <option value="name_desc" {% if request.GET.sort == 'name_desc' %}selected{% endif %}>Name: Z to A</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {% if products %}
+                    <div class="product-grid">
+                        {% for product in products %}
+                        <div class="product-card">
+                            <a href="{% url 'shop:product_detail' product.slug %}">
+                                <div class="product-image">
+                                    {% if product.images.first %}
+                                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                                    {% else %}
+                                        <div style="width: 100%; height: 100%; background: var(--bg-light); display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-size: 48px;">📦</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if product.is_on_sale %}
+                                        <span class="product-badge">Sale</span>
+                                    {% endif %}
+                                    {% if product.stock_quantity <= 0 %}
+                                        <span class="product-badge" style="background: #dc3545;">Out of Stock</span>
+                                    {% endif %}
+                                </div>
+                                <div class="product-info">
+                                    <p class="product-category">{{ product.category.name }}</p>
+                                    <h3 class="product-title">{{ product.name }}</h3>
+                                    <div class="product-price">
+                                        {% if product.is_on_sale %}
+                                            <span class="current-price">₹{{ product.sale_price }}</span>
+                                            <span class="original-price">₹{{ product.price }}</span>
+                                            <span class="discount">{{ product.discount_percent }}% OFF</span>
+                                        {% else %}
+                                            <span class="current-price">₹{{ product.price }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                            <form action="{% url 'shop:add_to_cart' product.id %}" method="post" style="padding: 0 20px 20px;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-add-cart" {% if product.stock_quantity <= 0 %}disabled style="background: #ccc;"{% endif %}>
+                                    {% if product.stock_quantity <= 0 %}Out of Stock{% else %}Add to Cart{% endif %}
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 40px;">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="btn btn-secondary">Previous</a>
+                        {% endif %}
+                        
+                        <span style="padding: 10px 20px; background: var(--bg-light); border-radius: var(--radius);">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="btn btn-secondary">Next</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="empty-state">
+                        <h2>No products found</h2>
+                        <p>Try adjusting your filters or browse our other categories.</p>
+                        <a href="{% url 'shop:category_list' %}" class="btn btn-primary">Browse All Categories</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

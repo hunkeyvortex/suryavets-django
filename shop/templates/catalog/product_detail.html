@@ -1,0 +1,34 @@
+{% extends 'base_shared.html' %}
+{% load static %}
+
+{% block title %}{{ product.meta_title|default:product.name }} | Surya Vets{% endblock %}
+{% block meta_description %}{{ product.meta_description|default:product.short_description|default:product.name }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/catalog.css' %}">{% endblock %}
+
+{% block content %}
+<div class="product-page site-shell">
+  <article class="product-view">
+    <section class="product-gallery" data-product-gallery>
+      {% if product.images.all and product.images.first.display_url %}<div class="product-gallery__main"><img src="{{ product.images.first.display_url }}" alt="{{ product.images.first.alt_text|default:product.name }}" data-product-main-image></div><div class="product-gallery__thumbnails">{% for image in product.images.all %}{% if image.display_url %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" data-product-image="{{ image.display_url }}" data-product-alt="{{ image.alt_text|default:product.name }}"><img src="{{ image.display_url }}" alt=""></button>{% endif %}{% endfor %}</div>{% else %}<div class="product-gallery__main product-gallery__placeholder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20.5c-1.7-1.8-6.5-5.4-6.5-9.3A3.7 3.7 0 0 1 12 9a3.7 3.7 0 0 1 6.5 2.2c0 3.9-4.8 7.5-6.5 9.3Z"/></svg></div>{% endif %}
+    </section>
+    <section class="product-summary">
+      {% if product.product_type %}<p class="product-summary__eyebrow">{{ product.product_type.name }}</p>{% endif %}
+      <h1>{{ product.name }}</h1>
+      {% if product.brand %}<p class="product-summary__brand">BY: {{ product.brand.name }}</p>{% endif %}
+      {% if product.sku %}<p class="product-summary__sku">SKU: {{ product.sku }}</p>{% endif %}
+      <div class="product-summary__price"><div><span>Sale price</span><strong data-product-price>Rs. {{ product.current_price|floatformat:2 }}</strong></div>{% if product.discount_percentage %}<div><span>Regular price</span><del>Rs. {{ product.base_price|floatformat:2 }}</del></div>{% endif %}</div>
+      <form class="product-form" action="{% url 'shop:add_to_cart' product.id %}" method="post">{% csrf_token %}
+        {% if product.variants.all %}<fieldset><legend>PACK:</legend><div class="product-variants">{% for variant in product.variants.all %}<label><input type="radio" name="variant_id" value="{{ variant.id }}" data-price="{{ variant.current_price }}" data-stock="{{ variant.stock_quantity }}" {% if forloop.first %}checked{% endif %} {% if not variant.is_in_stock %}disabled{% endif %}><span>{{ variant.name }}</span></label>{% endfor %}</div></fieldset>{% endif %}
+        <div class="product-quantity"><label for="quantity">Quantity</label><input id="quantity" name="quantity" type="number" min="1" value="1" {% if product.track_inventory and not product.variants.all %}max="{{ product.stock_quantity }}"{% endif %}></div>
+        <button type="submit" {% if not product.is_in_stock %}disabled{% endif %}>{% if product.is_in_stock %}Add to Cart{% else %}Out of Stock{% endif %}</button>
+      </form>
+      <div class="product-benefits" aria-label="Surya Vets benefits"><div><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.4 3 7.7 7 10 4-2.3 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Best Price</span></div><div><svg viewBox="0 0 24 24"><path d="m12 3 2.2 2.2 3.1-.4.4 3.1 2.2 2.2-2.2 2.2.4 3.1-3.1.4L12 20l-2.2-2.2-3.1.4.4-3.1L5 12.9l2.2-2.2-.4-3.1 3.1-.4L12 3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Best Quality</span></div><div><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h3l3 3v3h-6z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/></svg><span>Fast Delivery</span></div></div>
+    </section>
+  </article>
+  <section class="product-description"><h2>About this product</h2>{% if product.description %}{{ product.description|linebreaks }}{% else %}<p>Product information will be added shortly.</p>{% endif %}{% if product.specifications.all %}<h2>Specifications</h2><dl>{% for specification in product.specifications.all %}<dt>{{ specification.name }}</dt><dd>{{ specification.value }}</dd>{% endfor %}</dl>{% endif %}</section>
+  {% if related_products %}<section class="related-products"><header><h2>You may also like</h2></header><div class="catalog-product-grid">{% for product in related_products %}{% include 'includes/product_card.html' with product=product %}{% endfor %}</div></section>{% endif %}
+  <section class="product-reviews" aria-label="Customer reviews"><h2>Customer Reviews</h2><p>No reviews yet</p><button type="button" disabled>Be the first to write a review</button></section>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/catalog.js' %}" defer></script>{% endblock %}

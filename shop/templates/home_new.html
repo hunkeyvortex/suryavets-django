@@ -1,0 +1,36 @@
+{% extends 'base_shared.html' %}
+{% load static %}
+
+{% block title %}Surya Vets | Pet Pharmacy, Food & Supplies{% endblock %}
+{% block meta_description %}Shop veterinary medicines, nutrition and trusted pet supplies at Surya Vets.{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/home.css' %}">{% endblock %}
+
+{% block content %}
+<section class="home-hero" aria-label="Featured offers" data-hero-slider>
+  <div class="home-hero__slides">
+    {% if banners %}
+      {% for banner in banners %}<article class="home-hero__slide {% if forloop.first %}is-active{% endif %}">{% if banner.link %}<a href="{{ banner.link }}">{% endif %}<img src="{{ banner.image.url }}" alt="{{ banner.title|default:'Surya Vets offer' }}">{% if banner.link %}</a>{% endif %}</article>{% endfor %}
+    {% else %}
+      <article class="home-hero__slide is-active"><img src="{% static 'images/Banner-1_jpg.jpg' %}" alt="Trusted pet nutrition at Surya Vets"></article>
+      <article class="home-hero__slide"><img src="{% static 'images/Banner-2_jpg.jpg' %}" alt="Pet care offers at Surya Vets"></article>
+      <article class="home-hero__slide"><img src="{% static 'images/Banner-3_jpg.jpg' %}" alt="Veterinary pet care at Surya Vets"></article>
+    {% endif %}
+  </div>
+  <button class="home-hero__arrow home-hero__arrow--previous" type="button" aria-label="Previous offer" data-hero-previous>‹</button>
+  <button class="home-hero__arrow home-hero__arrow--next" type="button" aria-label="Next offer" data-hero-next>›</button>
+  <div class="home-hero__dots" aria-label="Choose offer" data-hero-dots></div>
+</section>
+
+<section class="trust-strip" aria-label="Why shop with Surya Vets"><div class="site-shell trust-strip__grid">
+  <div><svg viewBox="0 0 24 24"><path d="m12 3 2.2 2.2 3.1-.4.4 3.1 2.2 2.2-2.2 2.2.4 3.1-3.1.4L12 20l-2.2-2.2-3.1.4.4-3.1L5 12.9l2.2-2.2-.4-3.1 3.1-.4L12 3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Genuine Products</span></div>
+  <div><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="1"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Secure Payments</span></div>
+  <div><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h3l3 3v3h-6z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/></svg><span>Fast Delivery</span></div>
+  <div><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.4 3 7.7 7 10 4-2.3 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Trusted Pharmacy</span></div>
+</div></section>
+
+<section class="home-section home-pet-section"><div class="site-shell"><header class="home-section__heading"><h1>Shop By Pets</h1><p>All pet categories, one click—find what your pet loves!</p></header><div class="pet-category-grid">
+  {% for category in categories %}<a class="pet-category-card" href="{% url 'shop:category_detail' category.slug %}">{% if category.image %}<img src="{{ category.image.url }}" alt="{{ category.name }}">{% elif category.slug == 'cat' %}<img src="{% static 'images/Collection-Cat.png' %}" alt="Cat products">{% elif category.slug == 'dog' %}<img src="{% static 'images/Collection-Dog.png' %}" alt="Dog products">{% else %}<span class="pet-category-card__fallback"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 11h.01M15 11h.01M9.5 15c1.5 1 3.5 1 5 0"/></svg></span>{% endif %}<span>{{ category.name }}</span></a>{% empty %}<p class="home-empty">Pet categories will appear here once they are added in Django Admin.</p>{% endfor %}
+</div></div></section>
+
+<section class="home-section home-products-section"><div class="site-shell"><header class="home-section__heading home-section__heading--products"><h2>Top Selling</h2><p>Products Frequently Bought</p></header><div class="home-product-showcase" data-product-carousel>{% if top_products %}<button class="home-product-showcase__arrow home-product-showcase__arrow--previous" type="button" aria-label="Previous products" data-product-previous>‹</button>{% endif %}<div class="home-product-grid" data-product-track>{% for product in top_products %}{% include 'includes/product_card.html' with product=product %}{% empty %}<div class="home-empty home-empty--products"><h3>Our catalogue is being prepared</h3><p>Top Selling products will appear here as soon as the Shopify catalogue is imported.</p></div>{% endfor %}</div>{% if top_products %}<button class="home-product-showcase__arrow home-product-showcase__arrow--next" type="button" aria-label="Next products" data-product-next>›</button>{% endif %}</div></div></section>
+{% endblock %}

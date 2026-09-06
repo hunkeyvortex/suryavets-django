@@ -1,0 +1,21 @@
+<footer class="store-footer">
+  <section class="newsletter-band">
+    <div class="site-shell newsletter-band__inner">
+      <div><h2>Join our email list</h2><p>Get exclusive deals and early access to new products.</p></div>
+      <form class="newsletter-form" action="{% url 'shop:newsletter_signup' %}" method="post" data-newsletter-form>
+        {% csrf_token %}
+        <label class="sr-only" for="newsletter-email">Email address</label>
+        <input id="newsletter-email" type="email" name="email" placeholder="Email address" required>
+        <button type="submit">Sign up</button>
+        <p class="newsletter-form__message" aria-live="polite" data-newsletter-message></p>
+      </form>
+    </div>
+  </section>
+  <div class="site-shell footer-grid">
+    <section><h2 class="footer-brand">Surya Vets</h2><p>Mumbai, Maharashtra, India</p><a href="tel:9820854449">Phone: 9820854449 / 9619799900</a><a href="mailto:suryavets@gmail.com">Email: suryavets@gmail.com</a></section>
+    <section><h3>Popular Categories</h3><ul>{% for category in categories|slice:':3' %}<li><a href="{% url 'shop:category_detail' category.slug %}">{{ category.name }}</a></li>{% endfor %}</ul></section>
+    <section><h3>Quick Links</h3><ul><li><a href="{% url 'shop:about' %}">About us</a></li><li><a href="{% url 'shop:help' %}">Help Center</a></li><li><a href="{% url 'shop:contact' %}">Contact</a></li><li><a href="{% url 'shop:shipping' %}">Shipping Policy</a></li></ul></section>
+    <section><h3>Customer Policy</h3><ul><li><a href="{% url 'shop:privacy' %}">Privacy Policy</a></li><li><a href="{% url 'shop:terms' %}">Terms &amp; Conditions</a></li><li><a href="{% url 'shop:returns' %}">Return &amp; Refund Policy</a></li></ul></section>
+  </div>
+  <div class="site-shell footer-bottom"><p><strong>Medical Disclaimer</strong> Products sold on Surya Vets are veterinary products intended for use in animals. Pet owners should consult a qualified veterinarian before administering medicines or treatments to pets.</p><p>© {% now 'Y' %} SuryaVets. All Rights Reserved</p><p>Made in India, for the World</p></div>
+</footer>

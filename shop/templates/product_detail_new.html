@@ -1,0 +1,266 @@
+{% extends 'base_shared.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Surya Vets{% endblock %}
+
+{% block content %}
+    <div class="section">
+        <div class="section-container">
+            <!-- Breadcrumb -->
+            <nav style="margin-bottom: 30px; font-size: 14px; color: var(--text-light);">
+                <a href="{% url 'shop:index' %}">Home</a>
+                <span style="margin: 0 10px;">/</span>
+                <a href="{% url 'shop:category_detail' product.category.slug %}">{{ product.category.name }}</a>
+                {% if product.subcategory %}
+                    <span style="margin: 0 10px;">/</span>
+                    <a href="{% url 'shop:subcategory_detail' product.category.slug product.subcategory.slug %}">{{ product.subcategory.name }}</a>
+                {% endif %}
+                <span style="margin: 0 10px;">/</span>
+                <span>{{ product.name }}</span>
+            </nav>
+
+            <div class="product-detail">
+                <!-- Product Gallery -->
+                <div class="product-gallery">
+                    <div class="main-image-container">
+                        {% if product.images.first %}
+                            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="main-image" id="mainImage">
+                        {% else %}
+                            <div class="main-image" style="background: var(--bg-light); display: flex; align-items: center; justify-content: center;">
+                                <span style="font-size: 80px;">📦</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="thumbnail-list">
+                        {% for image in product.images.all %}
+                            <img src="{{ image.image.url }}" alt="{{ product.name }}" class="thumbnail {% if forloop.first %}active{% endif %}" onclick="changeImage('{{ image.image.url }}', this)">
+                        {% empty %}
+                            <div class="thumbnail" style="background: var(--bg-light); display: flex; align-items: center; justify-content: center;">
+                                <span style="font-size: 24px;">📦</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="product-details">
+                    <p class="product-category">{{ product.category.name }}{% if product.subcategory %} / {{ product.subcategory.name }}{% endif %}</p>
+                    <h1>{{ product.name }}</h1>
+                    <p class="product-sku">SKU: {{ product.sku|default:"N/A" }}</p>
+                    
+                    {% if product.is_on_sale %}
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <span style="font-size: 32px; font-weight: 700; color: var(--primary-color);">₹{{ product.sale_price }}</span>
+                        <span style="font-size: 20px; color: var(--text-lighter); text-decoration: line-through;">₹{{ product.price }}</span>
+                        <span style="background: var(--accent-color); color: white; padding: 4px 12px; border-radius: var(--radius-sm); font-weight: 600;">{{ product.discount_percent }}% OFF</span>
+                    </div>
+                    {% else %}
+                    <div style="margin-bottom: 20px;">
+                        <span style="font-size: 32px; font-weight: 700; color: var(--primary-color);">₹{{ product.price }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="product-description">
+                        {{ product.description|safe }}
+                    </div>
+
+                    {% if product.specifications.all %}
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 15px; font-size: 18px;">Specifications</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            {% for spec in product.specifications.all %}
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 12px 0; font-weight: 600; color: var(--text-light); width: 40%;">{{ spec.name }}</td>
+                                <td style="padding: 12px 0;">{{ spec.value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    {% if product.variants.all %}
+                    <div class="variant-selector">
+                        <label>Select Variant:</label>
+                        <div class="variant-options">
+                            {% for variant in product.variants.all %}
+                                <button type="button" class="variant-option {% if forloop.first %}active{% endif %}" data-variant="{{ variant.id }}" onclick="selectVariant(this, {{ variant.id }}, {{ variant.price }}, {{ variant.stock_quantity }})">
+                                    {{ variant.name }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="quantity-selector">
+                        <label>Quantity:</label>
+                        <div class="quantity-input">
+                            <button type="button" onclick="decreaseQuantity()">-</button>
+                            <input type="number" id="quantity" value="1" min="1" max="{{ product.stock_quantity }}" readonly>
+                            <button type="button" onclick="increaseQuantity()">+</button>
+                        </div>
+                    </div>
+
+                    <div class="product-actions">
+                        <form action="{% url 'shop:add_to_cart' product.id %}" method="post" id="addToCartForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" id="quantityInput" value="1">
+                            {% if product.variants.all %}
+                                <input type="hidden" name="variant_id" id="variantInput" value="{{ product.variants.first.id }}">
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 15px 30px;" {% if product.stock_quantity <= 0 %}disabled style="background: #ccc;"{% endif %}>
+                                {% if product.stock_quantity <= 0 %}Out of Stock{% else %}Add to Cart{% endif %}
+                            </button>
+                        </form>
+                        <button class="btn btn-secondary" style="padding: 15px 30px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                            Wishlist
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 30px; padding: 20px; background: var(--bg-light); border-radius: var(--radius);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <span style="font-size: 24px;">🚚</span>
+                            <strong>Free Delivery</strong>
+                        </div>
+                        <p style="color: var(--text-light); font-size: 14px;">On orders above ₹499 in selected locations</p>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 20px; background: var(--bg-light); border-radius: var(--radius);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <span style="font-size: 24px;">✓</span>
+                            <strong>In Stock</strong>
+                        </div>
+                        <p style="color: var(--text-light); font-size: 14px;">{{ product.stock_quantity }} items available</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Description Tab -->
+            <div style="margin-top: 60px;">
+                <div style="border-bottom: 2px solid var(--border-color); margin-bottom: 30px;">
+                    <button class="tab-btn active" onclick="showTab('description')" style="padding: 15px 30px; background: none; border: none; font-size: 16px; font-weight: 600; color: var(--primary-color); border-bottom: 3px solid var(--primary-color);">Description</button>
+                    <button class="tab-btn" onclick="showTab('specifications')" style="padding: 15px 30px; background: none; border: none; font-size: 16px; font-weight: 600; color: var(--text-light);">Specifications</button>
+                    <button class="tab-btn" onclick="showTab('reviews')" style="padding: 15px 30px; background: none; border: none; font-size: 16px; font-weight: 600; color: var(--text-light);">Reviews</button>
+                </div>
+
+                <div id="description-tab" class="tab-content">
+                    <div style="line-height: 1.8; color: var(--text-light);">
+                        {{ product.description|safe }}
+                    </div>
+                </div>
+
+                <div id="specifications-tab" class="tab-content" style="display: none;">
+                    {% if product.specifications.all %}
+                    <table style="width: 100%; border-collapse: collapse;">
+                        {% for spec in product.specifications.all %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 15px 0; font-weight: 600; color: var(--text-light); width: 40%;">{{ spec.name }}</td>
+                            <td style="padding: 15px 0;">{{ spec.value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    {% else %}
+                    <p style="color: var(--text-light);">No specifications available.</p>
+                    {% endif %}
+                </div>
+
+                <div id="reviews-tab" class="tab-content" style="display: none;">
+                    <p style="color: var(--text-light);">No reviews yet. Be the first to review this product!</p>
+                </div>
+            </div>
+
+            <!-- Related Products -->
+            {% if related_products %}
+            <div style="margin-top: 60px;">
+                <h2 style="margin-bottom: 30px; text-align: center;">Related Products</h2>
+                <div class="product-grid">
+                    {% for related in related_products %}
+                    <div class="product-card">
+                        <a href="{% url 'shop:product_detail' related.slug %}">
+                            <div class="product-image">
+                                {% if related.images.first %}
+                                    <img src="{{ related.images.first.image.url }}" alt="{{ related.name }}">
+                                {% else %}
+                                    <div style="width: 100%; height: 100%; background: var(--bg-light); display: flex; align-items: center; justify-content: center;">
+                                        <span style="font-size: 48px;">📦</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="product-info">
+                                <p class="product-category">{{ related.category.name }}</p>
+                                <h3 class="product-title">{{ related.name }}</h3>
+                                <div class="product-price">
+                                    {% if related.is_on_sale %}
+                                        <span class="current-price">₹{{ related.sale_price }}</span>
+                                        <span class="original-price">₹{{ related.price }}</span>
+                                    {% else %}
+                                        <span class="current-price">₹{{ related.price }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function changeImage(src, element) {
+        document.getElementById('mainImage').src = src;
+        document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    function selectVariant(element, variantId, price, stock) {
+        document.querySelectorAll('.variant-option').forEach(opt => opt.classList.remove('active'));
+        element.classList.add('active');
+        document.getElementById('variantInput').value = variantId;
+        
+        // Update price display if needed
+        const priceDisplay = document.querySelector('.current-price');
+        if (priceDisplay) {
+            priceDisplay.textContent = '₹' + price;
+        }
+    }
+
+    function increaseQuantity() {
+        const input = document.getElementById('quantity');
+        const max = parseInt(input.max);
+        if (parseInt(input.value) < max) {
+            input.value = parseInt(input.value) + 1;
+            document.getElementById('quantityInput').value = input.value;
+        }
+    }
+
+    function decreaseQuantity() {
+        const input = document.getElementById('quantity');
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+            document.getElementById('quantityInput').value = input.value;
+        }
+    }
+
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.style.color = 'var(--text-light)';
+            btn.style.borderBottom = 'none';
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').style.display = 'block';
+        // Add active class to clicked button
+        event.target.style.color = 'var(--primary-color)';
+        event.target.style.borderBottom = '3px solid var(--primary-color)';
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Surya Vets{% endblock %}
+{% block og_title %}{{ product.name }} - Surya Vets{% endblock %}
+{% block og_description %}{{ product.description|truncatewords:30 }}{% endblock %}
+{% block twitter_title %}{{ product.name }} - Surya Vets{% endblock %}
+{% block twitter_description %}{{ product.description|truncatewords:30 }}{% endblock %}
+
+{% block content %}
+    <div class="product-detail-container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="{% url 'shop:index' %}">Home</a>
+            <span>/</span>
+            <a href="{% url 'shop:category_detail' product.category.slug %}">{{ product.category.name }}</a>
+            {% if product.subcategory %}
+            <span>/</span>
+            <a href="{% url 'shop:subcategory_detail' product.category.slug product.subcategory.slug %}">{{ product.subcategory.name }}</a>
+            {% endif %}
+            <span>/</span>
+            <span>{{ product.name }}</span>
+        </nav>
+
+        <div class="product-detail">
+            <!-- Product Images -->
+            <div class="product-gallery">
+                <div class="main-image">
+                    {% if product.images.first %}
+                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" id="mainProductImage">
+                    {% else %}
+                    <div class="product-placeholder">{{ product.name|first }}</div>
+                    {% endif %}
+                </div>
+                {% if product.images.count > 1 %}
+                <div class="thumbnail-gallery">
+                    {% for image in product.images.all %}
+                    <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" 
+                         class="thumbnail {% if forloop.first %}active{% endif %}"
+                         onclick="changeMainImage('{{ image.image.url }}')">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <h1>{{ product.name }}</h1>
+                
+                {% if product.manufacturer %}
+                <p class="manufacturer">Manufacturer: {{ product.manufacturer }}</p>
+                {% endif %}
+
+                <div class="product-price">
+                    {% if product.discount_percentage > 0 %}
+                    <span class="current-price">₹{{ product.current_price }}</span>
+                    <span class="original-price">₹{{ product.original_price }}</span>
+                    <span class="discount-badge">{{ product.discount_percentage }}% OFF</span>
+                    {% else %}
+                    <span class="current-price">₹{{ product.current_price }}</span>
+                    {% endif %}
+                </div>
+
+                {% if product.requires_prescription %}
+                <div class="prescription-warning">
+                    <strong>⚠️ Prescription Required</strong>
+                    <p>This product requires a valid veterinary prescription.</p>
+                </div>
+                {% endif %}
+
+                <!-- Variant Selection -->
+                {% if product.variants.count > 1 %}
+                <div class="variant-selector">
+                    <h3>Select Variant:</h3>
+                    <div class="variant-options">
+                        {% for variant in product.variants.all %}
+                        <button type="button" 
+                                class="variant-btn {% if forloop.first %}active{% endif %}"
+                                data-variant-id="{{ variant.id }}"
+                                data-price="{{ variant.current_price }}"
+                                data-original-price="{{ variant.original_price }}"
+                                data-discount="{{ variant.discount_percentage }}"
+                                data-stock="{{ variant.stock_quantity }}"
+                                onclick="selectVariant(this)">
+                            {{ variant.name }}
+                            {% if variant.weight_info %}
+                            <span class="variant-weight">({{ variant.weight_info }})</span>
+                            {% endif %}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% elif product.variants.count == 1 %}
+                <input type="hidden" id="selectedVariantId" value="{{ product.variants.first.id }}">
+                {% endif %}
+
+                <!-- Quantity -->
+                <div class="quantity-selector">
+                    <h3>Quantity:</h3>
+                    <div class="quantity-controls">
+                        <button type="button" onclick="decreaseQuantity()">-</button>
+                        <input type="number" id="quantity" value="1" min="1" max="10" readonly>
+                        <button type="button" onclick="increaseQuantity()">+</button>
+                    </div>
+                </div>
+
+                <!-- Stock Status -->
+                <div class="stock-status" id="stockStatus">
+                    {% if product.variants.first %}
+                        {% if product.variants.first.is_in_stock %}
+                            {% if product.variants.first.is_low_stock %}
+                            <span class="low-stock">Only {{ product.variants.first.stock_quantity }} left in stock!</span>
+                            {% else %}
+                            <span class="in-stock">In Stock</span>
+                            {% endif %}
+                        {% else %}
+                        <span class="out-of-stock">Out of Stock</span>
+                        {% endif %}
+                    {% else %}
+                    <span class="out-of-stock">Out of Stock</span>
+                    {% endif %}
+                </div>
+
+                <!-- Add to Cart -->
+                <form action="{% url 'shop:add_to_cart' %}" method="post" id="addToCartForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <input type="hidden" name="variant_id" id="variantId" value="{% if product.variants.first %}{{ product.variants.first.id }}{% endif %}">
+                    <input type="hidden" name="quantity" id="quantityInput" value="1">
+                    
+                    <button type="submit" class="btn btn-primary btn-large" id="addToCartBtn">
+                        Add to Cart
+                    </button>
+                </form>
+
+                <!-- Product Description -->
+                <div class="product-description">
+                    <h3>Description</h3>
+                    <p>{{ product.description|default:"No description available." }}</p>
+                </div>
+
+                <!-- Specifications -->
+                {% if product.specifications.exists %}
+                <div class="product-specifications">
+                    <h3>Specifications</h3>
+                    <table>
+                        {% for spec in product.specifications.all %}
+                        <tr>
+                            <th>{{ spec.key }}</th>
+                            <td>{{ spec.value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentQuantity = 1;
+    let selectedVariant = null;
+
+    function changeMainImage(imageUrl) {
+        document.getElementById('mainProductImage').src = imageUrl;
+        document.querySelectorAll('.thumbnail').forEach(thumb => {
+            thumb.classList.remove('active');
+            if (thumb.src === imageUrl) {
+                thumb.classList.add('active');
+            }
+        });
+    }
+
+    function selectVariant(button) {
+        // Update active state
+        document.querySelectorAll('.variant-btn').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        // Get variant data
+        const variantId = button.dataset.variantId;
+        const price = parseFloat(button.dataset.price);
+        const originalPrice = parseFloat(button.dataset.originalPrice);
+        const discount = parseInt(button.dataset.discount);
+        const stock = parseInt(button.dataset.stock);
+        
+        // Update hidden input
+        document.getElementById('variantId').value = variantId;
+        document.getElementById('selectedVariantId').value = variantId;
+        
+        // Update price display
+        const priceContainer = document.querySelector('.product-price');
+        if (discount > 0) {
+            priceContainer.innerHTML = `
+                <span class="current-price">₹${price.toFixed(2)}</span>
+                <span class="original-price">₹${originalPrice.toFixed(2)}</span>
+                <span class="discount-badge">${discount}% OFF</span>
+            `;
+        } else {
+            priceContainer.innerHTML = `
+                <span class="current-price">₹${price.toFixed(2)}</span>
+            `;
+        }
+        
+        // Update stock status
+        const stockStatus = document.getElementById('stockStatus');
+        if (stock > 0) {
+            if (stock <= 10) {
+                stockStatus.innerHTML = `<span class="low-stock">Only ${stock} left in stock!</span>`;
+            } else {
+                stockStatus.innerHTML = `<span class="in-stock">In Stock</span>`;
+            }
+            document.getElementById('addToCartBtn').disabled = false;
+        } else {
+            stockStatus.innerHTML = `<span class="out-of-stock">Out of Stock</span>`;
+            document.getElementById('addToCartBtn').disabled = true;
+        }
+        
+        selectedVariant = {
+            id: variantId,
+            price: price,
+            stock: stock
+        };
+    }
+
+    function increaseQuantity() {
+        const maxQty = selectedVariant ? Math.min(selectedVariant.stock, 10) : 10;
+        if (currentQuantity < maxQty) {
+            currentQuantity++;
+            document.getElementById('quantity').value = currentQuantity;
+            document.getElementById('quantityInput').value = currentQuantity;
+        }
+    }
+
+    function decreaseQuantity() {
+        if (currentQuantity > 1) {
+            currentQuantity--;
+            document.getElementById('quantity').value = currentQuantity;
+            document.getElementById('quantityInput').value = currentQuantity;
+        }
+    }
+
+    // Add to cart form handling
+    document.getElementById('addToCartForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('.cart-count').textContent = data.cart_count;
+                alert('Product added to cart!');
+            } else {
+                alert(data.message || 'Error adding product to cart');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding product to cart');
+        });
+    });
+
+    // Initialize first variant if exists
+    {% if product.variants.first %}
+    const firstVariantBtn = document.querySelector('.variant-btn');
+    if (firstVariantBtn) {
+        selectVariant(firstVariantBtn);
+    }
+    {% endif %}
+</script>
+{% endblock %}

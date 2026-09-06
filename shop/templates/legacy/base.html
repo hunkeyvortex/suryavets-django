@@ -1,0 +1,733 @@
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1.0,user-scalable=no">
+    <meta name="theme-color" content="">
+    
+    <meta property="og:site_name" content="Surya Vets">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{% block og_title %}Surya Vets{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="{% block og_description %}Surya Vets{% endblock %}">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Surya Vets{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Surya Vets{% endblock %}">
+    
+    <title>{% block title %}Surya Vets{% endblock %}</title>
+    
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    
+    <!-- CSS from original website -->
+    <link href="{% static 'css/base.css' %}" rel="stylesheet" type="text/css" media="all" />
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet" type="text/css" media="all" />
+    <link href="{% static 'css/shopify_v2.css' %}" rel="stylesheet" type="text/css" media="all" />
+    <link href="{% static 'css/custom.css' %}" rel="stylesheet" type="text/css" media="all" />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --font-body--family: Poppins, sans-serif;
+            --font-body--style: normal;
+            --font-body--weight: 400;
+            --font-subheading--family: Poppins, sans-serif;
+            --font-subheading--style: normal;
+            --font-subheading--weight: 500;
+            --font-heading--family: Fredoka, sans-serif;
+            --font-heading--style: normal;
+            --font-heading--weight: 500;
+            --font-accent--family: Fredoka, sans-serif;
+            --font-accent--style: normal;
+            --font-accent--weight: 400;
+            --page-content-width: 120rem;
+            --page-margin: 40px;
+        }
+        
+        .ai-header-asfzrwvpymjzkk1piraigenblock154a681tprdth {
+            position: relative !important;
+            z-index: 9999999 !important;
+        }
+        
+        header.header,
+        .shopify-section-header {
+            z-index: 1 !important;
+        }
+        
+        .desktop-only {
+            display: block;
+        }
+        
+        @media (max-width: 1024px) {
+            .desktop-only {
+                display: none;
+            }
+        }
+        
+        /* Footer Styles */
+        .ai-custom-footer-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+            background-color: #000000;
+            color: #ffffff;
+            padding: 50px 0 15px;
+            width: 100%;
+        }
+
+        .ai-custom-footer-container-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+            max-width: var(--page-content-width, 120rem);
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 var(--page-margin, 40px);
+        }
+
+        .ai-custom-footer-columns-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+            display: flex;
+            flex-direction: row;
+            gap: 40px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1 1 250px;
+        }
+
+        .ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 8px 0;
+        }
+
+        .ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk p {
+            color: #ffffff;
+            margin: 0 0 12px 0;
+        }
+
+        .ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk ul {
+            display: flex;
+            gap: 12px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: opacity 0.3s ease;
+        }
+
+        .ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk a:hover {
+            opacity: 0.7;
+        }
+
+        .ai-custom-footer-bottom-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+            border-top: 1px solid #333333;
+            padding-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .medical-disclaimer {
+            border-top: 1px solid #333333;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            text-align: center;
+            max-width: 100%;
+            line-height: 1.6;
+        }
+
+        .medical-disclaimer strong {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #ffffff;
+        }
+
+        .medical-disclaimer p {
+            font-size: 10.8px;
+            color: #ffffff;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .copyright {
+            font-size: 12px;
+            color: #ffffff;
+        }
+
+        .copyright p {
+            margin: 5px 0;
+        }
+
+        @media screen and (max-width: 1024px) and (min-width: 750px) {
+            .ai-custom-footer-container-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+                padding: 0 var(--page-margin, 30px);
+            }
+
+            .ai-custom-footer-columns-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+                flex: 1 1 100%;
+            }
+        }
+
+        @media screen and (max-width: 749px) {
+            .ai-custom-footer-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+                padding: 35.0px 0;
+            }
+
+            .ai-custom-footer-container-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+                padding: 0 var(--page-margin, 20px);
+            }
+
+            .ai-custom-footer-columns-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+                flex-direction: column;
+                gap: 24px;
+                margin-bottom: 30px;
+            }
+
+            .ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+                flex: 1 1 100%;
+            }
+
+            .ai-custom-footer-bottom-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 20px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Original Header Structure -->
+    <header-navigation-asfzrwvpymjzkk1piraigenblock154a681tprdth class="ai-header-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+        <div class="ai-header-top-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+            <div class="ai-header-top__left-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                <div class="ai-header-drawer-wrapper-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                    <button class="ai-mobile-drawer-trigger-asfzrwvpymjzkk1piraigenblock154a681tprdth" aria-label="Open menu">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="ai-header-logo-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                    <a href="{% url 'shop:index' %}">
+                        <img src="{% static 'images/Suryavets-Logo-Pets.jpg' %}" alt="Surya Vets" width="327" height="120" loading="eager">
+                    </a>
+                </div>
+            </div>
+
+            <div class="ai-header-top__center-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                <div class="ai-header-search-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                    <form action="{% url 'shop:search' %}" method="get" class="ai-header-search-form-asfzrwvpymjzkk1piraigenblock154a681tprdth" role="search">
+                        <input type="search" name="q" class="ai-header-search-input-asfzrwvpymjzkk1piraigenblock154a681tprdth" placeholder="Search products..." aria-label="Search" autocomplete="off">
+                        <button type="submit" class="ai-header-search-button-asfzrwvpymjzkk1piraigenblock154a681tprdth" aria-label="Submit search">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="ai-header-top__right-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                <div class="ai-header-icons-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                    <a href="{% url 'shop:cart' %}" class="ai-icon-btn-asfzrwvpymjzkk1piraigenblock154a681tprdth" aria-label="Cart">
+                        <span class="ai-icon-btn__icon-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            </svg>
+                        </span>
+                        <span class="ai-icon-btn__label-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cart <span id="cart-count-display">{{ cart_count }}</span></span>
+                    </a>
+                    
+                    <a href="{% url 'shop:login' %}" class="ai-icon-btn-asfzrwvpymjzkk1piraigenblock154a681tprdth" aria-label="Account">
+                        <span class="ai-icon-btn__icon-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </span>
+                        <span class="ai-icon-btn__label-asfzrwvpymjzkk1piraigenblock154a681tprdth">LogIn/SignUp</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <nav class="ai-header-nav-asfzrwvpymjzkk1piraigenblock154a681tprdth desktop-only" aria-label="Main navigation">
+            <ul class="ai-header-nav-list-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                <li class="ai-header-nav-item-asfzrwvpymjzkk1piraigenblock154a681tprdth" data-has-dropdown="true">
+                    <a href="{% url 'shop:category_detail' 'cat' %}" class="ai-header-nav-link-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        Cat
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </a>
+                    <div class="ai-header-dropdown-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                        <ul class="ai-header-dropdown-list-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'cat' 'medicine-for-cats' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Medicine For Cats
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'allergy-relief-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Allergy Relief For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'anti-biotic-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Anti Biotic For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'anxiety-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Anxiety Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'cancer-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cancer Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'cardiac-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cardiac Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'dewormers-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dewormers For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'diabetes-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Diabetes For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'eye-ear-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Eye & Ear Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'fleas-ticks-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Fleas & Ticks For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'gastro-intestinal-digestive-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Gastro Intestinal & Digestive Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'hip-joint-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Hip & Joint Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'injectable-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Injectable For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'liver-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Liver Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'neural-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Neural Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'post-natal-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Post Natal Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'pre-natal-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Pre Natal Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'respiratory-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Respiratory Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'skin-coat-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Skin & Coat Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'thyroid-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Thyroid For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'urinary-tract-renal-care-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Urinary Tract & Renal Care For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'vaccine-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Vaccine For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'wound-pain-relief-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Wound & Pain Relief For Cats</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'cat' 'cat-supplements' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Cat Supplements
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'calcium-supplements-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Calcium supplements For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'liver-supplements-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Liver supplements For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'renal-urinary-supplements-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Renal & Urinary supplements For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'hip-joint-supplements-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Hip & Joint supplements For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'immunity-supplements-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Immunity supplements For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'skin-coat-supplements-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Skin & Coat supplements For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'intestinal-digestive-supplements-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Intestinal & Digestive supplements For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'multi-vitamin-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Multi Vitamin For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'dental-care-mouth-hygine-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dental Care/Mouth Hygine For Cats</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'cat' 'cat-food' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Cat Food
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'dry-food-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dry Food For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'infant-food-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Infant Food For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'premium-food-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Premium Food For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'veterinary-diets-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Veterinary Diets For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'wet-food-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Wet Food For Cats</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'cat' 'treats-for-cats' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Treats For Cats
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'biscuits-crunchy-treats-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Biscuits & Crunchy Treats For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'soft-treat-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Soft Treat For Cats</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'cat' 'cat-supplies' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Cat Supplies
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'beds-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Beds For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'cleaning-product-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cleaning Product For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'crates-carriers-penns-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Crates/Carriers/Penns For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'deos-fragrance-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Deos/Fragrance For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'grooming-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Grooming For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'leash-collars-harnesses-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Leash/Collars & Harnesses For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'medical-accessory-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Medical Accessory For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'medicated-shampoo-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Medicated Shampoo For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'potty-articals-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Potty Articals For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'surgical-accessory-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Surgical Accessory For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'toys-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Toys For Cats</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'cat' 'bowls-feeders-for-cats' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Bowls & Feeders For Cats</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="ai-header-nav-item-asfzrwvpymjzkk1piraigenblock154a681tprdth" data-has-dropdown="true">
+                    <a href="{% url 'shop:category_detail' 'dog' %}" class="ai-header-nav-link-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        Dog
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </a>
+                    <div class="ai-header-dropdown-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                        <ul class="ai-header-dropdown-list-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'dog' 'medicine-for-dogs' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Medicine For Dogs
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'allergy-relief-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Allergy Relief For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'anti-biotic-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Anti Biotic For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'anxiety-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Anxiety Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'cancer-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cancer Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'cardiac-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cardiac Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'dewormers-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dewormers For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'diabetes-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Diabetes For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'eye-ear-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Eye & Ear Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'fleas-ticks-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Fleas & Ticks For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'gastro-intestinal-digestive-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Gastro Intestinal & Digestive Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'hip-joint-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Hip & Joint Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'injectable-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Injectable For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'liver-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Liver Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'neural-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Neural Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'post-natal-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Post Natal Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'pre-natal-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Pre Natal Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'respiratory-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Respiratory Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'skin-coat-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Skin & Coat Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'thyroid-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Thyroid For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'urinary-tract-renal-care-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Urinary Tract & Renal Care For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'vaccine-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Vaccine For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'wound-pain-relief-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Wound & Pain Relief For Dogs</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'dog' 'dog-supplements' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Dog Supplements
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'anxiety-supplements-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Anxiety supplements For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'calcium-supplements-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Calcium Supplements For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'dental-care-mouth-hygine-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dental Care/Mouth Hygine For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'immunity-supplements-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Immunity supplements For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'intestinal-digestive-supplements-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Intestinal & Digestive supplements For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'liver-supplements-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Liver supplements For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'multi-vitamin-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Multi Vitamin For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'renal-urinary-supplements-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Renal & Urinary supplements For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'skin-coat-supplements-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Skin & Coat supplements For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'hip-joint-supplements-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Hip & Joint supplements For Dogs</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'dog' 'dog-food' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Dog Food
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'dry-food-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dry Food For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'infant-food-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Infant Food For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'premium-food-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Premium Food For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'veterinary-diets-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Veterinary Diets For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'wet-food-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Wet Food For Dogs</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'dog' 'treats-for-dogs' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Treats For Dogs
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'biscuits-crunchy-treats-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Biscuits & Crunchy Treats For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'bones-natural-chew-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Bones & Natural Chew For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'dental-treat-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dental Treat For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'soft-treat-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Soft Treat For Dogs</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'dog' 'dog-supplies' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Dog Supplies
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'beds-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Beds For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'cleaning-product-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cleaning Product For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'clothing-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Clothing For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'crates-carriers-penns-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Crates/Carriers/Penns For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'deos-fragrance-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Deos/Fragrance For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'gifting-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Gifting For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'grooming-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Grooming For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'leash-collars-harnesses-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Leash/Collars & Harnesses For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'medical-accessory-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Medical Accessory For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'medicated-shampoo-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Medicated Shampoo For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'potty-articals-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Potty Articals For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'surgical-accessory-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Surgical Accessory For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'toys-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Toys For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'training-behaviour-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Training & Behaviour For Dogs</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'dog' 'bowls-feeders-for-dogs' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Bowls & Feeders For Dogs</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="ai-header-nav-item-asfzrwvpymjzkk1piraigenblock154a681tprdth" data-has-dropdown="true">
+                    <a href="{% url 'shop:category_detail' 'farm-animals' %}" class="ai-header-nav-link-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        Farm Animals
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </a>
+                    <div class="ai-header-dropdown-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                        <ul class="ai-header-dropdown-list-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'farm-animals' 'medicine-for-farm-animals' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Medicine For Farm Animals
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'allergy-relief-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Allergy Relief For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'antibiotic-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Antibiotic For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'cancer-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cancer Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'cardiac-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cardiac Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'dewormers-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dewormers For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'eye-ear-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Eye & Ear Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'fleas-ticks-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Fleas & Ticks For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'gastro-intestinal-digestive-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Gastro Intestinal & Digestive Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'hip-joint-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Hip & Joint Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'injectable-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Injectable For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'liver-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Liver Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'neural-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Neural Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'post-natal-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Post Natal Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'pre-natal-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Pre Natal Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'respiratory-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Respiratory Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'skin-coat-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Skin & Coat Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'thyroid-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Thyroid For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'urinary-tract-renal-care-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Urinary Tract & Renal Care For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'vaccine-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Vaccine For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'wound-pain-relief-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Wound & Pain Relief For Farm Animals</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'farm-animals' 'supplements-for-farm-animals' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Supplements For Farm Animals
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'calcium-supplements-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Calcium supplements For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'dental-care-mouth-hygine-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dental Care/Mouth Hygine For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'hip-joint-supplements-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Hip & Joint supplements For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'immunity-supplements-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Immunity supplements For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'intestinal-digestive-supplements-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Intestinal & Digestive supplements For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'liver-supplements-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Liver supplements For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'multi-vitamin-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Multi Vitamin For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'skin-coat-supplements-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Skin & Coat supplements For Farm Animals</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'farm-animals' 'supplies-for-farm-animals' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Supplies For Farm Animals
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'cleaning-product-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Cleaning Product For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'feeders-bowls-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Feeders & Bowls For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'grooming-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Grooming For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'leash-collars-harnesses-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Leash/Collars & Harnesses For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'medical-accessory-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Medical Accessory For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'medicated-shampoo-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Medicated Shampoo For Farm Animals</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'farm-animals' 'surgical-accessory-for-farm-animals' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Surgical Accessory For Farm Animals</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="ai-header-nav-item-asfzrwvpymjzkk1piraigenblock154a681tprdth" data-has-dropdown="true">
+                    <a href="{% url 'shop:category_detail' 'fish-and-reptiles' %}" class="ai-header-nav-link-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        Fish & Reptiles
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </a>
+                    <div class="ai-header-dropdown-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                        <ul class="ai-header-dropdown-list-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-supplements-for-fish-and-reptiles' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Supplements For Fish & Reptiles
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-calcium-supplements-for-fish-and-reptiles' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Calcium supplements For Fish/Reptiles</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-immunity-supplements-for-fish-and-reptiles' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Immunity supplements For Fish/Reptiles</a></li>
+                                    <li><a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-multi-vitamin-for-fish-and-reptiles' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Multi Vitamin For Fish/Reptiles</a></li>
+                                </ul>
+                            </li>
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-item--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-food-for-fish-and-reptiles' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth ai-header-dropdown-link--has-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                                    Food For Fish & Reptiles
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-header-dropdown-arrow-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                                <ul class="ai-header-submenu-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    <li><a href="{% url 'shop:subcategory_detail' 'fish-and-reptiles' 'fish-and-reptiles-dry-food-for-fish-and-reptiles' %}" class="ai-header-submenu-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Dry Food For Fish/Reptiles</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="ai-header-nav-item-asfzrwvpymjzkk1piraigenblock154a681tprdth" data-has-dropdown="true">
+                    <a href="{% url 'shop:category_detail' 'vaccination' %}" class="ai-header-nav-link-asfzrwvpymjzkk1piraigenblock154a681tprdth" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        Vaccination
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </a>
+                    <div class="ai-header-dropdown-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                        <ul class="ai-header-dropdown-list-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                            <li class="ai-header-dropdown-item-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                <a href="{% url 'shop:subcategory_detail' 'vaccination' 'vaccination-services' %}" class="ai-header-dropdown-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                                    Vaccination Services
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="ai-header-nav-item-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                    <a href="{% url 'shop:contact' %}" class="ai-header-nav-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Pet Grooming</a>
+                </li>
+                <li class="ai-header-nav-item-asfzrwvpymjzkk1piraigenblock154a681tprdth">
+                    <a href="{% url 'shop:contact' %}" class="ai-header-nav-link-asfzrwvpymjzkk1piraigenblock154a681tprdth">Contact Us</a>
+                </li>
+            </ul>
+        </nav>
+    </header-navigation-asfzrwvpymjzkk1piraigenblock154a681tprdth>
+
+    <!-- Main Content -->
+    <main id="MainContent" class="content-for-layout {% block content_class %}{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Original Footer Structure -->
+    <footer class="ai-custom-footer-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+        <div class="ai-custom-footer-container-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+            <div class="ai-custom-footer-columns-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                <div class="ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                    <h3>Surya Vets</h3>
+                    <p>Mumbai, Maharashtra, India</p>
+                    <p>Phone: 9820854449/9619799900</p>
+                    <p>Email: suryavets@gmail.com</p>
+                </div>
+                
+                <div class="ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                    <h3>Popular Categories</h3>
+                    <ul class="ai-custom-footer-links-vertical-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                        {% for category in categories|slice:":3" %}
+                        <li><a href="{% url 'shop:category_detail' category.slug %}" class="ai-custom-footer-link-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">{{ category.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div class="ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                    <h3>Quick Links</h3>
+                    <ul class="ai-custom-footer-links-vertical-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                        <li><a href="{% url 'shop:about' %}" class="ai-custom-footer-link-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">About us</a></li>
+                        <li><a href="{% url 'shop:help' %}" class="ai-custom-footer-link-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">Help Center</a></li>
+                        <li><a href="{% url 'shop:contact' %}" class="ai-custom-footer-link-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">Contact</a></li>
+                        <li><a href="{% url 'shop:shipping' %}" class="ai-custom-footer-link-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">Shipping Policy</a></li>
+                    </ul>
+                </div>
+                
+                <div class="ai-custom-footer-column-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                    <h3>Customer Policy</h3>
+                    <ul class="ai-custom-footer-links-vertical-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                        <li><a href="{% url 'shop:privacy' %}" class="ai-custom-footer-link-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">Privacy Policy</a></li>
+                        <li><a href="{% url 'shop:terms' %}" class="ai-custom-footer-link-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">Terms & Conditions</a></li>
+                        <li><a href="{% url 'shop:returns' %}" class="ai-custom-footer-link-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">Return & Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="ai-custom-footer-bottom-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                <div class="ai-custom-footer-disclaimer-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                    <span class="ai-custom-footer-disclaimer-title-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">Medical Disclaimer</span>
+                    <span class="ai-custom-footer-disclaimer-text-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">Products sold on Surya Vets are veterinary products intended for use in animals. Pet owners should consult a qualified veterinarian before administering medicines or treatments to pets.</span>
+                </div>
+                
+                <div class="ai-custom-footer-bottom-text-asujwdytnbwxuuukxcaigenblock729b2dbpgrbxk">
+                    <p>© {% now "Y" %} SuryaVets. All Rights Reserved</p>
+                    <p>Made in India, for the World 🌏</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript from original website -->
+    <script src="{% static 'js/critical.js' %}"></script>
+    <script src="{% static 'js/product-card.js' %}"></script>
+    <script src="{% static 'js/cart-drawer.js' %}"></script>
+    <script src="{% static 'js/predictive-search.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.ai-mobile-drawer-trigger-asfzrwvpymjzkk1piraigenblock154a681tprdth')?.addEventListener('click', function() {
+            const nav = document.querySelector('.ai-header-nav-asfzrwvpymjzkk1piraigenblock154a681tprdth');
+            nav.classList.toggle('mobile-active');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{% extends "base_shared.html" %}
+
+{% block title %}Search Results - Surya Vets{% endblock %}
+
+{% block content %}
+    <div class="search-page">
+        <div class="section-container">
+            <h1>Search Results</h1>
+            
+            {% if query %}
+            <p class="search-query">Showing results for "{{ query }}"</p>
+            {% else %}
+            <p class="search-query">Enter a search term to find products</p>
+            {% endif %}
+            
+            <div class="product-grid" id="productGrid">
+                {% for product in products %}
+                <div class="product-card" data-price="{{ product.current_price }}" data-name="{{ product.name }}" data-date="{{ product.created_at|date:'U' }}">
+                    <a href="{% url 'shop:product_detail' product.slug %}" class="product-link">
+                        {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="product-image">
+                        {% else %}
+                        <div class="product-placeholder">{{ product.name|first }}</div>
+                        {% endif %}
+                        
+                        {% if product.discount_percentage > 0 %}
+                        <span class="discount-badge">{{ product.discount_percentage }}% OFF</span>
+                        {% endif %}
+                        
+                        {% if product.product_type %}
+                        <span class="product-type">{{ product.product_type.name }}</span>
+                        {% endif %}
+                        
+                        <h3>{{ product.name }}</h3>
+                        
+                        <div class="product-price">
+                            {% if product.discount_percentage > 0 %}
+                            <span class="current-price">₹{{ product.current_price }}</span>
+                            <span class="original-price">₹{{ product.original_price }}</span>
+                            {% else %}
+                            <span class="current-price">₹{{ product.current_price }}</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    
+                    <form action="{% url 'shop:add_to_cart' %}" method="post" class="add-to-cart-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        {% if product.variants.first %}
+                        <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}">
+                        {% endif %}
+                        <button type="submit" class="btn btn-add-cart">Add to Cart</button>
+                    </form>
+                </div>
+                {% empty %}
+                <p class="no-products">No products found matching your search.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}" class="pagination-link">Previous</a>
+                {% endif %}
+                
+                <span class="pagination-info">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}" class="pagination-link">Next</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

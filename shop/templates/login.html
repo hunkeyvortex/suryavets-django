@@ -1,0 +1,32 @@
+{% extends "base_shared.html" %}
+{% load static %}
+
+{% block title %}Login - Surya Vets{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/account.css' %}">{% endblock %}
+
+{% block content %}
+    <div class="account-page site-shell">
+        <div class="account-card">
+            <h1>Login</h1>
+            
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-large">Login</button>
+            </form>
+            
+            <p>Don't have an account? <a href="{% url 'shop:register' %}">Sign up</a></p>
+        </div>
+    </div>
+{% endblock %}
