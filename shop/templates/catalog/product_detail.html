@@ -1,5 +1,5 @@
 {% extends 'base_shared.html' %}
-{% load static %}
+{% load static shop_filters %}
 
 {% block title %}{{ product.meta_title|default:product.name }} | Surya Vets{% endblock %}
 {% block meta_description %}{{ product.meta_description|default:product.short_description|default:product.name }}{% endblock %}
@@ -16,10 +16,10 @@
       <h1>{{ product.name }}</h1>
       {% if product.brand %}<p class="product-summary__brand">BY: {{ product.brand.name }}</p>{% endif %}
       {% if product.sku %}<p class="product-summary__sku">SKU: {{ product.sku }}</p>{% endif %}
-      <div class="product-summary__price"><div><span>Sale price</span><strong data-product-price>Rs. {{ product.current_price|floatformat:2 }}</strong></div>{% if product.discount_percentage %}<div><span>Regular price</span><del>Rs. {{ product.base_price|floatformat:2 }}</del></div>{% endif %}</div>
+      <div class="product-summary__price" aria-live="polite"><div><span>Price</span><strong data-product-price>Rs. {{ display_price|money }}</strong></div><div data-product-compare-wrap {% if display_regular_price <= display_price %}hidden{% endif %}><span>Regular price</span><del data-product-compare>Rs. {{ display_regular_price|money }}</del></div></div>
       <form class="product-form" action="{% url 'shop:add_to_cart' product.id %}" method="post">{% csrf_token %}
-        {% if product.variants.all %}<fieldset><legend>PACK:</legend><div class="product-variants">{% for variant in product.variants.all %}<label><input type="radio" name="variant_id" value="{{ variant.id }}" data-price="{{ variant.current_price }}" data-stock="{{ variant.stock_quantity }}" {% if forloop.first %}checked{% endif %} {% if not variant.is_in_stock %}disabled{% endif %}><span>{{ variant.name }}</span></label>{% endfor %}</div></fieldset>{% endif %}
-        <div class="product-quantity"><label for="quantity">Quantity</label><input id="quantity" name="quantity" type="number" min="1" value="1" {% if product.track_inventory and not product.variants.all %}max="{{ product.stock_quantity }}"{% endif %}></div>
+        {% if product.variants.all %}<fieldset><legend>PACK:</legend><div class="product-variants">{% for variant in product.variants.all %}<label><input type="radio" name="variant_id" value="{{ variant.id }}" data-price="{{ variant.current_price|floatformat:'2u' }}" data-regular="{{ variant.original_price|floatformat:'2u' }}" data-stock="{{ variant.stock_quantity }}" {% if variant.pk == selected_variant.pk %}checked{% endif %} {% if not variant.is_in_stock %}disabled{% endif %}><span>{{ variant.name }}</span></label>{% endfor %}</div></fieldset>{% endif %}
+        <div class="product-quantity"><label for="quantity">Quantity</label><input id="quantity" name="quantity" type="number" min="1" value="1" {% if selected_variant %}max="{{ selected_variant.stock_quantity }}"{% elif product.track_inventory %}max="{{ product.stock_quantity }}"{% endif %}></div>
         <button type="submit" {% if not product.is_in_stock %}disabled{% endif %}>{% if product.is_in_stock %}Add to Cart{% else %}Out of Stock{% endif %}</button>
       </form>
       <div class="product-benefits" aria-label="Surya Vets benefits"><div><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.4 3 7.7 7 10 4-2.3 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Best Price</span></div><div><svg viewBox="0 0 24 24"><path d="m12 3 2.2 2.2 3.1-.4.4 3.1 2.2 2.2-2.2 2.2.4 3.1-3.1.4L12 20l-2.2-2.2-3.1.4.4-3.1L5 12.9l2.2-2.2-.4-3.1 3.1-.4L12 3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Best Quality</span></div><div><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h3l3 3v3h-6z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/></svg><span>Fast Delivery</span></div></div>

@@ -216,7 +216,7 @@ The stored source tree is shop/data/reference_navigation.json. This is the curre
 | Trust strip | / | / | Mismatch | Four fixed cards, sizing differs | Static service labels | NEEDS REVIEW |
 | Shop By Pets | / | / | Original assets restored; refinement pending | Original assets, three visible cards compared | Category links work | IN PROGRESS |
 | Delivery banner | / | / | Original asset restored | Same-width comparison captured | Image-only reference | NEEDS REVIEW |
-| Top Selling/cards | / | / | Mismatch | Mismatch | Database backed | IN PROGRESS |
+| Top Selling/cards | / | / | Measured card dimensions/styles closely aligned | Compared at all six widths; fixed title/price wrapping | Database backed; exact prices and carousel controls | NEEDS REVIEW: merchandising order differs |
 | Newsletter/footer | / | / | Mismatch | Mismatch | Signup endpoint is a stub | IN PROGRESS |
 | Cat/Dog/Farm collections | /collections/cat, /collections/dog, /collections/farm-animals | /category/cat/, /category/dog/, /category/farm-animals/ | Not matched | Not matched | 200; shared catalogue | IN PROGRESS |
 | Fish/Vaccination/Grooming | /collections/fish-reptiles, /collections/vaccination, /collections/vaccination-for-farm-animals-copy | /category/fish-and-reptiles/, /category/vaccination/, /category/pet-grooming/ | Not matched | Not matched | 200 | IN PROGRESS |
@@ -256,11 +256,11 @@ Product images currently use local media or Shopify source_url fallback (2,619 P
 ## H. Remaining functionality and production blockers
 
 1. Collection membership needs reconciliation against Shopify collection rules/manual membership, especially unmatched products and collections with no exact tag match. Exact tag matches are evidence-based, but not a guarantee that all Shopify smart-collection rules are reproduced.
-2. Preserve exact selling and compare-at Decimal prices, including variants. Integer discount rounding changes some imported prices. Make future reimports non-destructive to referenced variants; idempotence and dry-run tests needed.
+2. Exact-price milestone completed: nullable selling_price fields added; 2,428 product prices and 2,424 variant prices corrected from exports, with zero remaining price mismatches on revalidation. Variants/images are updated rather than deleted on reimport. Rename reconciliation and full inventory synchronization remain; see docs/exact-pricing-and-cards.md.
 3. Full inventory, stock reservation/recheck on checkout, transaction-safe decrement, order idempotency, payment verification/refunds and prescription workflow remain.
 4. Login next redirects and cart return URLs need validation; remove/logout currently accept GET. Authenticated cart helper creates carts during reads; guest-to-user cart merge missing.
 5. Newsletter currently returns success without saving or emailing; contact is a static template. Do not call these operational integrations complete.
-6. Base-price filters/sorting differ from selling prices. Mobile filter scripts now load, and popovers are bounded within the viewport; price/sort interactions are tested separately. Product variant UI should update exact price/stock.
+6. Selling-price filters/sorting and variant price/quantity controls are implemented and regression-tested. Mobile filters load and popovers are bounded. Accurate inventory, backorder rules and concurrent stock safety remain unverified.
 7. Hero pause/swipe/accessibility, full homepage visual alignment, product-card details, footer and content pages remain.
 8. Persistent media, missing image report, static manifest, PostgreSQL test, email service, backups/restore, monitoring, production secret/host/security validation remain.
 9. SEO sitemap, robots, canonical tags and Shopify 301 mapping remain. Use Category.reference_path and original product handles for redirects.
@@ -272,11 +272,12 @@ Product images currently use local media or Shopify source_url fallback (2,619 P
 - Phase 1/2 audit and inventory captured. About, Contact, shipping, privacy, terms, returns and Grooming were revisited successfully (HTTP 200), recorded in extra-pages.json. Account redirect and populated live cart remain pending; local content-page visual parity remains unverified.
 - Phase 3 additive hierarchy, tag restoration and descendant browsing implemented.
 - Phase 4 real recursive menus and modal mobile drawer implemented. Browser test passed nested navigation at 375,390,430,768,1024,1440; no document overflow or JavaScript errors in tested states. Six roots, care leaf and search return HTTP 200.
-- 15 Django tests pass, including deep descendant deduplication, cycle validation, inactive ancestors and exact tag matching. Migration drift check passes.
+- 29 Django tests pass, including hierarchy coverage and 14 added exact-price/import/card/variant tests. Migration drift check passes through migration 0005. Full importer dry run validates all 6,697 handles.
 - Final mobile interaction check at 390px: four trust cards share one row with no scroll overflow (362px content width); hero next changes slide; every expandable root opens; Escape collapses the active group then closes the drawer; minimum-price submission and automatic sort submission succeed. Verification script: C:/Users/danyb/Documents/ChatGPT/suryavets-django/verify-mobile-controls.cjs.
 - These are functional checks, not a claim that all pages visually match. Screenshots show remaining homepage/header/footer differences.
-- Phase 5 partial: original hero proportions, category artwork, missing delivery banner, four fixed trust cards, white newsletter and black footer treatment restored. Live/local full-page comparisons captured at all six widths. Product-card presentation, merchandising order, footer contact formatting and spacing still differ visibly and remain IN PROGRESS.
-- Next: finish same-width global/homepage alignment, collection/product details, then pricing/importer/cart/order integrity and security/SEO. Deploy to a temporary Render hostname only after these gates, then review domain cutover.
+- Phase 5 partial: original hero proportions, category artwork, missing delivery banner, four fixed trust cards, white newsletter and black footer treatment restored. Live/local full-page comparisons captured at all six widths. Shared product-card refinement now includes measured dimensions, red badges, outline buttons, two-line titles, grouped exact prices and 2/3/4/5-card responsive layouts. Merchandising order, footer contact formatting and page-level spacing remain IN PROGRESS.
+- Latest evidence and file/command list: docs/exact-pricing-and-cards.md. Card screenshots and product-card-verification.json record same-viewport comparisons, without claiming matching product order or full-page parity. Isolated browser fixture also verifies variant controls; local Arnica renders Rs. 95.00.
+- Next: inventory/cart/order integrity, remaining same-width collection/product/global alignment and security/SEO. Deploy to a temporary Render hostname only after these gates, then review domain cutover.
 
 Local commands (PowerShell, project folder):
 

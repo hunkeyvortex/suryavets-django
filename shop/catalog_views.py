@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, render
 
 from .models import Brand, Category, PetCategory, Product, ProductType, ProductVariant, Subcategory
 from .services.navigation import descendant_ids
+from .services.pricing import catalog_price_expression
 
 
 CATALOG_PAGE_SIZE = 12
@@ -35,6 +36,7 @@ def _valid_decimal(value):
 
 def _apply_catalog_controls(request, products, *, category=None, subcategory=None):
     """Apply safe query-string controls shared by browsing and search."""
+    products = products.annotate(catalog_price=catalog_price_expression())
     selected_category = request.GET.get('category', '')
     selected_brand = request.GET.get('brand', '')
     selected_product_type = request.GET.get('product_type', '')
@@ -53,9 +55,9 @@ def _apply_catalog_controls(request, products, *, category=None, subcategory=Non
     if selected_pet:
         products = products.filter(pet_categories__slug=selected_pet)
     if minimum_price is not None:
-        products = products.filter(base_price__gte=minimum_price)
+        products = products.filter(catalog_price__gte=minimum_price)
     if maximum_price is not None:
-        products = products.filter(base_price__lte=maximum_price)
+        products = products.filter(catalog_price__lte=maximum_price)
     if availability == 'in_stock':
         products = products.filter(
             Q(track_inventory=False)
@@ -71,8 +73,8 @@ def _apply_catalog_controls(request, products, *, category=None, subcategory=Non
 
     ordering = {
         'newest': ('-created_at',),
-        'price_low': ('base_price', 'name'),
-        'price_high': ('-base_price', 'name'),
+        'price_low': ('catalog_price', 'name'),
+        'price_high': ('-catalog_price', 'name'),
         'name': ('name',),
         'featured': ('-is_featured', '-is_bestseller', '-created_at'),
     }
@@ -188,7 +190,13 @@ def product_detail(request, product_slug):
     related_products = _product_queryset().filter(
         category=product.category
     ).exclude(pk=product.pk)[:4]
+    variants = list(product.variants.all())
+    selected_variant = next((variant for variant in variants if variant.is_in_stock), variants[0] if variants else None)
+    priced_item = selected_variant or product
     return render(request, 'catalog/product_detail.html', {
         'product': product,
+        'selected_variant': selected_variant,
+        'display_price': priced_item.current_price,
+        'display_regular_price': priced_item.original_price,
         'related_products': related_products,
     })

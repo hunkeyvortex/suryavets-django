@@ -100,10 +100,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!track) return;
     const scrollProducts = (direction) => {
       const firstCard = track.querySelector('.store-product-card');
-      const amount = firstCard ? firstCard.getBoundingClientRect().width + 20 : track.clientWidth * .8;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      const amount = firstCard ? firstCard.getBoundingClientRect().width + gap : track.clientWidth * .8;
       track.scrollBy({left: direction * amount, behavior: 'smooth'});
     };
     carousel.querySelector('[data-product-previous]')?.addEventListener('click', () => scrollProducts(-1));
     carousel.querySelector('[data-product-next]')?.addEventListener('click', () => scrollProducts(1));
+    const syncControls = () => {
+      const previous = carousel.querySelector('[data-product-previous]');
+      const next = carousel.querySelector('[data-product-next]');
+      if (previous) previous.disabled = track.scrollLeft <= 1;
+      if (next) next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 1;
+    };
+    track.addEventListener('scroll', syncControls, {passive: true});
+    window.addEventListener('resize', syncControls);
+    syncControls();
   });
 });

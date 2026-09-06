@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.text import slugify
 import uuid
+from .services.pricing import selling_price, discount_percent
 
 
 class Category(models.Model):
@@ -160,6 +161,7 @@ class Product(models.Model):
     
     # Pricing
     base_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], help_text='Exact selling price. Blank uses the legacy percentage calculation.')
     discount_percentage = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     stock_quantity = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     track_inventory = models.BooleanField(default=True)
@@ -194,11 +196,15 @@ class Product(models.Model):
 
     @property
     def current_price(self):
-        """Calculate current price after discount"""
-        if self.discount_percentage > 0:
-            discount_amount = (self.base_price * self.discount_percentage) / 100
-            return self.base_price - discount_amount
-        return self.base_price
+        return selling_price(self.base_price, self.discount_percentage, self.selling_price)
+
+    @property
+    def is_on_sale(self):
+        return self.current_price < self.base_price
+
+    @property
+    def display_discount_percentage(self):
+        return discount_percent(self.base_price, self.current_price)
 
     @property
     def original_price(self):
@@ -217,13 +223,17 @@ class Product(models.Model):
 
     @property
     def has_variants(self):
-        return self.variants.filter(is_active=True).exists()
+        return any(variant.is_active for variant in self.variants.all())
+
+    @property
+    def needs_variant_selection(self):
+        return sum(variant.is_active for variant in self.variants.all()) > 1
 
     @property
     def is_in_stock(self):
-        active_variants = self.variants.filter(is_active=True)
-        if active_variants.exists():
-            return active_variants.filter(stock_quantity__gt=0).exists()
+        active_variants = [variant for variant in self.variants.all() if variant.is_active]
+        if active_variants:
+            return any(variant.is_in_stock for variant in active_variants)
         return not self.track_inventory or self.stock_quantity > 0
 
     @property
@@ -253,6 +263,7 @@ class ProductVariant(models.Model):
     
     # Variant-specific pricing
     price_override = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     discount_percentage = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
     # Stock
@@ -270,17 +281,12 @@ class ProductVariant(models.Model):
 
     @property
     def current_price(self):
-        """Calculate current price for this variant"""
-        base_price = self.price_override if self.price_override else self.product.base_price
-        if self.discount_percentage > 0:
-            discount_amount = (base_price * self.discount_percentage) / 100
-            return base_price - discount_amount
-        return base_price
+        return selling_price(self.original_price, self.discount_percentage, self.selling_price)
 
     @property
     def original_price(self):
         """Return original price for this variant"""
-        return self.price_override if self.price_override else self.product.base_price
+        return self.price_override if self.price_override is not None else self.product.base_price
 
     @property
     def is_in_stock(self):

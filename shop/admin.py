@@ -79,7 +79,7 @@ class ProductSpecificationInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
-    fields = ['name', 'sku', 'barcode', 'size_code', 'weight_info', 'price_override', 'discount_percentage', 
+    fields = ['name', 'sku', 'barcode', 'size_code', 'weight_info', 'price_override', 'selling_price', 'discount_percentage',
               'stock_quantity', 'low_stock_threshold', 'is_active']
 
 
@@ -98,7 +98,7 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('name', 'slug', 'sku', 'short_description', 'description', 'brand', 'category', 'collections', 'shopify_tags', 'subcategory', 'pet_categories', 'product_type')
         }),
         ('Pricing', {
-            'fields': ('base_price', 'discount_percentage', 'current_price', 'original_price')
+            'fields': ('base_price', 'selling_price', 'discount_percentage', 'current_price', 'original_price')
         }),
         ('Product Details', {
             'fields': ('manufacturer', 'stock_quantity', 'track_inventory', 'is_in_stock', 'availability_label', 'requires_prescription', 'is_featured', 'is_bestseller', 'is_active')

@@ -13,6 +13,7 @@ from django.utils.html import strip_tags
 from django.utils.text import slugify
 
 from shop.models import Brand, Category, PetCategory, Product, ProductImage, ProductType, ProductVariant, Subcategory
+from shop.services.pricing import export_prices
 
 
 PET_RULES = (
@@ -106,27 +107,46 @@ class Command(BaseCommand):
         return inventory
 
     def _product_groups(self, sources):
+        groups = defaultdict(list)
         for source_path in sources:
             stream, archive = self._open_csv(source_path)
             try:
                 reader = csv.DictReader(stream)
-                group = []
-                current_handle = None
+                if not {'Handle', 'Variant Price'}.issubset(reader.fieldnames or []):
+                    raise CommandError(f'{source_path}: expected a Shopify product export with Handle and Variant Price columns.')
                 for row in reader:
                     handle = (row.get('Handle') or '').strip()
                     if not handle:
                         continue
-                    if current_handle is not None and handle != current_handle:
-                        yield current_handle, group
-                        group = []
-                    current_handle = handle
-                    group.append(row)
-                if group:
-                    yield current_handle, group
+                    groups[handle].append(row)
             finally:
                 stream.close()
                 if archive:
                     archive.close()
+        yield from groups.items()
+
+    def _priced_rows(self, handle, rows):
+        """Collapse repeated rows, but reject conflicting variant identities/prices."""
+        variants = {}
+        for row in rows:
+            if not (row.get('Variant Price') or row.get('Variant SKU') or option_name(row) != 'Default Title'):
+                continue
+            name = option_name(row)
+            if len(name) > 100:
+                raise CommandError(f'{handle}: variant name exceeds 100 characters; do not truncate identity.')
+            try:
+                prices = export_prices(row)
+            except ValueError as error:
+                raise CommandError(f'{handle} / {name}: {error}') from error
+            if name in variants:
+                previous = variants[name]
+                if export_prices(previous) != prices or previous.get('Variant SKU') != row.get('Variant SKU'):
+                    raise CommandError(f'{handle}: conflicting export rows for variant {name}.')
+            else:
+                variants[name] = row
+        if not variants:
+            raise CommandError(f'{handle}: no priced variant rows found.')
+        return list(variants.values())
 
     def _tags(self, row):
         return {tag.strip().lower() for tag in (row.get('Tags') or '').split(',') if tag.strip()}
@@ -160,11 +180,8 @@ class Command(BaseCommand):
         tags = self._tags(primary)
         category_name, pet_names, subcategory_name = self._category_data(tags)
         product_type_name = self._product_type(primary, tags)
-        first_price = decimal_value(primary.get('Variant Price'))
-        first_compare = decimal_value(primary.get('Variant Compare At Price'))
-        regular_price = first_compare if first_compare > first_price else first_price
-        discount = int(((regular_price - first_price) / regular_price * 100).quantize(Decimal('1'), rounding=ROUND_HALF_UP)) if regular_price else 0
-        variant_rows = [row for row in rows if row.get('Variant Price') or row.get('Variant SKU') or option_name(row) != 'Default Title']
+        variant_rows = self._priced_rows(handle, rows)
+        regular_price, first_price, discount = export_prices(variant_rows[0])
         total_stock = sum(self._stock_for(row, inventory) for row in variant_rows) if variant_rows else 0
         payload = {
             'shopify_tags': sorted(tags),
@@ -173,6 +190,7 @@ class Command(BaseCommand):
             'short_description': clean_text(primary.get('Body (HTML)'))[:500],
             'sku': (primary.get('Variant SKU') or '')[:100],
             'base_price': regular_price,
+            'selling_price': first_price,
             'discount_percentage': max(0, discount),
             'stock_quantity': total_stock,
             'track_inventory': bool(primary.get('Variant Inventory Tracker')),
@@ -222,18 +240,18 @@ class Command(BaseCommand):
             pets.append(pet)
         product.pet_categories.set(pets)
 
-        ProductVariant.objects.filter(product=product).delete()
         for row in variant_rows:
             name = option_name(row)
             if name == 'Default Title' and len(variant_rows) == 1:
                 continue
-            price = decimal_value(row.get('Variant Price'))
-            compare = decimal_value(row.get('Variant Compare At Price'))
-            regular = compare if compare > price else price
-            variant_discount = int(((regular - price) / regular * 100).quantize(Decimal('1'), rounding=ROUND_HALF_UP)) if regular else 0
-            ProductVariant.objects.create(product=product, name=name[:100], weight_info=name[:50], sku=(row.get('Variant SKU') or '')[:100], barcode=(row.get('Variant Barcodes') or '')[:100], price_override=regular, discount_percentage=max(0, variant_discount), stock_quantity=self._stock_for(row, inventory), is_active=product.is_active)
+            regular, price, variant_discount = export_prices(row)
+            ProductVariant.objects.update_or_create(product=product, name=name, defaults={
+                'weight_info': name[:50], 'sku': (row.get('Variant SKU') or '')[:100],
+                'barcode': (row.get('Variant Barcode') or row.get('Variant Barcodes') or '')[:100],
+                'price_override': regular, 'selling_price': price, 'discount_percentage': variant_discount,
+                'stock_quantity': self._stock_for(row, inventory), 'is_active': product.is_active,
+            })
 
-        ProductImage.objects.filter(product=product, source_url__startswith='https://cdn.shopify.com/').delete()
         images = []
         seen_urls = set()
         for row in rows:
@@ -241,8 +259,14 @@ class Command(BaseCommand):
             if not image_url or image_url in seen_urls:
                 continue
             seen_urls.add(image_url)
-            images.append(ProductImage(product=product, image='', source_url=image_url, alt_text=(row.get('Image Alt Text') or title)[:200], order=len(images), is_primary=not images))
-        ProductImage.objects.bulk_create(images)
+            existing_image = product.images.filter(source_url=image_url).first()
+            if existing_image is None:
+                existing_image = ProductImage(product=product, image='', source_url=image_url)
+            existing_image.alt_text = (row.get('Image Alt Text') or title)[:200]
+            existing_image.order = len(images)
+            existing_image.is_primary = not images
+            existing_image.save()
+            images.append(existing_image)
         return created, len(variant_rows), len(images)
 
     def handle(self, *args, **options):

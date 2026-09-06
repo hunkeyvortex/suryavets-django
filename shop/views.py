@@ -223,8 +223,12 @@ def add_to_cart(request, product_id):
     variant = None
     if variant_id:
         variant = get_object_or_404(ProductVariant, id=variant_id, product=product, is_active=True)
-    elif product.variants.filter(is_active=True).exists():
-        variant = product.variants.filter(is_active=True, stock_quantity__gt=0).first()
+    else:
+        active_variants = list(product.variants.filter(is_active=True))
+        if len(active_variants) > 1:
+            messages.info(request, 'Please choose a pack or variant before adding this product.')
+            return redirect('shop:product_detail', product_slug=product.slug)
+        variant = active_variants[0] if active_variants else None
 
     available_quantity = variant.stock_quantity if variant else product.stock_quantity
     if (variant or product.track_inventory) and available_quantity < quantity:

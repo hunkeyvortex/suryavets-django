@@ -1,21 +1,25 @@
+{% load shop_filters %}
 <article class="store-product-card">
   <a class="store-product-card__image" href="{% url 'shop:product_detail' product.slug %}">
     {% if product.images.first and product.images.first.display_url %}
-      <img src="{{ product.images.first.display_url }}" alt="{{ product.images.first.alt_text|default:product.name }}">
+      <img src="{{ product.images.first.display_url }}" alt="{{ product.images.first.alt_text|default:product.name }}" loading="lazy" decoding="async">
     {% else %}
       <span class="store-product-card__image-placeholder" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5c-1.7-1.8-6.5-5.4-6.5-9.3A3.7 3.7 0 0 1 12 9a3.7 3.7 0 0 1 6.5 2.2c0 3.9-4.8 7.5-6.5 9.3Z"/></svg></span>
     {% endif %}
-    {% if product.discount_percentage %}<span class="store-product-card__sale">{{ product.discount_percentage }}% OFF</span>{% endif %}
+    {% if product.is_on_sale %}<span class="store-product-card__sale">{% if product.display_discount_percentage %}{{ product.display_discount_percentage }}% OFF{% else %}Sale{% endif %}</span>{% endif %}
   </a>
   <div class="store-product-card__body">
     <p class="store-product-card__eyebrow">{% if product.product_type %}{{ product.product_type.name }}{% elif product.brand %}{{ product.brand.name }}{% else %}Surya Vets{% endif %}</p>
     <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.name }}</a></h3>
-    <p class="store-product-card__rating" aria-label="No rating yet">No rating yet</p>
-    <div class="store-product-card__price"><strong>₹{{ product.current_price|floatformat:2 }}</strong>{% if product.discount_percentage %}<del>₹{{ product.base_price|floatformat:2 }}</del>{% endif %}</div>
+    <div class="store-product-card__price"><strong>₹{{ product.current_price|money }}</strong> {% if product.is_on_sale %}<del>₹{{ product.base_price|money }}</del>{% endif %}</div>
+    {% if product.needs_variant_selection %}
+    <a class="store-product-card__choose" href="{% url 'shop:product_detail' product.slug %}">Choose options</a>
+    {% else %}
     <form action="{% url 'shop:add_to_cart' product.id %}" method="post">
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
       <button type="submit" {% if not product.is_in_stock %}disabled{% endif %}>{% if product.is_in_stock %}Add to Cart{% else %}Out of Stock{% endif %}</button>
     </form>
+    {% endif %}
   </div>
 </article>

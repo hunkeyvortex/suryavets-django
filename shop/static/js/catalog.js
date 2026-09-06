@@ -12,6 +12,28 @@
     });
   }
 
+  const productForm = document.querySelector('.product-form');
+  if (productForm) {
+    // Browser formatting is presentation only; the server recalculates all prices.
+    const money = value => 'Rs. ' + Number(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const syncVariant = () => {
+      const selected = productForm.querySelector('[name="variant_id"]:checked');
+      if (!selected) return;
+      document.querySelector('[data-product-price]').textContent = money(selected.dataset.price);
+      document.querySelector('[data-product-compare]').textContent = money(selected.dataset.regular);
+      document.querySelector('[data-product-compare-wrap]').hidden = Number(selected.dataset.regular) <= Number(selected.dataset.price);
+      const quantity = productForm.querySelector('[name="quantity"]');
+      const stock = Number(selected.dataset.stock);
+      quantity.max = String(stock);
+      if (stock > 0 && Number(quantity.value) > stock) quantity.value = String(stock);
+      const submit = productForm.querySelector('button[type="submit"]');
+      submit.disabled = stock < 1;
+      submit.textContent = stock > 0 ? 'Add to Cart' : 'Out of Stock';
+    };
+    productForm.querySelectorAll('[name="variant_id"]').forEach(input => input.addEventListener('change', syncVariant));
+    syncVariant();
+  }
+
   const mobileFilterForm = document.querySelector('[data-mobile-filter-form]');
   if (!mobileFilterForm) return;
   const controls = [...mobileFilterForm.querySelectorAll('details')];
