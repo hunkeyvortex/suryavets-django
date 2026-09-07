@@ -335,3 +335,18 @@ Latest payment UI update: new checkouts now offer COD with an unavailable Online
 | --- | --- | --- | --- | --- | --- | --- |
 | Basket | Original design requested | /cart/ | Reviewed | Reviewed | Add/update/remove and totals | FUNCTIONAL COMPLETE |
 | Payment preference | Original design requested | /checkout/ | Reviewed | Reviewed | COD; online intentionally unavailable | NEEDS GATEWAY INTEGRATION |
+
+## M. CRM catalog editor and inventory redesign
+
+- Added manager/superuser product creation and editing, validated photo uploads, existing variant price/details editing, and confirmed archive/restore. Products are archived rather than permanently deleted; stock and order history are preserved.
+- Inventory now has catalog counts, visibility filters, product thumbnails, explicit actions, and responsive mobile cards. Stock pages link to editing and archiving.
+- Existing manager role updated with add/change product permissions after a database backup. No user passwords or memberships changed; no schema migrations required.
+- New products begin with zero stock and use the existing audited adjustment flow for opening quantities. Existing product edits cannot alter stock or tracking flags. Variant creation and destructive photo/product deletion are outside this update.
+- Verified all 115 tests with browser suites enabled, including product creation, pack editing and archive/restore. Six responsive widths checked; editor and inventory desktop/mobile screenshots reviewed. No claim of Shopify visual parity: this is the original CRM design requested by the user.
+- Guide, changed files and exact commands: `docs/crm-product-management.md`.
+
+| Page/component | Reference | Django URL | Desktop | Mobile | Functional | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CRM inventory | Original SuryaVets staff UI | /crm/inventory/ | Reviewed | Reviewed | Search, status/stock filters, product actions | FUNCTIONAL COMPLETE |
+| Product editor | Original SuryaVets staff UI | /crm/inventory/new/ and /crm/inventory/{id}/edit/ | Reviewed | Reviewed | Create/edit/photos/existing pack prices | FUNCTIONAL COMPLETE |
+| Archive/restore | Explicit confirmation flow | /crm/inventory/{id}/archive/ | Rendered/tested | Responsive form | History-preserving POST actions | FUNCTIONAL COMPLETE |

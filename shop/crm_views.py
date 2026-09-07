@@ -181,7 +181,10 @@ def customer_note(request, key):
 
 @staff_page()
 def inventory(request):
-    qs = Product.objects.select_related('brand').order_by('name', 'pk')
+    qs = Product.objects.select_related('brand', 'category').prefetch_related('images').order_by('name', 'pk')
+    visibility = request.GET.get('visibility', '')
+    if visibility in ('active', 'archived'):
+        qs = qs.filter(is_active=visibility == 'active')
     q = request.GET.get('q', '').strip()[:150]
     if q:
         qs = qs.filter(Q(name__icontains=q) | Q(sku__icontains=q) | Q(variants__sku__icontains=q) | Q(brand__name__icontains=q)).distinct()
@@ -192,7 +195,10 @@ def inventory(request):
     elif stock == 'out':
         qs = qs.filter(Q(variants__is_active=True, variants__stock_quantity=0) |
                        Q(variants__isnull=True, track_inventory=True, stock_quantity=0)).distinct()
-    return render(request, 'crm/inventory.html', {**page_context(request, qs), 'section': 'inventory', 'title': 'Inventory', 'stock': stock})
+    stats = Product.objects.aggregate(total=Count('pk'), active=Count('pk', filter=Q(is_active=True)),
+        archived=Count('pk', filter=Q(is_active=False)))
+    return render(request, 'crm/catalog_inventory.html', {**page_context(request, qs), 'section': 'inventory',
+        'title': 'Products & inventory', 'stock': stock, 'visibility': visibility, 'stats': stats})
 
 
 @staff_page()

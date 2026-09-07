@@ -1,5 +1,6 @@
 from django.urls import path
 from . import crm_views as views
+from . import crm_catalog_views as catalog
 
 app_name = 'crm'
 urlpatterns = [
@@ -14,6 +15,10 @@ urlpatterns = [
     path('customers/<str:key>/', views.customer_detail, name='customer_detail'),
     path('customers/<str:key>/notes/', views.customer_note, name='customer_note'),
     path('inventory/', views.inventory, name='inventory'),
+    path('inventory/new/', catalog.product_create, name='product_create'),
+    path('inventory/<uuid:pk>/edit/', catalog.product_edit, name='product_edit'),
+    path('inventory/<uuid:pk>/archive/', catalog.product_archive, name='product_archive'),
+    path('inventory/<uuid:pk>/packs/<int:variant_id>/edit/', catalog.variant_edit, name='variant_edit'),
     path('inventory/<uuid:pk>/', views.inventory_detail, name='inventory_detail'),
     path('inventory/<uuid:pk>/variants/<int:variant_id>/', views.inventory_detail, name='variant_detail'),
     path('reports/', views.reports, name='reports'),

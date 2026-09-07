@@ -9,7 +9,7 @@ class Command(BaseCommand):
         roles = {
             'Surya CRM Viewer': ['access_crm'],
             'Surya CRM Operations': ['access_crm', 'manage_crm_orders', 'write_crm_notes'],
-            'Surya CRM Manager': ['access_crm', 'manage_crm_orders', 'write_crm_notes', 'adjust_crm_inventory', 'manage_crm_coupons'],
+            'Surya CRM Manager': ['access_crm', 'manage_crm_orders', 'write_crm_notes', 'adjust_crm_inventory', 'manage_crm_coupons', 'add_product', 'change_product'],
         }
         for name, codes in roles.items():
             group, _ = Group.objects.get_or_create(name=name)

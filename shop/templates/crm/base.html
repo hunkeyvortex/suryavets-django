@@ -1,5 +1,5 @@
 {% load static %}<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>{{ title|default:'Staff sign in' }} | SuryaVets CRM</title><link rel="stylesheet" href="{% static 'css/crm.css' %}"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>{{ title|default:'Staff sign in' }} | SuryaVets CRM</title><link rel="stylesheet" href="{% static 'css/crm.css' %}">{% if section == 'inventory' %}<link rel="stylesheet" href="{% static 'css/crm-catalog.css' %}">{% endif %}</head>
 <body><a class="skip-link" href="#content">Skip to content</a>
 {% if request.user.is_authenticated and perms.shop.access_crm and request.user.is_staff %}
 <aside class="sidebar"><a class="brand" href="{% url 'crm:dashboard' %}">SURYA<span>vets</span><small>OPERATIONS WORKSPACE</small></a><nav aria-label="Staff navigation">
@@ -15,4 +15,5 @@
 <header class="topbar"><span>SuryaVets <span class="muted">/ Staff CRM</span></span>{% if request.user.is_authenticated %}<form method="post" action="{% url 'crm:logout' %}">{% csrf_token %}<span>{{ request.user.get_username }}</span><button class="quiet" type="submit">Sign out</button></form>{% endif %}</header>
 <main id="content"><div class="page-heading"><div><p class="eyebrow">PET'S LIFELINE · BEHIND THE SCENES</p><h1>{{ title|default:'Staff sign in' }}</h1></div><span class="workspace-tag">Internal workspace</span></div>
 {% if messages %}<div aria-live="polite">{% for message in messages %}<p class="notice {{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+{% if section == 'inventory' and product and perms.shop.change_product %}{% if request.resolver_match.url_name == 'inventory_detail' or request.resolver_match.url_name == 'variant_detail' %}<div class="catalog-toolbar"><a class="button quiet" href="{% url 'crm:product_edit' product.pk %}">Edit product</a><a href="{% url 'crm:product_archive' product.pk %}">{% if product.is_active %}Archive from store{% else %}Restore to store{% endif %}</a></div>{% endif %}{% endif %}
 {% block content %}{% endblock %}</main><footer class="workspace-footer">SuryaVets CRM · Built for your team. Connected to your Django store.</footer></div></body></html>

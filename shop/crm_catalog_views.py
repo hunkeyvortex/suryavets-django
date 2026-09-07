@@ -1,0 +1,112 @@
+"""Catalog editing shares the storefront database and preserves the stock ledger."""
+from django.contrib import messages
+from django.db import transaction, IntegrityError, OperationalError
+from django.db.models import Min
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+from .crm_views import staff_page
+from .crm_catalog_forms import ProductEditorForm, VariantEditorForm, ArchiveProductForm
+from .models import Product, ProductVariant, ProductImage, CRMActivity
+
+
+def record_product_activity(user, product, message):
+    CRMActivity.objects.create(actor=user, kind='note', text=f'Catalog [{product.pk}] {message}')
+
+
+@staff_page('change_product')
+@require_http_methods(['GET', 'POST'])
+def product_edit(request, pk):
+    return edit_product(request, pk)
+
+
+@staff_page('add_product')
+@require_http_methods(['GET', 'POST'])
+def product_create(request):
+    return edit_product(request)
+
+
+def edit_product(request, pk=None):
+    instance = get_object_or_404(Product, pk=pk) if pk else Product()
+    form = ProductEditorForm(instance=instance)
+    uploaded = None
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                instance = get_object_or_404(Product.objects.select_for_update(), pk=pk) if pk else Product()
+                form = ProductEditorForm(request.POST, request.FILES, instance=instance)
+                if form.is_valid():
+                    product = form.save(commit=False)
+                    product.discount_percentage = 0  # Exact selling_price is authoritative.
+                    product.save()
+                    form.save_m2m()
+                    if form.cleaned_data.get('image'):
+                        first_order = product.images.aggregate(first=Min('order'))['first']
+                        photo = ProductImage(product=product, order=(first_order - 1) if first_order is not None else 0,
+                            is_primary=True, alt_text=form.cleaned_data.get('image_alt') or product.name)
+                        photo.image.save(form.cleaned_data['image'].name, form.cleaned_data['image'], save=False)
+                        uploaded = (photo.image.storage, photo.image.name)
+                        product.images.update(is_primary=False)
+                        photo.save()
+                    fields = ', '.join(f for f in form.changed_data if f != 'version')
+                    record_product_activity(request.user, product, f'{"Updated" if pk else "Created"} {product.name}. Fields: {fields or "no changes"}.')
+                    messages.success(request, 'Product saved. Stock and previous order prices were not changed.' if pk else 'Product created. Use Adjust stock to record its opening quantity before selling.')
+                    return redirect('crm:product_edit' if request.user.has_perm('shop.change_product') else 'crm:inventory_detail', pk=product.pk)
+        except (IntegrityError, OperationalError):
+            if uploaded:
+                uploaded[0].delete(uploaded[1])  # Only the new file created by this failed save.
+            form.add_error(None, 'This handle or record changed during saving. Reload and check for duplicates before retrying.')
+    return render(request, 'crm/product_editor.html', {'title': 'Edit product' if pk else 'Add a product', 'section': 'inventory',
+        'form': form, 'product': instance if pk else None, 'variants': instance.variants.all() if pk else [],
+        'activity': CRMActivity.objects.filter(text__startswith=f'Catalog [{instance.pk}]').select_related('actor')[:20] if pk else []})
+
+
+@staff_page('change_product')
+@require_http_methods(['GET', 'POST'])
+def product_archive(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    form = ArchiveProductForm(initial={'version': product.updated_at.isoformat()})
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                product = get_object_or_404(Product.objects.select_for_update(), pk=pk)
+                form = ArchiveProductForm(request.POST)
+                if form.is_valid():
+                    if form.cleaned_data['version'] != product.updated_at.isoformat():
+                        form.add_error(None, 'This product changed. Reload and review its current status before continuing.')
+                    else:
+                        product.is_active = not product.is_active
+                        product.save(update_fields=['is_active', 'updated_at'])
+                        action = 'Restored' if product.is_active else 'Archived'
+                        record_product_activity(request.user, product, f'{action} {product.name}. Reason: {form.cleaned_data["reason"]}')
+                        messages.success(request, f'{action} product. Order history and stock records are preserved.')
+                        return redirect('crm:inventory')
+        except OperationalError:
+            form.add_error(None, 'This product is busy. Reload and try again.')
+    return render(request, 'crm/product_archive.html', {'title': 'Archive product' if product.is_active else 'Restore product',
+        'section': 'inventory', 'product': product, 'form': form})
+
+
+@staff_page('change_product')
+@require_http_methods(['GET', 'POST'])
+def variant_edit(request, pk, variant_id):
+    product = get_object_or_404(Product, pk=pk)
+    variant = get_object_or_404(ProductVariant, pk=variant_id, product=product)
+    form = VariantEditorForm(instance=variant)
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                product = get_object_or_404(Product.objects.select_for_update(), pk=pk)
+                variant = get_object_or_404(ProductVariant.objects.select_for_update(), pk=variant_id, product=product)
+                form = VariantEditorForm(request.POST, instance=variant)
+                if form.is_valid():
+                    variant = form.save(commit=False)
+                    variant.discount_percentage = 0
+                    variant.save()
+                    Product.objects.filter(pk=product.pk).update(updated_at=timezone.now())
+                    record_product_activity(request.user, product, f'Edited pack {variant.pk} ({variant.name}). Fields: {", ".join(f for f in form.changed_data if f != "version")}.')
+                    messages.success(request, 'Pack details saved. Stock and past orders are unchanged.')
+                    return redirect('crm:product_edit', pk=product.pk)
+        except (IntegrityError, OperationalError):
+            form.add_error(None, 'A pack with this name already exists or the record is busy. Reload and review.')
+    return render(request, 'crm/variant_editor.html', {'title': 'Edit pack', 'section': 'inventory', 'product': product, 'variant': variant, 'form': form})
