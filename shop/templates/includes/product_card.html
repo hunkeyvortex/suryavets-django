@@ -11,7 +11,7 @@
   </a>
   <div class="store-product-card__body">
     <p class="store-product-card__eyebrow">{% if product.product_type %}{{ product.product_type.name }}{% elif product.brand %}{{ product.brand.name }}{% else %}Surya Vets{% endif %}</p>
-    <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.name }}</a></h3>
+    <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.family_name|default:product.name }}</a></h3>
     <div class="store-product-card__price"><strong>{% if offer.multiple %}<small>From </small>{% endif %}₹{{ offer.price|money }}</strong> {% if offer.sale %}<del>₹{{ offer.regular|money }}</del>{% endif %}</div>
     {% if offer.multiple %}
     <a class="store-product-card__choose" href="{% url 'shop:product_detail' product.slug %}">Choose size</a>
@@ -20,7 +20,7 @@
       {% csrf_token %}
       {% if offer.variant %}<input type="hidden" name="variant_id" value="{{ offer.variant.pk }}">{% endif %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
-      <button type="submit" {% if not product.is_in_stock %}disabled{% endif %}>{% if product.is_in_stock %}Add to Cart{% else %}Out of Stock{% endif %}</button>
+      <button type="submit" {% if not offer.in_stock %}disabled{% endif %}>{% if offer.in_stock %}Add to Cart{% else %}Out of Stock{% endif %}</button>
     </form>
     {% endif %}
   </div>

@@ -21,9 +21,9 @@ def _categories_with_counts():
 
 
 def _product_queryset():
-    return Product.objects.filter(is_active=True).select_related(
+    return Product.objects.filter(is_active=True, variant_family__isnull=True).select_related(
         'category', 'subcategory', 'brand', 'product_type'
-    ).prefetch_related('images', 'pet_categories', 'variants').order_by('-created_at')
+    ).prefetch_related('images', 'pet_categories', 'variants', 'family_members__variants', 'family_members__images').order_by('-created_at')
 
 
 def _valid_decimal(value):
@@ -59,8 +59,9 @@ def _apply_catalog_controls(request, products, *, category=None, subcategory=Non
     if maximum_price is not None:
         products = products.filter(catalog_price__lte=maximum_price)
     if availability in ('in_stock', 'out_of_stock'):
-        products = products.annotate(has_pack=Exists(ProductVariant.objects.filter(product_id=OuterRef('pk'))),
-            has_stock_pack=Exists(ProductVariant.objects.filter(product_id=OuterRef('pk'), is_active=True, stock_quantity__gt=0)))
+        family_match=Q(product_id=OuterRef('pk')) | Q(product__variant_family_id=OuterRef('pk'))
+        products = products.annotate(has_pack=Exists(ProductVariant.objects.filter(family_match)),
+            has_stock_pack=Exists(ProductVariant.objects.filter(family_match, product__is_active=True, is_active=True, stock_quantity__gt=0)))
         stock_filter = Q(has_stock_pack=True) | (Q(has_pack=False) & (Q(track_inventory=False) | Q(stock_quantity__gt=0)))
         products = products.filter(stock_filter) if availability == 'in_stock' else products.exclude(stock_filter)
 
@@ -158,6 +159,9 @@ def product_search(request):
             | Q(category__name__icontains=query)
             | Q(subcategory__name__icontains=query)
             | Q(product_type__name__icontains=query)
+            | Q(family_members__name__icontains=query)
+            | Q(family_members__sku__icontains=query)
+            | Q(family_members__variants__sku__icontains=query)
         )
     else:
         products = Product.objects.none()
@@ -175,23 +179,33 @@ def product_detail(request, product_slug):
         Product.objects.select_related('category', 'subcategory', 'brand', 'product_type')
         .prefetch_related(
             'images', 'pet_categories', 'specifications',
-            'variants',
+            'variants', 'family_members__variants', 'family_members__images',
         ),
         slug=product_slug,
         is_active=True,
     )
     related_products = _product_queryset().filter(
         category=product.category
-    ).exclude(pk=product.pk)[:4]
-    variants = [v for v in product.variants.all() if v.is_active]
+    ).exclude(pk=product.variant_family_id or product.pk)[:4]
+    from .services.pack_families import buying_variants, family_products
+    requested_product = product
+    if product.variant_family_id:
+        product = get_object_or_404(_product_queryset(), pk=product.variant_family_id)
+    members = family_products(product)
+    family_photos = [photo for member in members for photo in member.images.all()]
+    product._prefetched_objects_cache['images'] = family_photos
+    variants = sorted(buying_variants(product), key=lambda v:(v.display_order,v.name,v.pk))
     from .services.variants import variant_options
     options = variant_options(product, variants)
     selected_variant = next((variant for variant in variants if variant.is_in_stock), variants[0] if variants else None)
+    if requested_product.pk != product.pk:
+        selected_variant = next((v for v in variants if v.product_id == requested_product.pk and v.is_in_stock), selected_variant)
     priced_item = selected_variant or product
     saving = max(Decimal(0), priced_item.original_price - priced_item.current_price)
     return render(request, 'catalog/product_detail.html', {
         'product': product,
         'selected_variant': selected_variant,
+        'buying_in_stock': any(v.is_in_stock for v in variants) if variants else product.is_in_stock,
         'variant_options': options,
         'selected_option': next((o for o in options if o['variant'] == selected_variant), {'saving': saving, 'discount': int(saving * 100 / priced_item.original_price) if priced_item.original_price > 0 else 0, 'unit_price': None}),
         'display_price': priced_item.current_price,

@@ -149,6 +149,8 @@ class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True, blank=True)
+    variant_family = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='family_members', help_text='Canonical listing for verified sibling packs. Existing stock and orders stay on this product.')
+    family_name = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
     short_description = models.TextField(blank=True)
     ingredients = models.TextField(blank=True)

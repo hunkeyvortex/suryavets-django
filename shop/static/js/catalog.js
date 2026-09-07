@@ -5,6 +5,9 @@
     gallery.querySelectorAll('[data-product-image]').forEach((button) => {
       button.addEventListener('click', () => {
         mainImage.src = button.dataset.productImage;
+        mainImage.hidden = false;
+        const notice = gallery.querySelector('[data-variant-image-missing]');
+        if (notice) notice.hidden = true;
         mainImage.alt = button.dataset.productAlt || mainImage.alt;
         gallery.querySelectorAll('[data-product-image]').forEach((item) => {
           item.classList.remove('is-active'); item.setAttribute('aria-pressed', 'false');
@@ -35,6 +38,9 @@
       document.querySelector('[data-selected-pack]').textContent = selected.dataset.name;
       document.querySelector('[data-product-unit]').textContent = selected.dataset.unit;
       if (mainImage) {
+        mainImage.hidden = selected.dataset.imageMissing === '1';
+        const notice = gallery.querySelector('[data-variant-image-missing]');
+        if (notice) notice.hidden = !mainImage.hidden;
         mainImage.src = selected.dataset.image || defaultImage.src;
         mainImage.alt = selected.dataset.alt || defaultImage.alt;
         gallery.querySelectorAll('[data-product-image]').forEach(button => {

@@ -11,6 +11,7 @@ from .services.product_media import optimize_image
 from .crm_views import staff_page
 from .crm_catalog_forms import ProductEditorForm, VariantEditorForm, ArchiveProductForm, ImageEditorForm
 from .models import Product, ProductVariant, ProductImage, CRMActivity
+from .services.pack_families import family_products
 
 
 def record_product_activity(user, product, message):
@@ -67,6 +68,7 @@ def edit_product(request, pk=None):
     return render(request, 'crm/product_editor.html', {'title': 'Edit product' if pk else 'Add a product', 'section': 'inventory',
         'form': form, 'product': instance if pk else None, 'variants': instance.variants.all() if pk else [],
         'photos': ProductImage.all_objects.filter(product=instance) if pk else [],
+        'pack_sources': family_products(instance) if pk else [],
         'activity': CRMActivity.objects.filter(text__startswith=f'Catalog [{instance.pk}]').select_related('actor')[:20] if pk else []})
 
 

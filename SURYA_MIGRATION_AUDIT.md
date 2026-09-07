@@ -387,3 +387,16 @@ Latest payment UI update: new checkouts now offer COD with an unavailable Online
 | Product cards | SuryaVets reusable cards | /categories/ | Tested | Grid overflow checked | From price and Choose size | IMPLEMENTED |
 | Pack management | Original CRM | /crm/inventory/{id}/packs/new/ | Form tested | Responsive | Add/edit/disable/order/image; audited stock | IMPLEMENTED |
 | Photo management | Original CRM | /crm/inventory/{id}/images/{id}/ | Form tested | Responsive | Main photo/order/remove/restore | IMPLEMENTED |
+
+## P. Existing source pack families and requested stock balance
+
+- Linked 221 families containing 498 original product records; 277 siblings are represented under shared catalog cards. Original URLs, variant ownership, prices, SKUs, orders and inventory history are preserved. This supersedes section O's earlier zero real multi-pack page status; it does not destructively merge records.
+- Set all 6,677 variants and 20 simple products to stock 10, with 6,692 new inventory adjustments. This is an owner-requested balance, not verified physical inventory. Visibility/tracking flags were not changed. Future purchases reduce stock normally.
+- Held 287 unclear families for review; no manufacturer-only sizes or selling prices invented. Missing photos and source label accuracy remain separate review items.
+- Full suite: 139 tests passed, including linked-source pack selection/cart/order journeys across nine widths. Django checks and migration-drift checks pass. Backup comparison confirms unchanged historical product/variant identity and prices, order items and prior inventory movements.
+- Guide, exact commands, local reports and rollback checkpoint: `docs/pack-family-stock-update.md`.
+
+| Page/component | Reference | Django URL | Desktop | Mobile | Functional | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Existing multi-pack families | Supplied Shopify records; live N&D 7KG label/price checked | /product/n-d-gf-chic-adu-mini-dry-food-800gm/ | Actual page reviewed | Linked-source fixtures tested | Exact source pack pricing/cart/orders | 221 LINKED; 287 REQUIRE REVIEW |
+| Stock reset | Explicit owner request | CRM stock pages | Backend verified | Backend verified | Audited, retry-safe, 10 per pack/simple product | APPLIED LOCALLY |

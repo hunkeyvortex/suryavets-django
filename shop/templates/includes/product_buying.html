@@ -14,7 +14,7 @@
         data-price="{{ option.price|floatformat:'2u' }}" data-regular="{{ option.regular|floatformat:'2u' }}" data-stock="{{ variant.stock_quantity }}"
         data-name="{{ variant.name }}" data-sku="{{ variant.sku|default:product.sku }}" data-discount="{{ option.discount }}" data-saving="{{ option.saving|money }}"
         data-unit="{% if option.unit_price != None %}₹{{ option.unit_price|money }}/{{ option.unit_label }}{% endif %}"
-        data-image="{{ option.image_url }}" data-alt="{{ option.image_alt }}"
+        data-image="{{ option.image_url }}" data-alt="{{ option.image_alt }}" data-image-missing="{% if option.image_missing %}1{% else %}0{% endif %}"
         {% if variant.pk == selected_variant.pk %}checked{% endif %} {% if not variant.is_in_stock %}disabled{% endif %}>
       <span class="buying-option__content"><strong>{{ variant.name }}</strong><span>₹{{ option.price|money }}</span>
         {% if option.unit_price != None %}<small>₹{{ option.unit_price|money }}/{{ option.unit_label }}</small>{% endif %}
@@ -25,7 +25,7 @@
     </label>{% endwith %}{% endfor %}
   </div></fieldset>{% endif %}
   <p class="buying-selection" aria-live="polite"><strong data-selected-pack>{{ selected_variant.name }}</strong> <span data-product-unit>{% if selected_option.unit_price != None and selected_option %}₹{{ selected_option.unit_price|money }}/{{ selected_option.unit_label }}{% endif %}</span></p>
-  <p class="buying-stock" data-product-stock aria-live="polite">{% if product.is_in_stock %}In stock · ready to add{% else %}Out of stock{% endif %}</p>
+  <p class="buying-stock" data-product-stock aria-live="polite">{% if buying_in_stock %}In stock · ready to add{% else %}Out of stock{% endif %}</p>
   <div class="product-quantity"><label for="quantity">Quantity</label><div class="buying-stepper"><button type="button" data-quantity-step="-1" aria-label="Decrease quantity">−</button><input id="quantity" name="quantity" type="number" min="1" value="1" required {% if selected_variant %}max="{{ selected_variant.stock_quantity }}"{% elif product.track_inventory %}max="{{ product.stock_quantity }}"{% else %}max="10000"{% endif %}><button type="button" data-quantity-step="1" aria-label="Increase quantity">+</button></div></div>
-  <div class="buying-actions"><button type="submit" data-add-to-cart {% if not product.is_in_stock %}disabled{% endif %}>{% if product.is_in_stock %}Add to Cart{% else %}Out of Stock{% endif %}</button><button type="submit" class="buying-now" name="next" value="{% url 'shop:checkout' %}" {% if not product.is_in_stock %}disabled{% endif %}>Buy now</button></div>
+  <div class="buying-actions"><button type="submit" data-add-to-cart {% if not buying_in_stock %}disabled{% endif %}>{% if buying_in_stock %}Add to Cart{% else %}Out of Stock{% endif %}</button><button type="submit" class="buying-now" name="next" value="{% url 'shop:checkout' %}" {% if not buying_in_stock %}disabled{% endif %}>Buy now</button></div>
 </form>

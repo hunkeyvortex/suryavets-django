@@ -32,12 +32,12 @@ def index(request):
         category.reference_image = 'images/' + reference_images[category.slug] if category.slug in reference_images else ''
     banners = Banner.objects.filter(is_active=True).order_by('order')[:3]
     top_products = Product.objects.filter(
-        is_active=True
+        is_active=True, variant_family__isnull=True
     ).filter(
         Q(is_bestseller=True) | Q(is_featured=True)
     ).select_related(
         'category', 'subcategory', 'brand', 'product_type'
-    ).prefetch_related('images', 'variants')[:8]
+    ).prefetch_related('images', 'variants', 'family_members__variants', 'family_members__images')[:8]
     
     context = {
         'categories': categories,
@@ -238,19 +238,27 @@ def add_to_cart(request, product_id):
         messages.error(request, 'Please enter a quantity between 1 and 10000.')
         return redirect(_cart_return_url(request))
     product = get_object_or_404(Product, id=product_id, is_active=True)
+    if product.variant_family_id:
+        get_object_or_404(Product, pk=product.variant_family_id, is_active=True)
     variant_id = request.POST.get('variant_id')
     variant = None
     if variant_id:
         if not variant_id.isdecimal():
             messages.error(request, 'Please choose a valid pack.')
             return redirect('shop:product_detail', product_slug=product.slug)
-        variant = get_object_or_404(ProductVariant, id=variant_id, product=product, is_active=True)
+        root_id = product.variant_family_id or product.pk
+        variant = get_object_or_404(ProductVariant.objects.select_related('product').filter(
+            Q(product_id=root_id) | Q(product__variant_family_id=root_id)), id=variant_id, is_active=True, product__is_active=True)
+        product = variant.product  # Preserve the existing SKU's stock/cart/order ownership.
     else:
-        active_variants = list(product.variants.filter(is_active=True))
+        from .services.pack_families import buying_variants
+        active_variants = buying_variants(product)
         if len(active_variants) > 1:
             messages.info(request, 'Please choose a pack or variant before adding this product.')
             return redirect('shop:product_detail', product_slug=product.slug)
         variant = active_variants[0] if active_variants else None
+        if variant:
+            product = variant.product
         if variant is None and product.variants.exists():
             messages.error(request, 'This product has no available packs.')
             return redirect('shop:product_detail', product_slug=product.slug)

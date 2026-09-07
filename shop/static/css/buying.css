@@ -26,6 +26,8 @@
 .product-form .buying-now { background: white; border: 1px solid var(--sv-green); color: var(--sv-green-dark); }
 .product-form .buying-now:disabled { border-color: #a4ada7; color: #68726c; }
 .buying-price [hidden], .buying-saving[hidden] { display: none; }
+.product-gallery__main [hidden] { display: none; }
+.product-gallery__main [data-variant-image-missing] { padding: 1.5rem; text-align: center; color: var(--sv-muted); }
 .store-product-card { min-width: 0; }
 .store-product-card h3 { overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: 2.7em; }
 .store-product-card__body button, .store-product-card__choose { min-height: 44px; }

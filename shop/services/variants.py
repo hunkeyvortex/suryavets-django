@@ -21,6 +21,7 @@ def variant_options(product, variants):
                   'unit_price': None, 'unit_label': '', 'value_saving': Decimal(0),
                   'best_value': False, 'baseline': '', 'image_url': photo.display_url if photo else '',
                   'image_alt': (photo.alt_text or f'{product.name} — {variant.name}') if photo else ''}
+        option['image_missing'] = bool(product.family_name and not photo)
         if variant.quantity and variant.quantity > 0 and variant.unit in UNITS:
             label, factor = UNITS[variant.unit]
             quantity = variant.quantity * factor
@@ -46,10 +47,12 @@ def variant_options(product, variants):
 
 
 def card_offer(product):
-    variants = [v for v in product.variants.all() if v.is_active]
+    from .pack_families import buying_variants
+    variants = buying_variants(product)
     available = [v for v in variants if v.is_in_stock]
     item = min(available or variants, key=lambda v: v.current_price) if variants else product
     return {'price': item.current_price, 'regular': item.original_price,
+            'in_stock': bool(available) if variants else product.is_in_stock,
             'discount': int((item.original_price - item.current_price) * 100 / item.original_price) if item.original_price > 0 and item.current_price < item.original_price else 0,
             'sale': item.current_price < item.original_price, 'multiple': len(variants) > 1,
             'variant': variants[0] if len(variants) == 1 else None}
