@@ -223,7 +223,7 @@ class CustomerAddressAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ['product', 'product_variant', 'product_name', 'sku', 'variant_name', 'unit_price', 'quantity', 'line_total']
+    readonly_fields = ['product', 'product_variant', 'product_name', 'sku', 'variant_name', 'unit_price', 'quantity', 'line_total', 'image_reference']
     can_delete = False
 
     def has_add_permission(self, request, obj=None):
@@ -243,7 +243,8 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ['order_number', 'email', 'phone', 'user__username', 'payment_reference']
     readonly_fields = ['id', 'order_number', 'created_at', 'updated_at', 'checkout_key', 'checkout_cart',
                        'stock_deducted', 'inventory_recorded', 'subtotal', 'shipping_cost', 'discount_amount', 'total',
-                       'status', 'payment_status', 'payment_method', 'payment_reference', 'coupon', 'coupon_code']
+                       'status', 'payment_status', 'payment_method', 'payment_reference', 'coupon', 'coupon_code',
+                       'return_status', 'courier', 'tracking_number', 'tracking_url']
     inlines = [OrderItemInline]
 
 
@@ -277,3 +278,19 @@ class CouponAdmin(ImmutableAuditAdmin):
     list_display = ['code', 'kind', 'value', 'is_active', 'used_count', 'max_uses', 'ends_at']
     search_fields = ['code', 'name']
     list_filter = ['is_active', 'kind']
+
+
+from .models import OrderStatusHistory, OrderNotification
+
+
+@admin.register(OrderStatusHistory)
+class OrderEventAdmin(ImmutableAuditAdmin):
+    list_display = ['order', 'kind', 'status', 'timestamp', 'changed_by', 'customer_visible']
+    list_filter = ['kind', 'status', 'customer_visible']
+    search_fields = ['order__order_number']
+
+
+@admin.register(OrderNotification)
+class OrderNotificationAdmin(ImmutableAuditAdmin):
+    list_display = ['event', 'channel', 'state', 'sent_at', 'attempts']
+    list_filter = ['channel', 'state']

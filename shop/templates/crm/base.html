@@ -5,6 +5,7 @@
 <aside class="sidebar"><a class="brand" href="{% url 'crm:dashboard' %}">SURYA<span>vets</span><small>OPERATIONS WORKSPACE</small></a><nav aria-label="Staff navigation">
 <a href="{% url 'crm:dashboard' %}" {% if section == 'dashboard' %}aria-current="page"{% endif %}>Overview</a>
 <a href="{% url 'crm:orders' %}" {% if section == 'orders' %}aria-current="page"{% endif %}>Orders</a>
+<a href="{% url 'crm:support' %}" {% if section == 'support' %}aria-current="page"{% endif %}>Customer support</a>
 <a href="{% url 'crm:customers' %}" {% if section == 'customers' %}aria-current="page"{% endif %}>Customers</a>
 <a href="{% url 'crm:inventory' %}" {% if section == 'inventory' %}aria-current="page"{% endif %}>Inventory</a>
 <a href="{% url 'crm:coupons' %}" {% if section == 'coupons' %}aria-current="page"{% endif %}>Coupons</a>

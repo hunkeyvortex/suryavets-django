@@ -42,3 +42,4 @@
   .product-summary h1 { font-size: 1.25rem; line-height: 1.35; }
   .store-product-card .store-product-card__body button, .store-product-card__choose { min-height: 44px; }
 }
+.product-save-button { display: inline-flex; align-items: center; min-height: 44px; border: 1px solid #009b51; border-radius: 9px; background: white; color: #007b43; padding: 10px 16px; margin-top: 12px; cursor: pointer; text-decoration: none; font: inherit; }

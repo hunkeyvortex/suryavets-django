@@ -17,6 +17,8 @@ from django.views.decorators.http import require_POST
 from .crm_forms import CouponForm, NoteForm, StaffLoginForm, StatusForm, StockAdjustmentForm
 from .models import Coupon, CRMActivity, InventoryMovement, Order, Product, ProductVariant, ProductImage
 from django.utils import timezone
+from django.utils.dateparse import parse_date
+from .services.order_tracking import tracker
 from .services.crm import CRMError, TRANSITIONS, add_note, adjustment_token, adjust_inventory, require_staff, transition_order
 
 
@@ -68,6 +70,10 @@ def customer_groups():
 def dashboard(request):
     return render(request, 'crm/dashboard.html', {
         'section': 'dashboard', 'title': 'Overview',
+        'new_orders': Order.objects.filter(status='pending').count(),
+        'to_pack': Order.objects.filter(status__in=['confirmed', 'processing']).count(),
+        'shipped_orders': Order.objects.filter(status__in=['shipped', 'out_for_delivery']).count(),
+        'delivered_today': Order.objects.filter(events__kind='order', events__status='delivered', events__timestamp__date=timezone.localdate()).distinct().count(),
         'open_orders': Order.objects.filter(status__in=['pending', 'processing']).count(),
         'paid_total': Order.objects.filter(payment_status='paid').aggregate(total=Sum('total'))['total'] or 0,
         'product_count': Product.objects.filter(is_active=True).count(),
@@ -78,13 +84,21 @@ def dashboard(request):
 
 @staff_page()
 def orders(request):
-    qs = Order.objects.all()
+    qs = Order.objects.prefetch_related('items')
     q = request.GET.get('q', '').strip()[:150]
     if q:
         qs = qs.filter(Q(order_number__icontains=q) | Q(email__icontains=q) | Q(shipping_name__icontains=q) | Q(phone__icontains=q))
     status, payment = request.GET.get('status', ''), request.GET.get('payment', '')
     if status in Order.Status.values:
         qs = qs.filter(status=status)
+    elif status == 'to_pack': qs = qs.filter(status__in=['confirmed', 'processing'])
+    elif status == 'in_transit': qs = qs.filter(status__in=['shipped', 'out_for_delivery'])
+    elif status == 'returns': qs = qs.exclude(return_status='')
+    elif status == 'delivered_today': qs = qs.filter(events__kind='order', events__status='delivered', events__timestamp__date=timezone.localdate()).distinct()
+    for param, lookup in [('from', 'created_at__date__gte'), ('to', 'created_at__date__lte')]:
+        try: value = parse_date(request.GET.get(param, ''))
+        except ValueError: value = None
+        if value: qs = qs.filter(**{lookup: value})
     if payment in Order.PaymentStatus.values:
         qs = qs.filter(payment_status=payment)
     return render(request, 'crm/orders.html', {**page_context(request, qs), 'section': 'orders', 'title': 'Orders',
@@ -98,6 +112,7 @@ def order_detail(request, pk):
     status_form.fields['status'].choices = [(s, Order.Status(s).label) for s in TRANSITIONS.get(order.status, ())]
     return render(request, 'crm/order_detail.html', {'section': 'orders', 'title': order.order_number, 'order': order,
         'status_form': status_form, 'can_transition': bool(status_form.fields['status'].choices), 'note_form': NoteForm(),
+        'events': order.events.select_related('changed_by'), 'stages': tracker(order),
         'activity': order.crm_activity.select_related('actor'), 'movements': order.stock_movements.select_related('product', 'variant', 'actor'),
         'customer_key': signing.dumps(order.email.lower(), salt='surya.crm.customer')})
 

@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import catalog_views, views
+from . import catalog_views, views, account_views as account
 
 app_name = 'shop'
 
@@ -32,9 +32,25 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
-    path('account/', views.profile_view, name='profile'),
-    path('account/addresses/', views.addresses_view, name='addresses'),
-    path('account/orders/<uuid:order_id>/', views.order_detail, name='order_detail'),
+    path('account/', account.dashboard, name='profile'),
+    path('account/orders/', account.orders, name='orders'),
+    path('account/orders/<uuid:order_id>/', account.order_detail, name='order_detail'),
+    path('account/orders/<uuid:order_id>/reorder/', account.reorder, name='reorder'),
+    path('account/orders/<uuid:order_id>/cancel/', account.cancel, name='cancel_order'),
+    path('account/orders/<uuid:order_id>/return/', account.request_return, name='request_return'),
+    path('account/orders/<str:number>/', account.order_detail, name='order_number'),
+    path('account/addresses/', account.addresses, name='addresses'),
+    path('account/addresses/<int:pk>/edit/', account.addresses, name='address_edit'),
+    path('account/addresses/<int:pk>/<str:action>/', account.address_action, name='address_action'),
+    path('account/pets/', account.pets, name='pets'),
+    path('account/pets/<int:pk>/edit/', account.pets, name='pet_edit'),
+    path('account/pets/<int:pk>/delete/', account.pet_delete, name='pet_delete'),
+    path('account/wishlist/', account.wishlist, name='wishlist'),
+    path('account/wishlist/save/<uuid:product_id>/', account.wishlist_save, name='wishlist_save'),
+    path('account/wishlist/<int:pk>/delete/', account.wishlist_delete, name='wishlist_delete'),
+    path('account/profile/', account.profile, name='profile_edit'),
+    path('account/security/', account.security, name='security'),
+    path('account/support/', account.support, name='support'),
     
     # Informational pages
     path('about/', views.about, name='about'),

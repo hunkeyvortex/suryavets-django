@@ -7,6 +7,7 @@
   <div class="checkout-shell">
     <nav class="checkout-progress" aria-label="Checkout progress"><a href="{% url 'shop:cart' %}">01 <span>Basket</span></a><span class="progress-line"></span><span aria-current="step">02 <span>Checkout</span></span><span class="progress-line"></span><span class="step-next">03 <span>Confirmation</span></span></nav>
     <header class="checkout-heading"><div><p class="checkout-eyebrow">GOOD CARE IS ON ITS WAY</p><h1>Let's bring it home.</h1><p>A few details, and we'll take it from here.</p></div><a href="{% url 'shop:cart' %}">← Back to your basket</a></header>
+    {% if saved_addresses %}<form method="get" class="checkout-panel"><label for="saved-address">Use a saved delivery address</label><select id="saved-address" name="address">{% for address in saved_addresses %}<option value="{{ address.pk }}" {% if request.GET.address == address.pk|stringformat:'s' %}selected{% endif %}>{{ address.label }} · {{ address.full_name }} · {{ address.postal_code }}</option>{% endfor %}</select><button type="submit">Use this address</button><p>Loads the selected address into the form below. Review before placing your order.</p></form>{% endif %}
     <form method="post" class="checkout-layout" data-checkout-form>
       {% csrf_token %}<input type="hidden" name="checkout_token" value="{{ checkout_token }}">
       <div class="checkout-details">

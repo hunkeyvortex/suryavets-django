@@ -65,28 +65,49 @@ def adjust_inventory(user, product_id, variant_id, delta, reason, token):
     return movement
 
 
-TRANSITIONS = {'pending': ('processing', 'cancelled'), 'processing': ('shipped', 'cancelled'), 'shipped': ('delivered',)}
+TRANSITIONS = {'pending': ('confirmed', 'cancelled'), 'confirmed': ('processing', 'cancelled'),
+               'processing': ('packed', 'cancelled'), 'packed': ('shipped', 'cancelled'),
+               'shipped': ('out_for_delivery',), 'out_for_delivery': ('delivered',)}
 
 
 @transaction.atomic
-def transition_order(user, order_id, expected, status, reason):
-    require_staff(user, 'manage_crm_orders')
+def transition_order(user, order_id, expected, status, reason, *, courier='', tracking_number='', tracking_url='', customer_note='', customer=False):
+    from .order_tracking import customer_can_cancel, record_event
+    from django.core.validators import URLValidator
+    from django.core.exceptions import ValidationError
+    if not customer:
+        require_staff(user, 'manage_crm_orders')
     if not 3 <= len(reason.strip()) <= 500:
         raise CRMError('Explain the status change (3–500 characters).')
     order = Order.objects.select_for_update().get(pk=order_id)
+    if customer and (not user.is_authenticated or not user.is_active or order.user_id != user.pk or status != 'cancelled' or not customer_can_cancel(order)):
+        raise PermissionDenied
     if order.status == status:
         return order  # Duplicate submission must never restock twice.
     if order.status != expected or status not in TRANSITIONS.get(order.status, ()):
         raise CRMError('This status change is no longer available. Review the latest order.')
-    if status in ('processing', 'shipped', 'delivered') and order.payment_status != 'paid' and not (order.payment_method == 'cash_on_delivery' and order.payment_status == 'pending'):
+    if status != 'cancelled' and order.payment_status != 'paid' and not (order.payment_method == 'cash_on_delivery' and order.payment_status == 'pending'):
         raise CRMError('Fulfilment requires a confirmed payment or a pending cash-on-delivery order.')
     if status == 'cancelled':
-        if order.payment_status in ('paid', 'refunded'):
+        if order.payment_status not in ('pending', 'failed'):
             raise CRMError('Paid/refunded orders require a separate refund and returns review. No refund has been issued.')
         if order.stock_deducted and not order.inventory_recorded:
             raise CRMError('This older order has no complete stock ledger. Reconcile it manually before cancellation; no stock was changed.')
+    updates = {'status': status, 'updated_at': timezone.now()}
+    if len(customer_note) > 1000:
+        raise CRMError('Customer note is too long.')
+    if status == 'shipped':
+        if not 1 <= len(courier.strip()) <= 100 or not 1 <= len(tracking_number.strip()) <= 150:
+            raise CRMError('Enter the courier and tracking number before dispatch.')
+        if tracking_url:
+            try:
+                URLValidator(schemes=['https'])(tracking_url)
+                if len(tracking_url) > 500: raise ValidationError('Too long')
+            except ValidationError:
+                raise CRMError('Use a valid HTTPS courier tracking URL.')
+        updates.update(courier=courier.strip(), tracking_number=tracking_number.strip(), tracking_url=tracking_url)
     # Compare-and-swap also prevents concurrent transitions on SQLite.
-    if not Order.objects.filter(pk=order.pk, status=expected).update(status=status, updated_at=timezone.now()):
+    if not Order.objects.filter(pk=order.pk, status=expected).update(**updates):
         raise CRMError('Another staff member changed this order. Reload before continuing.')
     if status == 'cancelled' and order.stock_deducted:
         deductions = list(order.stock_movements.filter(kind='checkout').order_by('product_id', 'variant_id'))
@@ -107,6 +128,7 @@ def transition_order(user, order_id, expected, status, reason):
         for pk in {m.product_id for m in deductions if m.variant_id}:
             sync_variant_total(pk)
     CRMActivity.objects.create(actor=user, order=order, kind='status', text=f'{expected} → {status}: {reason.strip()}')
+    record_event(order, status, actor=user, internal_note=reason.strip(), customer_note=customer_note.strip())
     order.status = status
     return order
 

@@ -400,3 +400,23 @@ Latest payment UI update: new checkouts now offer COD with an unavailable Online
 | --- | --- | --- | --- | --- | --- | --- |
 | Existing multi-pack families | Supplied Shopify records; live N&D 7KG label/price checked | /product/n-d-gf-chic-adu-mini-dry-food-800gm/ | Actual page reviewed | Linked-source fixtures tested | Exact source pack pricing/cart/orders | 221 LINKED; 287 REQUIRE REVIEW |
 | Stock reset | Explicit owner request | CRM stock pages | Backend verified | Backend verified | Audited, retry-safe, 10 per pack/simple product | APPLIED LOCALLY |
+
+## Q. Customer account and shared CRM order tracking
+
+- Initial thirteen-point architecture audit: `docs/account-order-audit.md`. Continued the existing Desktop/suryavets-django project; the alternatively named Desktop/suryavets directory does not exist.
+- Reused Django User/email authentication, Order/OrderItem snapshots, addresses, cart, CRM permissions and cancellation ledger. Added migrations 0012–0013 for structured shared events, shipment details, separate return state, expanded payment/fulfillment states, profile phone, owned pets/wishlist/support and a deduplicated notification outbox.
+- Customer and CRM pages read the same order and event rows. Valid staff updates become visible on customer page reload; internal notes remain staff-only. Status transitions are guarded, shipped orders require courier/AWB and payment is independent from delivery. Return approval/refund recording is not an actual refund or automatic restock.
+- Customer dashboard, paginated order history, vertical tracker, exact-pack/current-price Buy again, pets, wishlist, address CRUD/default/checkout selection, profile, password change and order-linked support implemented. CRM adds attention counts, date/status/payment/returns filters, structured timeline and customer support replies.
+- Full regression suite: 156 tests passed with browser suites enabled. Expanded account suite: 20 focused tests passed, including four additional cases. Account overflow verified at nine widths from 320 to 1440; shared CRM-to-customer event visibility and exact-pack reorder tested in disposable browser fixtures. Mobile tracker and desktop dashboard screenshots reviewed.
+- Read-only backup comparison confirms all pre-existing order, item, product, variant, inventory movement, address and User rows unchanged. Only known historical creation time was backfilled; no fake milestone times or legacy notifications.
+- Remaining boundaries: actual email transport/worker deployment, verified self-service email change, password recovery, Google OAuth, real payment/refund integration, private pet photos, return/refund business policy and audited exceptional corrections. No Shopify/DNS/Render changes.
+- Staff workflow, changed files, migration commands and safety details: `docs/account-order-management.md`.
+- Final post-polish rerun: 21 account unit/browser tests passed; system checks and migration drift remain clean.
+
+| Page/component | Reference | Django URL | Desktop | Mobile | Functional | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| My account | Requested original SuryaVets-themed design | /account/ | Reviewed | Nine widths | Dashboard and owned account data | IMPLEMENTED LOCALLY |
+| Customer order tracker | Shared Order/OrderStatusHistory | /account/orders/ | Tested | Vertical tracker reviewed | Status/history, exact variants, current-price reorder | IMPLEMENTED LOCALLY |
+| CRM orders | Existing CRM extended | /crm/orders/ | Tested | Seven widths | Guarded transitions, shipment, reviews, timeline | IMPLEMENTED LOCALLY |
+| Support | Simple structured requests | /account/support/ and /crm/support/ | Tested | Overflow tested | Owned order links and customer-visible replies | IMPLEMENTED LOCALLY |
+| Notifications | Shared event outbox | send_order_notifications command | Backend tested | — | Deduplicated, disabled by default | TRANSPORT/DEPLOYMENT REMAINS |

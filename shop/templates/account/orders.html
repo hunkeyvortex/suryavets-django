@@ -1,0 +1,1 @@
+{% extends 'account/base.html' %}{% block account_content %}<p>Your purchased sizes and prices are kept exactly as ordered.</p>{% for order in page %}{% include 'account/order_card.html' %}{% empty %}<div class="customer-card">No orders yet. <a href="{% url 'shop:category_list' %}">Start shopping</a>.</div>{% endfor %}{% include 'account/pagination.html' %}{% endblock %}

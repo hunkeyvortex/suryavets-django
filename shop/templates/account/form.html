@@ -1,0 +1,1 @@
+{% extends 'account/base.html' %}{% block account_content %}<section class="customer-card"><p>{{ intro }}</p>{% if form %}<form method="post" class="account-form">{% csrf_token %}{{ form.as_p }}<button class="account-button">Save changes</button></form>{% endif %}</section>{% endblock %}

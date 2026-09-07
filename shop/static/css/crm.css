@@ -635,3 +635,4 @@ th,td{
 
 }
 input[type="checkbox"] { display: inline-block; width: 18px; height: 18px; accent-color: var(--green); }
+.order-snapshot-images{display:flex;gap:16px;flex-wrap:wrap}.order-snapshot-images figure{margin:0;max-width:180px}.order-snapshot-images img{object-fit:contain}.order-snapshot-images figcaption{font-size:12px;overflow-wrap:anywhere}

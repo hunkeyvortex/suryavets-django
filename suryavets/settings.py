@@ -182,6 +182,8 @@ MAILERS = {
 }
 
 LOGIN_URL = 'shop:login'
+ORDER_EMAIL_ENABLED = env_bool('ORDER_EMAIL_ENABLED', default=False)
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Surya Vets <noreply@localhost>')
 LOGIN_REDIRECT_URL = 'shop:profile'
 LOGOUT_REDIRECT_URL = 'shop:index'
 

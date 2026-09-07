@@ -330,7 +330,8 @@ def render_checkout(request, cart, form, items, code='', *, token=None, status=2
             request.session.pop('checkout_coupon', None)
     return render(request, 'checkout_new.html', {'form': form, 'cart_items': items,
         'checkout_token': token if token is not None else review_token(cart, items, pricing=pricing),
-        'coupon_error': coupon_error, 'coupon_message': coupon_message, **pricing}, status=status)
+        'coupon_error': coupon_error, 'coupon_message': coupon_message,
+        'saved_addresses': request.user.addresses.all() if request.user.is_authenticated else [], **pricing}, status=status)
 
 
 @never_cache
@@ -348,6 +349,11 @@ def checkout(request):
     if request.user.is_authenticated:
         initial['email'] = request.user.email
     address = request.user.addresses.filter(is_default_shipping=True).first() if request.user.is_authenticated else None
+    if request.GET.get('address') and request.user.is_authenticated:
+        from django.http import Http404
+        try: address_id = int(request.GET['address'])
+        except (ValueError, TypeError): raise Http404
+        address = get_object_or_404(request.user.addresses, pk=address_id)
     if address:
         initial.update({
             'phone': address.phone, 'shipping_name': address.full_name,

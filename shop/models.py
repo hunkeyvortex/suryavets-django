@@ -540,9 +540,12 @@ class Coupon(models.Model):
 class Order(models.Model):
     """Checkout snapshot; payment confirmation is a separate operation."""
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
+        PENDING = 'pending', 'Placed'
+        CONFIRMED = 'confirmed', 'Confirmed'
         PROCESSING = 'processing', 'Processing'
+        PACKED = 'packed', 'Packed'
         SHIPPED = 'shipped', 'Shipped'
+        OUT_FOR_DELIVERY = 'out_for_delivery', 'Out for delivery'
         DELIVERED = 'delivered', 'Delivered'
         CANCELLED = 'cancelled', 'Cancelled'
 
@@ -550,7 +553,16 @@ class Order(models.Model):
         PENDING = 'pending', 'Pending'
         PAID = 'paid', 'Paid'
         FAILED = 'failed', 'Failed'
+        REFUND_PENDING = 'refund_pending', 'Refund pending'
+        PARTIALLY_REFUNDED = 'partially_refunded', 'Partially refunded'
         REFUNDED = 'refunded', 'Refunded'
+
+    class ReturnStatus(models.TextChoices):
+        NONE = '', 'No return'
+        REQUESTED = 'requested', 'Return requested'
+        APPROVED = 'approved', 'Return approved'
+        REJECTED = 'rejected', 'Return rejected'
+        RECEIVED = 'received', 'Returned'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.CharField(max_length=20, unique=True, blank=True, db_index=True)
@@ -565,6 +577,10 @@ class Order(models.Model):
     payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
     payment_method = models.CharField(max_length=50, blank=True)
     payment_reference = models.CharField(max_length=150, blank=True)
+    return_status = models.CharField(max_length=20, choices=ReturnStatus.choices, blank=True, default='')
+    courier = models.CharField(max_length=100, blank=True)
+    tracking_number = models.CharField(max_length=150, blank=True)
+    tracking_url = models.URLField(max_length=500, blank=True)
     shipping_name = models.CharField(max_length=150)
     shipping_address_line_1 = models.CharField(max_length=255)
     shipping_address_line_2 = models.CharField(max_length=255, blank=True)
@@ -601,6 +617,10 @@ class Order(models.Model):
     def __str__(self):
         return self.order_number
 
+    @property
+    def payment_method_label(self):
+        return {'cash_on_delivery': 'Cash on Delivery', 'online': 'Online payment'}.get(self.payment_method, self.payment_method or 'Not recorded')
+
 
 class OrderItem(models.Model):
     """Snapshot of a purchased product so history survives later catalogue edits."""
@@ -610,6 +630,7 @@ class OrderItem(models.Model):
     product_name = models.CharField(max_length=200)
     sku = models.CharField(max_length=100, blank=True)
     variant_name = models.CharField(max_length=100, blank=True)
+    image_reference = models.CharField(max_length=1000, blank=True, help_text='Image URL captured at purchase; never inferred for old orders.')
     unit_price = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
 
@@ -662,7 +683,84 @@ class CRMActivity(models.Model):
         permissions = [
             ('access_crm', 'Access customer and order CRM'),
             ('manage_crm_orders', 'Process and cancel orders in CRM'),
+            ('manage_crm_payments', 'Record externally verified payment and refund outcomes'),
             ('adjust_crm_inventory', 'Adjust stock through audited CRM workflow'),
             ('write_crm_notes', 'Write internal CRM notes'),
             ('manage_crm_coupons', 'Create and edit checkout coupons'),
         ]
+
+
+class OrderStatusHistory(models.Model):
+    """Append-only event shared by staff and customers. Notes have explicit audiences."""
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name='events')
+    kind = models.CharField(max_length=12, choices=[('order', 'Order'), ('return', 'Return'), ('payment', 'Payment')], default='order')
+    status = models.CharField(max_length=24)
+    timestamp = models.DateTimeField(null=True, blank=True, help_text='Null means the legacy milestone time is unknown.')
+    recorded_at = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL)
+    customer_visible = models.BooleanField(default=True)
+    internal_note = models.TextField(blank=True, max_length=2000)
+    customer_note = models.TextField(blank=True, max_length=1000)
+
+    class Meta:
+        ordering = ['recorded_at', 'pk']
+
+    @property
+    def label(self):
+        choices = {'order': Order.Status.choices, 'payment': Order.PaymentStatus.choices, 'return': Order.ReturnStatus.choices}
+        return dict(choices.get(self.kind, [])).get(self.status, self.status)
+
+
+class OrderNotification(models.Model):
+    event = models.ForeignKey(OrderStatusHistory, on_delete=models.PROTECT, related_name='notifications')
+    channel = models.CharField(max_length=20, default='email')
+    state = models.CharField(max_length=12, default='pending', choices=[('pending', 'Pending'), ('sending', 'Sending'), ('sent', 'Sent'), ('failed', 'Failed')])
+    sent_at = models.DateTimeField(null=True, blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    error = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['event', 'channel'], name='one_notification_per_order_event_channel')]
+
+
+class CustomerProfile(models.Model):
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE, related_name='customer_profile')
+    phone = models.CharField(max_length=20, blank=True)
+
+
+class CustomerPet(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='pets')
+    name = models.CharField(max_length=80)
+    pet_type = models.ForeignKey(PetCategory, on_delete=models.PROTECT)
+    breed = models.CharField(max_length=100, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=10, blank=True, choices=[('', 'Not specified'), ('female', 'Female'), ('male', 'Male')])
+    weight = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal('0.01'))])
+    # Photos deliberately omitted until private media delivery is available.
+
+
+class WishlistItem(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='wishlist')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'product'], name='unique_customer_wishlist_product')]
+        ordering = ['-created_at']
+
+
+class SupportRequest(models.Model):
+    CATEGORIES = [('order', 'Order issue'), ('delivery', 'Delivery issue'), ('payment', 'Payment issue'), ('product', 'Product issue'), ('return', 'Return/refund'), ('other', 'Other')]
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='support_requests')
+    order = models.ForeignKey(Order, null=True, blank=True, on_delete=models.PROTECT, related_name='support_requests')
+    category = models.CharField(max_length=12, choices=CATEGORIES)
+    subject = models.CharField(max_length=150)
+    message = models.TextField(max_length=3000)
+    state = models.CharField(max_length=12, default='open', choices=[('open', 'Open'), ('resolved', 'Resolved')])
+    response = models.TextField(max_length=3000, blank=True, help_text='Customer-visible reply.')
+    responded_by = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    responded_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

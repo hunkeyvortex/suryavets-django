@@ -133,7 +133,10 @@ def place_order(cart, user, token, data):
     OrderItem.objects.bulk_create([OrderItem(order=order, product=item.product, product_variant=item.product_variant,
         product_name=item.product.name, sku=(item.product_variant or item.product).sku,
         variant_name=item.product_variant.name if item.product_variant else '',
-        unit_price=(item.product_variant or item.product).current_price, quantity=item.quantity) for item in items])
+        unit_price=(item.product_variant or item.product).current_price, quantity=item.quantity,
+        image_reference=(item.product_variant.image.display_url if item.product_variant and item.product_variant.image else item.product.images.first().display_url if item.product.images.exists() else '')) for item in items])
+    from .order_tracking import record_event
+    record_event(order, order.status, actor=user if user_id else None)
     # Record only quantities actually deducted, inside the same transaction.
     movements = []
     for pk, quantity in product_stock.items():
@@ -145,6 +148,8 @@ def place_order(cart, user, token, data):
             quantity_after=variants[pk].stock_quantity - quantity, reason='Checkout reservation'))
     InventoryMovement.objects.bulk_create(movements)
     if values['save_address'] and user_id:
+        from django.contrib.auth import get_user_model
+        get_user_model().objects.select_for_update().get(pk=user_id)
         address = CustomerAddress.objects.filter(user_id=user_id, is_default_shipping=True).first()
         if address is None:
             address = CustomerAddress(user_id=user_id, label='Home', is_default_shipping=True)

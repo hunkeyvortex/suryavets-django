@@ -105,13 +105,16 @@ class CRMTests(TestCase):
 
     def test_status_flow_stale_updates_and_payment_guard(self):
         order = self.checkout()
-        transition_order(self.manager, order.pk, 'pending', 'processing', 'Preparing shipment')
+        transition_order(self.manager, order.pk, 'pending', 'confirmed', 'Order confirmed')
+        transition_order(self.manager, order.pk, 'confirmed', 'processing', 'Preparing shipment')
         with self.assertRaises(CRMError):
             transition_order(self.manager, order.pk, 'pending', 'cancelled', 'Stale page')
-        transition_order(self.manager, order.pk, 'processing', 'shipped', 'Handed to courier')
+        transition_order(self.manager, order.pk, 'processing', 'packed', 'Packed shipment')
+        transition_order(self.manager, order.pk, 'packed', 'shipped', 'Handed to courier', courier='Fixture courier', tracking_number='AWB-1')
         with self.assertRaises(CRMError):
             transition_order(self.manager, order.pk, 'shipped', 'cancelled', 'Already dispatched')
-        transition_order(self.manager, order.pk, 'shipped', 'delivered', 'Delivery confirmed')
+        transition_order(self.manager, order.pk, 'shipped', 'out_for_delivery', 'Courier is nearby')
+        transition_order(self.manager, order.pk, 'out_for_delivery', 'delivered', 'Delivery confirmed')
         order.refresh_from_db()
         self.assertEqual(order.payment_status, 'pending')
         Order.objects.filter(pk=order.pk).update(status='pending', payment_method='manual')

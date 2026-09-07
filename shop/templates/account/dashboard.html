@@ -1,0 +1,11 @@
+{% extends 'account/base.html' %}{% block account_content %}
+<section class="customer-welcome"><span class="customer-eyebrow">WELCOME BACK</span><h2>Hello, {{ request.user.first_name|default:'pet parent' }}.</h2><p>Your orders, favourite finds and furry family—together.</p><span>{{ request.user.email }}</span></section>
+<div class="account-tiles">
+  <a href="{% url 'shop:orders' %}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 7 9-4 9 4v11l-9 4-9-4V7Zm0 0 9 4 9-4M12 11v11"/></svg><strong>My orders</strong><span>{{ order_count }} orders · View, track & buy again</span></a>
+  <a href="{% url 'shop:pets' %}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="6" r="2"/><circle cx="17" cy="6" r="2"/><path d="M5 17c0-3 4-8 7-8s7 5 7 8-4 2-7 2-7 1-7-2Z"/></svg><strong>My pets</strong><span>{{ pet_count }} companions · Their own little space</span></a>
+  <a href="{% url 'shop:wishlist' %}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 3 12C-2 5 7 0 12 7c5-7 14-2 9 5Z"/></svg><strong>Wishlist</strong><span>{{ wishlist_count }} saved finds · Shop when you're ready</span></a>
+  <a href="{% url 'shop:addresses' %}"><strong>Saved addresses</strong><span>A smooth delivery, every time</span></a><a href="{% url 'shop:profile_edit' %}"><strong>Profile</strong><span>Keep your contact details up to date</span></a><a href="{% url 'shop:security' %}"><strong>Security</strong><span>Manage your password</span></a><a href="{% url 'shop:support' %}"><strong>Help & support</strong><span>Talk to our team about an order</span></a>
+</div>
+{% if request.user.is_staff and perms.shop.access_crm %}<p><a href="{% url 'crm:dashboard' %}">Open staff CRM</a></p>{% endif %}
+<h2>Recent orders</h2>{% for order in orders %}{% include 'account/order_card.html' %}{% empty %}<div class="customer-card"><p>Your first order will appear here.</p><a href="{% url 'shop:category_list' %}">Explore the store</a></div>{% endfor %}
+{% endblock %}

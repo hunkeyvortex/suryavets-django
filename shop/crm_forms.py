@@ -27,6 +27,10 @@ class StatusForm(forms.Form):
     expected = forms.CharField(widget=forms.HiddenInput)
     status = forms.ChoiceField(label='Next status', choices=[])
     reason = forms.CharField(min_length=3, max_length=500, widget=forms.Textarea(attrs={'rows': 2}))
+    customer_note = forms.CharField(required=False, max_length=1000, widget=forms.Textarea(attrs={'rows': 2}), help_text='Visible to the customer. Leave staff-only information in Reason.')
+    courier = forms.CharField(required=False, max_length=100)
+    tracking_number = forms.CharField(required=False, max_length=150)
+    tracking_url = forms.URLField(required=False, max_length=500, help_text='HTTPS courier URL. Required courier and AWB when marking Shipped.')
 
 
 class NoteForm(forms.Form):
