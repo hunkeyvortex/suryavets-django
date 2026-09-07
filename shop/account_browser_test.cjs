@@ -19,7 +19,8 @@ const path = require('node:path');
       for (const route of ['/account/', '/account/orders/', `/account/orders/${order}/`, '/account/pets/', '/account/wishlist/', '/account/addresses/', '/account/profile/', '/account/security/', '/account/support/']) {
         const response = await buyer.goto(origin + route);
         assert.equal(response.status(), 200, route);
-        assert.equal(await buyer.locator('.customer-nav').count(), route === '/account/' ? 0 : 1);
+        assert.equal(await buyer.locator('.customer-nav').count(), 0);
+        assert.equal(await buyer.getByRole('link', {name:'Back to My Account', exact:true}).count(), route === '/account/' ? 0 : 1);
         assert(await buyer.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Account overflow ${width}: ${route}`);
         if (process.env.SURYA_BROWSER_ARTIFACTS && [320,390,1440].includes(width) && [ '/account/', `/account/orders/${order}/` ].includes(route)) {
           fs.mkdirSync(process.env.SURYA_BROWSER_ARTIFACTS, {recursive:true});

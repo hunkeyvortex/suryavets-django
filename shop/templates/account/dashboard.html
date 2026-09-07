@@ -1,6 +1,5 @@
 {% extends 'account/base.html' %}
-{% block account_layout_class %}customer-layout--overview{% endblock %}
-{% block account_navigation %}{% endblock %}
+{% block account_back_link %}{% endblock %}
 {% block account_content %}
 <section class="customer-welcome"><span class="customer-eyebrow">WELCOME BACK</span><h2>Hello, {{ request.user.first_name|default:'pet parent' }}.</h2><p>Your orders, favourite finds and furry family—together.</p><span>{{ request.user.email }}</span></section>
 <div class="account-tiles">

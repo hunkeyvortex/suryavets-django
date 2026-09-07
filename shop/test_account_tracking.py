@@ -55,10 +55,21 @@ class AccountTrackingTests(TestCase):
     def test_dashboard_uses_tiles_without_duplicate_navigation(self):
         response = self.client.get(self.url('profile'))
         self.assertNotContains(response, 'class="customer-nav"')
-        self.assertContains(response, 'customer-layout--overview')
+        self.assertContains(response, 'customer-layout--fullwidth')
         self.assertContains(response, 'class="account-tiles"')
         self.assertContains(response, 'Log out', count=1)
-        self.assertContains(self.client.get(self.url('orders')), 'class="customer-nav"')
+        self.assertNotContains(response, 'Back to My Account')
+
+    def test_all_account_subpages_remove_duplicate_navigation(self):
+        routes = [(name, []) for name in ['orders', 'pets', 'wishlist', 'addresses', 'profile_edit', 'security', 'support']]
+        routes += [('order_detail', [self.order.pk]), ('order_number', [self.order.order_number])]
+        for name, args in routes:
+            with self.subTest(page=name):
+                response = self.client.get(self.url(name, *args))
+                self.assertEqual(response.status_code, 200)
+                self.assertNotContains(response, 'class="customer-nav"')
+                self.assertContains(response, 'customer-layout--fullwidth')
+                self.assertContains(response, 'Back to My Account', count=1)
 
     def test_owned_order_and_number_route_preserve_historical_variant(self):
         for name, identifier in [('order_detail', self.order.pk), ('order_number', self.order.order_number)]:

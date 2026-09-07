@@ -23,7 +23,7 @@ Returns require a delivered order and explicit customer request. Staff must revi
 
 | Route | Function |
 | --- | --- |
-| `/account/` | Dashboard, account navigation, recent orders |
+| `/account/` | Dashboard tiles, recent orders, logout |
 | `/account/orders/` | Paginated history, exact purchased variants, totals |
 | `/account/orders/<order-number>/` | Snapshot detail, vertical tracker, shipment, customer-visible events |
 | `/account/orders/<uuid>/` | Preserved legacy link to the same owned order |
