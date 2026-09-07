@@ -4,11 +4,13 @@
 {% block content %}
 <section class="customer-area site-shell">
   <header class="customer-heading"><div><p class="customer-eyebrow">YOUR COMPANION'S CORNER</p><h1>{{ title }}</h1><p>A little care, all in one place.</p></div><a href="{% url 'shop:category_list' %}">Continue shopping</a></header>
-  <div class="customer-layout">
+  <div class="customer-layout {% block account_layout_class %}{% endblock %}">
+    {% block account_navigation %}
     <nav class="customer-nav" aria-label="My account">
       <a href="{% url 'shop:profile' %}">Overview</a><a href="{% url 'shop:orders' %}">My orders</a><a href="{% url 'shop:pets' %}">My pets</a><a href="{% url 'shop:wishlist' %}">Wishlist</a><a href="{% url 'shop:addresses' %}">Addresses</a><a href="{% url 'shop:profile_edit' %}">Profile</a><a href="{% url 'shop:security' %}">Security</a><a href="{% url 'shop:support' %}">Help & support</a>
       <form method="post" action="{% url 'shop:logout' %}">{% csrf_token %}<button class="quiet-button">Log out</button></form>
     </nav>
+    {% endblock %}
     <div class="customer-main">{% block account_content %}{% endblock %}</div>
   </div>
 </section>

@@ -52,6 +52,14 @@ class AccountTrackingTests(TestCase):
             self.assertEqual(response['X-Robots-Tag'], 'noindex, nofollow')
             self.assertEqual(Client().get(self.url(name)).status_code, 302)
 
+    def test_dashboard_uses_tiles_without_duplicate_navigation(self):
+        response = self.client.get(self.url('profile'))
+        self.assertNotContains(response, 'class="customer-nav"')
+        self.assertContains(response, 'customer-layout--overview')
+        self.assertContains(response, 'class="account-tiles"')
+        self.assertContains(response, 'Log out', count=1)
+        self.assertContains(self.client.get(self.url('orders')), 'class="customer-nav"')
+
     def test_owned_order_and_number_route_preserve_historical_variant(self):
         for name, identifier in [('order_detail', self.order.pk), ('order_number', self.order.order_number)]:
             response = self.client.get(self.url(name, identifier))
