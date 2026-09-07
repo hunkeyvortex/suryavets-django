@@ -84,7 +84,7 @@ def place_order(cart, user, token, data):
             raise CheckoutError('Please choose a valid quantity for every cart item.')
         if item.product_variant_id and (not variant or not variant.is_active or variant.product_id != product.pk):
             raise CheckoutError(f'{product.name}: the selected pack is no longer available.')
-        if not variant and product.variants.filter(is_active=True).exists():
+        if not variant and product.variants.exists():
             raise CheckoutError(f'{product.name}: please select a pack again.')
         item.product, item.product_variant = product, variant
         if variant:

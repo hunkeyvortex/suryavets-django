@@ -4,6 +4,12 @@ from decimal import Decimal, InvalidOperation
 register = template.Library()
 
 
+@register.simple_tag
+def product_offer(product):
+    from shop.services.variants import card_offer
+    return card_offer(product)
+
+
 @register.filter
 def money(value):
     """Group exact Decimal prices without converting money to binary floats."""

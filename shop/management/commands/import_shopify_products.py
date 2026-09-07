@@ -14,6 +14,7 @@ from django.utils.text import slugify
 
 from shop.models import Brand, Category, PetCategory, Product, ProductImage, ProductType, ProductVariant, Subcategory, Order, InventoryMovement
 from shop.services.pricing import export_prices
+from shop.services.product_media import image_identity
 
 
 PET_RULES = (
@@ -250,28 +251,42 @@ class Command(BaseCommand):
             if name == 'Default Title' and len(variant_rows) == 1:
                 continue
             regular, price, variant_discount = export_prices(row)
+            sku = (row.get('Variant SKU') or '')[:100]
+            if sku and (ProductVariant.objects.filter(sku__iexact=sku).exclude(product=product, name=name).exists()
+                        or Product.objects.filter(sku__iexact=sku).exclude(pk=product.pk).exists()):
+                raise CommandError(f'{handle}: SKU is already assigned to another product or variant.')
             ProductVariant.objects.update_or_create(product=product, name=name, defaults={
                 'weight_info': name[:50], 'sku': (row.get('Variant SKU') or '')[:100],
                 'barcode': (row.get('Variant Barcode') or row.get('Variant Barcodes') or '')[:100],
                 'price_override': regular, 'selling_price': price, 'discount_percentage': variant_discount,
                 'stock_quantity': self._stock_for(row, inventory), 'is_active': product.is_active,
+                'attributes': {str(row.get(f'Option{i} Name') or f'Option {i}'): str(row.get(f'Option{i} Value')) for i in range(1, 4) if row.get(f'Option{i} Value')},
             })
 
         images = []
         seen_urls = set()
-        for row in rows:
+        def position(row):
+            try:
+                return int(row.get('Image Position') or 100000)
+            except (ValueError, TypeError):
+                return 100000
+        image_rows = sorted(rows, key=position) + [{'Image Src': row.get('Variant Image')} for row in variant_rows if row.get('Variant Image')]
+        for row in image_rows:
             image_url = (row.get('Image Src') or '').strip()
-            if not image_url or image_url in seen_urls:
+            identity = image_identity(image_url)
+            if not image_url or identity in seen_urls:
                 continue
-            seen_urls.add(image_url)
-            existing_image = product.images.filter(source_url=image_url).first()
+            seen_urls.add(identity)
+            existing_image = next((photo for photo in ProductImage.all_objects.filter(product=product) if image_identity(photo.source_url) == identity), None)
             if existing_image is None:
-                existing_image = ProductImage(product=product, image='', source_url=image_url)
-            existing_image.alt_text = (row.get('Image Alt Text') or title)[:200]
-            existing_image.order = len(images)
-            existing_image.is_primary = not images
-            existing_image.save()
+                existing_image = ProductImage.objects.create(product=product, image='', source_url=image_url,
+                    alt_text=(row.get('Image Alt Text') or title)[:200], order=len(images), is_primary=not product.images.exists())
             images.append(existing_image)
+        by_url = {image_identity(photo.source_url): photo for photo in images if photo.is_active}
+        for row in variant_rows:
+            photo = by_url.get(image_identity(row.get('Variant Image') or ''))
+            if photo:
+                ProductVariant.objects.filter(product=product, name=option_name(row), image__isnull=True).update(image=photo)
         return created, len(variant_rows), len(images)
 
     def handle(self, *args, **options):

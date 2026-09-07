@@ -81,7 +81,7 @@ class ProductVariantInline(admin.TabularInline):
     extra = 1
     readonly_fields = ['stock_quantity']
     fields = ['name', 'sku', 'barcode', 'size_code', 'weight_info', 'price_override', 'selling_price', 'discount_percentage',
-              'stock_quantity', 'low_stock_threshold', 'is_active']
+              'stock_quantity', 'low_stock_threshold', 'quantity', 'unit', 'comparison_group', 'display_order', 'image', 'is_active']
 
 
 @admin.register(Product)

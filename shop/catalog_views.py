@@ -3,7 +3,7 @@
 from decimal import Decimal, InvalidOperation
 
 from django.core.paginator import Paginator
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Prefetch, Q, Exists, OuterRef
 from django.shortcuts import get_object_or_404, render
 
 from .models import Brand, Category, PetCategory, Product, ProductType, ProductVariant, Subcategory
@@ -58,18 +58,11 @@ def _apply_catalog_controls(request, products, *, category=None, subcategory=Non
         products = products.filter(catalog_price__gte=minimum_price)
     if maximum_price is not None:
         products = products.filter(catalog_price__lte=maximum_price)
-    if availability == 'in_stock':
-        products = products.filter(
-            Q(track_inventory=False)
-            | Q(stock_quantity__gt=0)
-            | Q(variants__is_active=True, variants__stock_quantity__gt=0)
-        )
-    elif availability == 'out_of_stock':
-        products = products.exclude(
-            Q(track_inventory=False)
-            | Q(stock_quantity__gt=0)
-            | Q(variants__is_active=True, variants__stock_quantity__gt=0)
-        )
+    if availability in ('in_stock', 'out_of_stock'):
+        products = products.annotate(has_pack=Exists(ProductVariant.objects.filter(product_id=OuterRef('pk'))),
+            has_stock_pack=Exists(ProductVariant.objects.filter(product_id=OuterRef('pk'), is_active=True, stock_quantity__gt=0)))
+        stock_filter = Q(has_stock_pack=True) | (Q(has_pack=False) & (Q(track_inventory=False) | Q(stock_quantity__gt=0)))
+        products = products.filter(stock_filter) if availability == 'in_stock' else products.exclude(stock_filter)
 
     ordering = {
         'newest': ('-created_at',),
@@ -182,7 +175,7 @@ def product_detail(request, product_slug):
         Product.objects.select_related('category', 'subcategory', 'brand', 'product_type')
         .prefetch_related(
             'images', 'pet_categories', 'specifications',
-            Prefetch('variants', queryset=ProductVariant.objects.filter(is_active=True)),
+            'variants',
         ),
         slug=product_slug,
         is_active=True,
@@ -190,12 +183,17 @@ def product_detail(request, product_slug):
     related_products = _product_queryset().filter(
         category=product.category
     ).exclude(pk=product.pk)[:4]
-    variants = list(product.variants.all())
+    variants = [v for v in product.variants.all() if v.is_active]
+    from .services.variants import variant_options
+    options = variant_options(product, variants)
     selected_variant = next((variant for variant in variants if variant.is_in_stock), variants[0] if variants else None)
     priced_item = selected_variant or product
+    saving = max(Decimal(0), priced_item.original_price - priced_item.current_price)
     return render(request, 'catalog/product_detail.html', {
         'product': product,
         'selected_variant': selected_variant,
+        'variant_options': options,
+        'selected_option': next((o for o in options if o['variant'] == selected_variant), {'saving': saving, 'discount': int(saving * 100 / priced_item.original_price) if priced_item.original_price > 0 else 0, 'unit_price': None}),
         'display_price': priced_item.current_price,
         'display_regular_price': priced_item.original_price,
         'related_products': related_products,

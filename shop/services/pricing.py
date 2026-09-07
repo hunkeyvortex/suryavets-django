@@ -1,7 +1,7 @@
 """Money calculations shared by importers, models and catalogue queries."""
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
-from django.db.models import DecimalField, ExpressionWrapper, F, Value
+from django.db.models import DecimalField, ExpressionWrapper, F, Value, OuterRef, Subquery
 from django.db.models.functions import Coalesce, Round
 
 
@@ -43,9 +43,16 @@ def export_prices(row):
 
 
 def catalog_price_expression():
+    from shop.models import ProductVariant
     money = DecimalField(max_digits=10, decimal_places=2)
     legacy = ExpressionWrapper(
         F('base_price') * (Value(Decimal('100.0')) - F('discount_percentage')) / Value(Decimal('100.0')),
         output_field=money,
     )
-    return Coalesce(F('selling_price'), Round(legacy, precision=2), output_field=money)
+    variant_regular = Coalesce(F('price_override'), F('product__base_price'), output_field=money)
+    variant_legacy = ExpressionWrapper(variant_regular * (Value(Decimal('100')) - F('discount_percentage')) / Value(Decimal('100')), output_field=money)
+    variants = ProductVariant.objects.filter(product_id=OuterRef('pk'), is_active=True).annotate(
+        offer_price=Coalesce(F('selling_price'), Round(variant_legacy, precision=2), output_field=money))
+    return Coalesce(Subquery(variants.filter(stock_quantity__gt=0).order_by('offer_price').values('offer_price')[:1]),
+                    Subquery(variants.order_by('offer_price').values('offer_price')[:1]),
+                    F('selling_price'), Round(legacy, precision=2), output_field=money)

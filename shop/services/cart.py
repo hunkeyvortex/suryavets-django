@@ -35,7 +35,7 @@ def get_cart(request, *, create=True):
 def cart_items(cart):
     if not cart:
         return []
-    return cart.items.select_related('product', 'product_variant').prefetch_related('product__images')
+    return cart.items.select_related('product', 'product_variant', 'product_variant__product', 'product_variant__image').prefetch_related('product__images')
 
 
 def cart_totals(items):

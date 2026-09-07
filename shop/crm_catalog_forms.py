@@ -1,7 +1,7 @@
 """Explicit catalog fields: never accept stock or ownership fields from a product edit."""
 from django import forms
 from django.utils.text import slugify
-from .models import Product, ProductVariant
+from .models import Product, ProductVariant, ProductImage
 
 
 class ProductEditorForm(forms.ModelForm):
@@ -72,12 +72,16 @@ class VariantEditorForm(forms.ModelForm):
 
     class Meta:
         model = ProductVariant
-        fields = ['name', 'sku', 'price_override', 'selling_price', 'weight_info']
+        fields = ['name', 'sku', 'price_override', 'selling_price', 'weight_info', 'quantity', 'unit',
+                  'comparison_group', 'attributes', 'display_order', 'image', 'is_active']
         labels = {'price_override': 'Regular pack price (₹)', 'selling_price': 'Selling pack price (₹)', 'weight_info': 'Pack size / weight'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['version'].initial = self.instance.updated_at.isoformat()
+        self.fields['version'].initial = self.version_value()
+        self.fields['image'].queryset = ProductImage.objects.filter(product_id=self.instance.product_id)
+        self.fields['display_order'].required = False
+        self.fields['attributes'].widget = forms.Textarea(attrs={'rows': 2})
         self.fields['price_override'].required = True
         self.fields['price_override'].initial = self.instance.original_price
         self.fields['selling_price'].required = True
@@ -85,7 +89,9 @@ class VariantEditorForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
-        if data.get('version') != self.instance.updated_at.isoformat():
+        data['display_order'] = data.get('display_order') or 0
+        data['attributes'] = data.get('attributes') or {}
+        if data.get('version') != self.version_value():
             raise forms.ValidationError('This pack changed. Reload before saving.')
         regular, sale = data.get('price_override'), data.get('selling_price')
         if regular is not None and regular < 0:
@@ -96,6 +102,31 @@ class VariantEditorForm(forms.ModelForm):
             ProductVariant.objects.exclude(pk=self.instance.pk).filter(sku__iexact=data['sku']).exists()
             or Product.objects.exclude(pk=self.instance.product_id).filter(sku__iexact=data['sku']).exists()):
             self.add_error('sku', 'This SKU is already in use.')
+        return data
+
+    def version_value(self):
+        return (self.instance.product.updated_at if self.instance._state.adding else self.instance.updated_at).isoformat()
+
+
+class ImageEditorForm(forms.ModelForm):
+    version = forms.CharField(widget=forms.HiddenInput)
+    reason = forms.CharField(required=False, max_length=500, help_text='Required when removing a photo from the storefront. The file remains recoverable.')
+
+    class Meta:
+        model = ProductImage
+        fields = ['alt_text', 'order', 'is_primary', 'is_active']
+        labels = {'is_active': 'Show photo in storefront', 'order': 'Display order (lowest first)'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['version'].initial = self.instance.product.updated_at.isoformat()
+
+    def clean(self):
+        data = super().clean()
+        if data.get('version') != self.instance.product.updated_at.isoformat():
+            raise forms.ValidationError('This product changed. Reload before saving.')
+        if not data.get('is_active') and not data.get('reason'):
+            self.add_error('reason', 'Explain why this photo should be removed.')
         return data
 
 

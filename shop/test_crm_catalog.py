@@ -111,6 +111,7 @@ class CatalogEditorTests(TestCase):
             self.assertEqual(self.product.images.filter(is_primary=True).count(), 1)
             photo = self.product.images.first()
             self.assertTrue(photo.image.storage.exists(photo.image.name))
+            self.assertTrue(photo.thumbnail.storage.exists(photo.thumbnail.name))
             self.assertEqual(photo.alt_text, 'Product box')
 
     def test_invalid_upload_does_not_change_product(self):

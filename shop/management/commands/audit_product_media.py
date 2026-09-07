@@ -55,7 +55,7 @@ class Command(BaseCommand):
                         product.nutrition_source_note = 'Extracted from supplied Shopify product export. Unverified draft; check current manufacturer label and exact pack before publishing.'
                         product.save(update_fields=['ingredients','nutrition_information','nutrition_source','nutrition_source_note','updated_at'])
                         summary['nutrition_drafts_staged'] += 1
-                    known = {image_identity(p.source_url) for p in product.images.all() if p.source_url}
+                    known = {image_identity(p.source_url) for p in ProductImage.all_objects.filter(product=product) if p.source_url}
                     for row in rows:
                         url = (row.get('Image Src') or '').strip()
                         if not url or image_identity(url) in known:
@@ -98,7 +98,7 @@ class Command(BaseCommand):
         report = Path(options['report']); report.parent.mkdir(parents=True, exist_ok=True)
         with report.open('w', encoding='utf-8-sig', newline='') as stream:
             writer = csv.writer(stream)
-            writer.writerow(['Product','Handle','SKU','Variant','Image Count','Missing Image','Broken Image','Duplicate References','Source','Local Images','Nutrition Review','Action Required'])
+            writer.writerow(['Product','Handle','SKU','Variant','Image Count','Missing Image','Broken Image','Duplicate References','Source','Local Images','Nutrition Review','Action Required','Missing Variant Images'])
             for product in Product.objects.prefetch_related('images','variants').order_by('slug').iterator(chunk_size=300):
                 images = list(product.images.all())
                 refs = [image_identity(p.source_url) for p in images if p.source_url]
@@ -112,7 +112,8 @@ class Command(BaseCommand):
                 writer.writerow([csv_cell(x) for x in [product.name, product.slug, product.sku,
                     ' | '.join(v.name for v in product.variants.all()), len(usable), 'YES' if not usable else 'NO', status,
                     len(refs)-len(set(refs)), ' | '.join(p.source_url for p in images if p.source_url),
-                    sum(bool(p.image) for p in images), 'Reviewed' if product.nutrition_reviewed else ('Draft' if product.ingredients or product.nutrition_information else 'Not provided'), action]])
+                    sum(bool(p.image) for p in images), 'Reviewed' if product.nutrition_reviewed else ('Draft' if product.ingredients or product.nutrition_information else 'Not provided'), action,
+                    ' | '.join(f'{v.name} [{v.sku}]' for v in product.variants.all() if v.is_active and v.image_id not in {p.pk for p in usable})]])
                 summary['products'] += 1
                 if not usable: summary['products_missing_images'] += 1
         self.stdout.write(str(dict(summary)))

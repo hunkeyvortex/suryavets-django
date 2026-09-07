@@ -48,7 +48,7 @@ const path = require('node:path');
     }
     await page.goto(origin + '/product/browser-checkout-fixture/', {waitUntil: 'domcontentloaded'});
     await page.locator('.product-form [name="quantity"]').fill('2');
-    await page.locator('.product-form button[type="submit"]').click();
+    await page.locator('.product-form [data-add-to-cart]').click();
     await page.locator('.basket-product').waitFor();
     await page.locator('[data-step="1"]').click();
     assert.equal(await page.locator('[data-basket-quantity] [name="quantity"]').inputValue(), '3');
@@ -73,7 +73,7 @@ const path = require('node:path');
     await page.locator('.basket-empty').waitFor();
     await page.goto(origin + '/product/browser-checkout-fixture/');
     await page.locator('.product-form [name="quantity"]').fill('2');
-    await page.locator('.product-form button[type="submit"]').click();
+    await page.locator('.product-form [data-add-to-cart]').click();
     await page.getByRole('link', {name: 'Proceed to checkout'}).click();
     assert(await page.getByRole('radio', {name: 'Cash on Delivery (COD)', exact: false}).isChecked());
     assert(await page.getByRole('radio', {name: 'Online Payment', exact: false}).isDisabled());

@@ -237,9 +237,9 @@ class Product(models.Model):
 
     @property
     def is_in_stock(self):
-        active_variants = [variant for variant in self.variants.all() if variant.is_active]
-        if active_variants:
-            return any(variant.is_in_stock for variant in active_variants)
+        variants = list(self.variants.all())
+        if variants:
+            return any(variant.is_active and variant.is_in_stock for variant in variants)
         return not self.track_inventory or self.stock_quantity > 0
 
     @property
@@ -264,6 +264,12 @@ class ProductVariant(models.Model):
     name = models.CharField(max_length=100)  # e.g., "10-20KG", "Small", "Large"
     size_code = models.CharField(max_length=10, choices=SIZE_CHOICES, blank=True)
     weight_info = models.CharField(max_length=50, blank=True)  # e.g., "10-20KG"
+    quantity = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, validators=[MinValueValidator(Decimal('0.001'))], help_text='Verified net pack quantity, not animal weight or shipping weight.')
+    unit = models.CharField(max_length=10, blank=True, choices=[('g', 'g'), ('kg', 'kg'), ('ml', 'ml'), ('L', 'L'), ('count', 'count')])
+    comparison_group = models.CharField(max_length=100, blank=True, help_text='Only identical formulations/items may share a comparison group. Blank disables value comparisons.')
+    attributes = models.JSONField(default=dict, blank=True, help_text='Other exact options, such as flavour or colour.')
+    display_order = models.PositiveIntegerField(default=0, blank=True)
+    image = models.ForeignKey('ProductImage', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_variants')
     sku = models.CharField(max_length=100, blank=True, db_index=True)
     barcode = models.CharField(max_length=100, blank=True)
     
@@ -282,8 +288,26 @@ class ProductVariant(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['display_order', 'name', 'pk']
         unique_together = ['product', 'name']
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        if bool(self.quantity) != bool(self.unit):
+            errors['quantity'] = 'Supply both a verified quantity and its unit, or leave both blank.'
+        if self.quantity is not None and self.quantity <= 0:
+            errors['quantity'] = 'Pack quantity must be positive.'
+        if not isinstance(self.attributes, dict) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in self.attributes.items()):
+            errors['attributes'] = 'Use a JSON object with text option names and values.'
+        if self.image_id and (self.image.product_id != self.product_id or not self.image.is_active):
+            errors['image'] = 'Choose an active image belonging to this exact product.'
+        if self.price_override is not None and self.price_override < 0:
+            errors['price_override'] = 'MRP cannot be negative.'
+        if self.product_id and self.selling_price is not None and self.selling_price > self.original_price:
+            errors['selling_price'] = 'Selling price cannot exceed MRP.'
+        if errors:
+            raise ValidationError(errors)
 
     @property
     def current_price(self):
@@ -308,6 +332,11 @@ class ProductVariant(models.Model):
         return f"{self.product.name} - {self.name}"
 
 
+class ActiveImageManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
+
 class ProductImage(models.Model):
     """Product images"""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
@@ -319,6 +348,9 @@ class ProductImage(models.Model):
     alt_text = models.CharField(max_length=200, blank=True)
     order = models.IntegerField(default=0)
     is_primary = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    objects = ActiveImageManager()
+    all_objects = models.Manager()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -415,6 +447,12 @@ class CartItem(models.Model):
 
     class Meta:
         unique_together = ['cart', 'product', 'product_variant']
+
+    @property
+    def display_image(self):
+        if self.product_variant and self.product_variant.image and self.product_variant.image.is_active:
+            return self.product_variant.image
+        return next(iter(self.product.images.all()), None) if self.product else None
 
     @property
     def total_price(self):

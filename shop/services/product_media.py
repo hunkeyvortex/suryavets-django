@@ -83,6 +83,11 @@ def download_image(url):
         data = response.read(12 * 1024 * 1024 + 1)
     if len(data) > 12 * 1024 * 1024:
         raise ValueError('Image exceeds 12 MB download limit')
+    return optimize_image(data)
+
+
+def optimize_image(data):
+    """Shared encoder for migrated images and validated staff uploads."""
     with Image.open(io.BytesIO(data)) as original:
         if original.width * original.height > 20000000:
             raise ValueError('Image exceeds 20 megapixels')

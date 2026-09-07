@@ -138,7 +138,7 @@ class ExactPricingTests(TestCase):
         response = self.client.post(reverse('shop:add_to_cart', args=[self.product.pk]), {'quantity': 1})
         self.assertRedirects(response, reverse('shop:product_detail', args=[self.product.slug]))
         self.assertFalse(CartItem.objects.exists())
-        self.assertContains(self.client.get(reverse('shop:category_list')), 'Choose options')
+        self.assertContains(self.client.get(reverse('shop:category_list')), 'Choose size')
 
     def test_selected_variant_is_priced_on_server_and_snapshotted_at_checkout(self):
         self.variant.selling_price = Decimal('95.00'); self.variant.save()
@@ -167,6 +167,7 @@ class ExactPricingTests(TestCase):
 
     def test_product_card_renders_real_prices_without_placeholder_rating(self):
         self.product.base_price = Decimal('2070'); self.product.selling_price = Decimal('1863'); self.product.save()
+        self.variant.price_override = Decimal('2070'); self.variant.selling_price = Decimal('1863'); self.variant.save()
         response = self.client.get(reverse('shop:category_list'))
         self.assertContains(response, '₹1,863.00')
         self.assertContains(response, '₹2,070.00')

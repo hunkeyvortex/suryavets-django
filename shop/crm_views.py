@@ -15,7 +15,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from .crm_forms import CouponForm, NoteForm, StaffLoginForm, StatusForm, StockAdjustmentForm
-from .models import Coupon, CRMActivity, InventoryMovement, Order, Product, ProductVariant
+from .models import Coupon, CRMActivity, InventoryMovement, Order, Product, ProductVariant, ProductImage
 from django.utils import timezone
 from .services.crm import CRMError, TRANSITIONS, add_note, adjustment_token, adjust_inventory, require_staff, transition_order
 
@@ -185,11 +185,13 @@ def inventory(request):
     visibility = request.GET.get('visibility', '')
     media_filter = request.GET.get('media', '')
     if media_filter == 'missing':
-        qs = qs.exclude(Q(images__image__gt='') | Q(images__source_url__gt=''))
+        qs = qs.exclude(pk__in=ProductImage.objects.filter(Q(image__gt='') | Q(source_url__gt='')).values('product_id'))
     elif media_filter == 'broken':
         qs = qs.filter(images__check_error__gt='').distinct()
     elif media_filter == 'nutrition':
         qs = qs.filter(nutrition_reviewed=False).exclude(ingredients='', nutrition_information='')
+    elif media_filter == 'variant':
+        qs = qs.filter(variants__is_active=True, variants__image__isnull=True).distinct()
     if visibility in ('active', 'archived'):
         qs = qs.filter(is_active=visibility == 'active')
     q = request.GET.get('q', '').strip()[:150]

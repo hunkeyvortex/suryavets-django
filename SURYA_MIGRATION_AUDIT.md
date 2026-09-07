@@ -368,3 +368,22 @@ Latest payment UI update: new checkouts now offer COD with an unavailable Online
 | Nutrition review | Supplied export descriptions, unverified | /crm/inventory/?media=nutrition | Form tested | Responsive form | Draft + explicit reviewed display | NEEDS LABEL REVIEW |
 | Image coverage audit | Supplied exports and Django image rows | tmp/PRODUCT_IMAGE_AUDIT.csv | — | — | Every product included | GENERATED |
 | Full variant buying experience | Attached product/variant brief | Product/CRM/cart | Pending | Pending | Existing variant commerce preserved | REMAINING PHASE |
+
+## O. Mobile-first variant buying and CRM controls
+
+- Audited existing product/variant/cart/order/import architecture; preserved 6,697 products, 6,677 variants and historical order snapshots. No products merged or pack quantities inferred. Real catalog still contains zero multi-variant products.
+- Additive migration 0010 supports verified net quantity/unit, opt-in comparison groups, flexible option attributes, display order, variant-specific image and recoverable image visibility.
+- Pack cards update exact price, MRP, discount, savings, unit price, SKU and verified image. Server-side calculations distinguish MRP savings from comparable-pack savings. Best value is the lowest comparable available unit rate, not automatically the largest size.
+- Cards, catalog price filtering and sorting share the purchasable pack price. Multiple sizes lead to Choose size; disabled packs cannot fall back to base-product purchase. Variant cart lines and order snapshots remain exact.
+- CRM supports add/edit/disable/order packs, exact-photo assignment, audited stock adjustment links and recoverable photo removal/restore. Uploads produce optimized thumbnails. Importer supports explicit Variant Image URLs and structured option attributes without assuming units.
+- Nine viewport widths exercised with disposable multi-pack browser fixtures. Screenshots reviewed at 320 and 1440; real live/local product comparison at 390 informed reduced image/title spacing. Not a claim of full Shopify pixel parity.
+- Remaining data: 4,342 missing original product images, unassigned pack-specific photos, verified product-family mappings/quantities and two existing duplicate-SKU groups requiring reconciliation. No existing SKUs were renamed.
+- Full audit, commands, changed files and staff workflow: `docs/variant-buying-experience.md`.
+- Final verification: all 133 tests pass with browser suites enabled; Django system checks and migration-drift checks pass. Backup comparison confirms unchanged existing product/variant prices, names, SKUs and stock, and unchanged historical order snapshots.
+
+| Page/component | Reference | Django URL | Desktop | Mobile | Functional | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Variant buying panel | Requested SuryaVets-themed improvement | /product/{slug}/ | Screenshot reviewed | Nine widths tested | Price, image, stock, quantities and Buy now | IMPLEMENTED; REAL PACK DATA REQUIRED |
+| Product cards | SuryaVets reusable cards | /categories/ | Tested | Grid overflow checked | From price and Choose size | IMPLEMENTED |
+| Pack management | Original CRM | /crm/inventory/{id}/packs/new/ | Form tested | Responsive | Add/edit/disable/order/image; audited stock | IMPLEMENTED |
+| Photo management | Original CRM | /crm/inventory/{id}/images/{id}/ | Form tested | Responsive | Main photo/order/remove/restore | IMPLEMENTED |

@@ -18,23 +18,46 @@
   const productForm = document.querySelector('.product-form');
   if (productForm) {
     // Browser formatting is presentation only; the server recalculates all prices.
-    const money = value => 'Rs. ' + Number(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const money = value => '₹' + Number(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const mainImage = document.querySelector('[data-product-main-image]');
+    const defaultImage = mainImage ? {src: mainImage.src, alt: mainImage.alt} : null;
     const syncVariant = () => {
       const selected = productForm.querySelector('[name="variant_id"]:checked');
       if (!selected) return;
       document.querySelector('[data-product-price]').textContent = money(selected.dataset.price);
       document.querySelector('[data-product-compare]').textContent = money(selected.dataset.regular);
       document.querySelector('[data-product-compare-wrap]').hidden = Number(selected.dataset.regular) <= Number(selected.dataset.price);
+      document.querySelector('[data-product-discount]').textContent = selected.dataset.discount + '% OFF';
+      const saving = document.querySelector('[data-product-saving]');
+      saving.hidden = Number(selected.dataset.regular) <= Number(selected.dataset.price);
+      saving.textContent = 'You save ₹' + selected.dataset.saving + ' on MRP';
+      document.querySelector('[data-product-sku]').textContent = selected.dataset.sku || 'Not supplied';
+      document.querySelector('[data-selected-pack]').textContent = selected.dataset.name;
+      document.querySelector('[data-product-unit]').textContent = selected.dataset.unit;
+      if (mainImage) {
+        mainImage.src = selected.dataset.image || defaultImage.src;
+        mainImage.alt = selected.dataset.alt || defaultImage.alt;
+        gallery.querySelectorAll('[data-product-image]').forEach(button => {
+          const active = button.dataset.productImage === mainImage.getAttribute('src');
+          button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active));
+        });
+      }
       const quantity = productForm.querySelector('[name="quantity"]');
       const stock = Number(selected.dataset.stock);
       quantity.max = String(stock);
       if (stock > 0 && Number(quantity.value) > stock) quantity.value = String(stock);
-      const submit = productForm.querySelector('button[type="submit"]');
-      submit.disabled = stock < 1;
+      const submit = productForm.querySelector('[data-add-to-cart]');
+      productForm.querySelectorAll('button[type="submit"]').forEach(button => { button.disabled = stock < 1; });
       submit.textContent = stock > 0 ? 'Add to Cart' : 'Out of Stock';
+      document.querySelector('[data-product-stock]').textContent = stock > 0 ? 'In stock · ready to add' : 'Out of stock';
     };
     productForm.querySelectorAll('[name="variant_id"]').forEach(input => input.addEventListener('change', syncVariant));
     syncVariant();
+    productForm.querySelectorAll('[data-quantity-step]').forEach(button => button.addEventListener('click', () => {
+      const input = productForm.querySelector('[name="quantity"]');
+      input.value = String(Math.max(1, Math.min(Number(input.max) || 10000, (Number(input.value) || 1) + Number(button.dataset.quantityStep))));
+      input.dispatchEvent(new Event('change', {bubbles: true}));
+    }));
   }
 
   const mobileFilterForm = document.querySelector('[data-mobile-filter-form]');
