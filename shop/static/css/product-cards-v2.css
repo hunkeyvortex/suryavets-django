@@ -35,12 +35,6 @@
 .sv-product-card .sv-card__saving{color:#008447;font-size:12px;line-height:1.5;margin:3px 0}
 .sv-product-card .sv-card__selected{color:#6f8074;font-size:10px;margin:5px 0 0}
 .sv-product-card .sv-card__actions{display:flex;gap:8px;flex-wrap:wrap}
-.sv-product-card .sv-card__stepper{display:grid;grid-template-columns:1fr 1fr 1fr;flex:1 1 100px;min-width:0;border:1px solid #d3ddd6;border-radius:10px;overflow:hidden}
-.sv-card__stepper label{min-width:0;margin:0}
-.store-product-card.sv-product-card .sv-card__stepper button{display:block;width:100%;min-width:0;min-height:44px;border:0;border-radius:0;padding:0;background:#fff;color:#12613b;font:500 20px Arial,sans-serif}
-.store-product-card.sv-product-card .sv-card__stepper button:disabled{color:#b4beb7;background:#fafbf9;cursor:not-allowed}
-.sv-product-card .sv-card__stepper input{width:100%;min-width:0;min-height:44px;text-align:center;border:0;border-radius:0;padding:0;font:500 16px Arial,sans-serif;color:#264333;background:#fff;appearance:textfield;box-sizing:border-box}
-.sv-card__stepper input::-webkit-inner-spin-button,.sv-card__stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .store-product-card.sv-product-card .sv-card__add{flex:2 1 125px;min-width:0;width:auto;min-height:46px;background:#00a651;color:#fff;border:1px solid #00a651;border-radius:10px;padding:10px 8px;font:600 13px/1.3 Poppins,Arial,sans-serif}
 .store-product-card.sv-product-card .sv-card__add:hover{background:#008c48;border-color:#008c48}.store-product-card.sv-product-card .sv-card__add:disabled{background:#edf1ed;color:#77857b;border-color:#dae2dc;cursor:not-allowed}
 .sv-product-card .sv-card__details{font-size:11px;text-align:center;color:#627a68;min-height:32px;padding-top:12px;text-decoration:underline}

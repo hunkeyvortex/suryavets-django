@@ -19,6 +19,9 @@ class ProductCardTests(TestCase):
         self.assertNotContains(response, '12 kg'); self.assertNotContains(response, 'Not published')
         self.assertContains(response, 'name="variant_id"')
         self.assertContains(response, 'data-card-add')
+        self.assertContains(response, '<input type="hidden" name="quantity" value="1">')
+        self.assertNotContains(response, 'data-card-step')
+        self.assertNotContains(response, 'sv-card__stepper')
 
     def test_selection_savings_stock_and_query_reuse(self):
         product = _product_queryset().get(pk=self.product.pk)

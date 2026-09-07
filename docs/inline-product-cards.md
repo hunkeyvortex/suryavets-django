@@ -6,7 +6,7 @@ The approved green/gold card concept is implemented in the shared Django card co
 
 - Real active pack options, including verified linked source products, appear as selectable chips. Additional options use a collapsible More sizes section.
 - Selecting a pack updates its exact current price, MRP, saving, discount, stock limit and assigned photograph. Missing exact pack photos remain visibly unavailable rather than borrowing another pack's artwork.
-- The card includes quantity controls, Add to Cart, wishlist access and a product-detail link. Anonymous wishlist access goes through login. Without JavaScript, customers follow the product-detail link to choose a pack.
+- The card includes Add to Cart, wishlist access and a product-detail link. Cards add one unit of the selected pack; quantity controls are in the cart, not on cards. Anonymous wishlist access goes through login. Without JavaScript, customers follow the product-detail link to choose a pack.
 - Every purchase uses the existing server-side cart validation. Client price fields cannot change the charged price, and a linked pack retains its actual source product and variant IDs.
 - No product records, stock, images, orders or schema were changed. The mockup's illustrative sizes were not imported. Previously missing photos still need verified source assets.
 
