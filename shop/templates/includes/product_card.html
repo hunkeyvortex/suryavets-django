@@ -2,7 +2,7 @@
 <article class="store-product-card">
   <a class="store-product-card__image" href="{% url 'shop:product_detail' product.slug %}">
     {% if product.images.first and product.images.first.display_url %}
-      <img src="{{ product.images.first.display_url }}" alt="{{ product.images.first.alt_text|default:product.name }}" loading="lazy" decoding="async">
+      <img src="{{ product.images.first.thumbnail_url }}" alt="{{ product.images.first.alt_text|default:product.name }}" loading="lazy" decoding="async">
     {% else %}
       <span class="store-product-card__image-placeholder" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5c-1.7-1.8-6.5-5.4-6.5-9.3A3.7 3.7 0 0 1 12 9a3.7 3.7 0 0 1 6.5 2.2c0 3.9-4.8 7.5-6.5 9.3Z"/></svg></span>
     {% endif %}

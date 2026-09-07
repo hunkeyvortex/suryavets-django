@@ -9,7 +9,7 @@
 <div class="product-page site-shell">
   <article class="product-view">
     <section class="product-gallery" data-product-gallery>
-      {% if product.images.all and product.images.first.display_url %}<div class="product-gallery__main"><img src="{{ product.images.first.display_url }}" alt="{{ product.images.first.alt_text|default:product.name }}" data-product-main-image></div><div class="product-gallery__thumbnails">{% for image in product.images.all %}{% if image.display_url %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" data-product-image="{{ image.display_url }}" data-product-alt="{{ image.alt_text|default:product.name }}"><img src="{{ image.display_url }}" alt=""></button>{% endif %}{% endfor %}</div>{% else %}<div class="product-gallery__main product-gallery__placeholder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20.5c-1.7-1.8-6.5-5.4-6.5-9.3A3.7 3.7 0 0 1 12 9a3.7 3.7 0 0 1 6.5 2.2c0 3.9-4.8 7.5-6.5 9.3Z"/></svg></div>{% endif %}
+      {% include 'includes/product_gallery.html' %}
     </section>
     <section class="product-summary">
       {% if product.product_type %}<p class="product-summary__eyebrow">{{ product.product_type.name }}</p>{% endif %}
@@ -26,6 +26,7 @@
     </section>
   </article>
   <section class="product-description"><h2>About this product</h2>{% if product.description %}{{ product.description|linebreaks }}{% else %}<p>Product information will be added shortly.</p>{% endif %}{% if product.specifications.all %}<h2>Specifications</h2><dl>{% for specification in product.specifications.all %}<dt>{{ specification.name }}</dt><dd>{{ specification.value }}</dd>{% endfor %}</dl>{% endif %}</section>
+  {% if product.nutrition_reviewed %}<section class="product-description" aria-label="Ingredients and nutrition">{% if product.ingredients %}<h2>Ingredients</h2>{{ product.ingredients|linebreaks }}{% endif %}{% if product.nutrition_information %}<h2>Nutritional information</h2>{{ product.nutrition_information|linebreaks }}{% endif %}<p>Check the current package for the formulation and feeding directions for your exact product.</p>{% if product.nutrition_source %}<a href="{{ product.nutrition_source }}" target="_blank" rel="noopener noreferrer">Product information source ↗</a>{% endif %}</section>{% endif %}
   {% if related_products %}<section class="related-products"><header><h2>You may also like</h2></header><div class="catalog-product-grid">{% for product in related_products %}{% include 'includes/product_card.html' with product=product %}{% endfor %}</div></section>{% endif %}
   <section class="product-reviews" aria-label="Customer reviews"><h2>Customer Reviews</h2><p>No reviews yet</p><button type="button" disabled>Be the first to write a review</button></section>
 </div>

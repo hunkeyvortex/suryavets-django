@@ -14,10 +14,11 @@ class ProductEditorForm(forms.ModelForm):
         model = Product
         fields = ['name', 'slug', 'sku', 'brand', 'category', 'collections', 'pet_categories',
                   'short_description', 'description', 'base_price', 'selling_price',
+                  'ingredients', 'nutrition_information', 'nutrition_source', 'nutrition_source_note', 'nutrition_reviewed',
                   'is_featured', 'is_bestseller', 'requires_prescription', 'meta_title', 'meta_description']
         labels = {'base_price': 'Regular price (₹)', 'selling_price': 'Selling price (₹)', 'slug': 'URL handle',
                   'category': 'Primary category', 'collections': 'Additional collections'}
-        widgets = {name: forms.Textarea(attrs={'rows': 3}) for name in ['short_description', 'description', 'meta_description']}
+        widgets = {name: forms.Textarea(attrs={'rows': 3}) for name in ['short_description', 'description', 'meta_description', 'ingredients', 'nutrition_information']}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,6 +36,7 @@ class ProductEditorForm(forms.ModelForm):
                        ('Where it belongs', [self[name] for name in ['category', 'collections', 'pet_categories']]),
                        ('Tell its story', [self[name] for name in ['short_description', 'description']]),
                        ('Product photo', [self[name] for name in ['image', 'image_alt']]),
+                       ('Ingredients & nutrition review', [self[name] for name in ['ingredients', 'nutrition_information', 'nutrition_source', 'nutrition_source_note', 'nutrition_reviewed']]),
                        ('Merchandising & SEO', [self[name] for name in ['is_featured', 'is_bestseller', 'requires_prescription', 'meta_title', 'meta_description']])]
 
     def clean_slug(self):
@@ -52,6 +54,8 @@ class ProductEditorForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
+        if data.get('nutrition_reviewed') and (not data.get('nutrition_source') or not (data.get('ingredients') or data.get('nutrition_information'))):
+            self.add_error('nutrition_reviewed', 'Provide product-specific information and its source URL before approving it for display.')
         if not self.instance._state.adding and data.get('version') != self.instance.updated_at.isoformat():
             raise forms.ValidationError('This product changed since you opened it. Reload before saving.')
         if data.get('base_price') is not None and data.get('selling_price') is not None and data['selling_price'] > data['base_price']:

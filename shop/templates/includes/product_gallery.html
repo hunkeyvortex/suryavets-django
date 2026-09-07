@@ -1,0 +1,6 @@
+{% with primary=product.images.all.0 %}
+{% if primary.display_url %}
+<div class="product-gallery__main"><img src="{{ primary.display_url }}" alt="{{ primary.alt_text|default:product.name }}" data-product-main-image decoding="async" fetchpriority="high"></div>
+<div class="product-gallery__thumbnails" aria-label="Product photos">{% for image in product.images.all %}{% if image.display_url %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" data-product-image="{{ image.display_url }}" data-product-alt="{{ image.alt_text|default:product.name }}" aria-label="View product photo {{ forloop.counter }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"><img src="{{ image.thumbnail_url }}" alt="" loading="lazy" decoding="async"></button>{% endif %}{% endfor %}</div>
+{% else %}<div class="product-gallery__main product-gallery__placeholder"><p>Product photo awaiting verification</p></div>{% endif %}
+{% endwith %}

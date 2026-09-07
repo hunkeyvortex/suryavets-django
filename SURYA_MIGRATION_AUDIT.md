@@ -350,3 +350,21 @@ Latest payment UI update: new checkouts now offer COD with an unavailable Online
 | CRM inventory | Original SuryaVets staff UI | /crm/inventory/ | Reviewed | Reviewed | Search, status/stock filters, product actions | FUNCTIONAL COMPLETE |
 | Product editor | Original SuryaVets staff UI | /crm/inventory/new/ and /crm/inventory/{id}/edit/ | Reviewed | Reviewed | Create/edit/photos/existing pack prices | FUNCTIONAL COMPLETE |
 | Archive/restore | Explicit confirmation flow | /crm/inventory/{id}/archive/ | Rendered/tested | Responsive form | History-preserving POST actions | FUNCTIONAL COMPLETE |
+
+## N. Product image coverage and nutrition review
+
+- Audited all 6,697 products and both supplied Shopify product exports. Initial coverage: 4,342 products without an image reference, 2,145 with one image and 210 with multiple images. All 2,619 image records initially depended on Shopify CDN URLs.
+- The exports contain no variant-specific image URLs and no multi-variant handles. Current 6,677 variants belong to separate product records; no similar-name products were merged.
+- Added optional source-backed ingredients/nutrition drafts and explicit manager review before display. Staged 1,650 labelled ingredient/composition/nutrition sections; no automatic approval or invented nutrient values.
+- Added safe, resumable media migration and the application-generated `tmp/PRODUCT_IMAGE_AUDIT.csv`, plus optimized WebP originals/thumbnails and CRM missing-image/failed-check/nutrition-review filters. Existing galleries now have accessible selected states and smaller thumbnails.
+- Final result: all 2,619 available image references migrated locally with thumbnails, covering 2,355 products. Nine transient timeouts succeeded on retry; no failed checks remain. No additional image references were present in the supplied exports.
+- Migration 0009 applied after a database backup. Existing prices, identities and order snapshots were preserved. A new local checkout during the work legitimately deducted one unit; that ledger event was retained.
+- Full suite: 123 tests passed; focused media/gallery tests rerun after final styling changes. Gallery checked at all nine widths from 320 to 1440 px. Full Shopify mobile parity and the broader variant brief are NOT complete.
+- Comprehensive ten-point architecture findings, changed files, schema recommendations, remaining phases, commands and source limits: `docs/product-image-nutrition-audit.md`. Verified original photos are still required for the 4,342 products with no export reference.
+
+| Page/component | Reference | Django URL / artifact | Desktop | Mobile | Functional | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Existing product gallery | Exact supplied Shopify image references | /product/{slug}/ | Reviewed | 320–430 checked | Multiple images, accessible thumbnails | IMPLEMENTED; COMPLETE IMAGE COVERAGE BLOCKED BY MISSING ASSETS |
+| Nutrition review | Supplied export descriptions, unverified | /crm/inventory/?media=nutrition | Form tested | Responsive form | Draft + explicit reviewed display | NEEDS LABEL REVIEW |
+| Image coverage audit | Supplied exports and Django image rows | tmp/PRODUCT_IMAGE_AUDIT.csv | — | — | Every product included | GENERATED |
+| Full variant buying experience | Attached product/variant brief | Product/CRM/cart | Pending | Pending | Existing variant commerce preserved | REMAINING PHASE |

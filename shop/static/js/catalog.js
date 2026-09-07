@@ -6,8 +6,11 @@
       button.addEventListener('click', () => {
         mainImage.src = button.dataset.productImage;
         mainImage.alt = button.dataset.productAlt || mainImage.alt;
-        gallery.querySelectorAll('[data-product-image]').forEach((item) => item.classList.remove('is-active'));
+        gallery.querySelectorAll('[data-product-image]').forEach((item) => {
+          item.classList.remove('is-active'); item.setAttribute('aria-pressed', 'false');
+        });
         button.classList.add('is-active');
+        button.setAttribute('aria-pressed', 'true');
       });
     });
   }

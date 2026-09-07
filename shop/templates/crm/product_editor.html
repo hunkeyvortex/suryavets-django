@@ -2,6 +2,8 @@
 {% block content %}
 <div class="catalog-toolbar"><a href="{% url 'crm:inventory' %}">← All products</a>{% if product %}<div><a class="button quiet" href="{% url 'crm:inventory_detail' product.pk %}">Adjust stock</a><a class="button quiet" href="{% url 'crm:product_archive' product.pk %}">{% if product.is_active %}Archive from store{% else %}Restore to store{% endif %}</a>{% if product.is_active %}<a href="{% url 'shop:product_detail' product.slug %}" target="_blank" rel="noopener">View in store ↗</a>{% endif %}</div>{% endif %}</div>
 <div class="catalog-editor-layout"><div>
+{% if not product.images.all %}<p class="notice"><strong>IMAGE REQUIRED</strong> — upload a verified photo of this exact product. Do not substitute another pack or similar packaging.</p>{% endif %}
+{% if product.nutrition_information or product.ingredients %}{% if not product.nutrition_reviewed %}<p class="notice">Nutrition / ingredients are an unverified draft. Check the exact product's current label or manufacturer information before approving them for display.</p>{% endif %}{% endif %}
 {% if variants %}<p class="notice">This product has pack-specific prices. <a href="#catalog-packs">Jump to packs &amp; variants ↓</a> to edit the price customers pay for each pack.</p>{% endif %}
 <form method="post" enctype="multipart/form-data" class="catalog-editor" data-product-editor>{% csrf_token %}{{ form.version }}{{ form.non_field_errors }}
 {% for heading, fields in form.groups %}<section class="panel"><div class="catalog-section-title"><span>{{ forloop.counter|stringformat:'02d' }}</span><h2>{{ heading }}</h2></div><div class="catalog-fields">{% for field in fields %}{% include 'crm/catalog_field.html' %}{% endfor %}</div></section>{% endfor %}

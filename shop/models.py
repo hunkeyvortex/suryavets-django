@@ -151,6 +151,11 @@ class Product(models.Model):
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     description = models.TextField(blank=True)
     short_description = models.TextField(blank=True)
+    ingredients = models.TextField(blank=True)
+    nutrition_information = models.TextField(blank=True)
+    nutrition_source = models.URLField(blank=True)
+    nutrition_source_note = models.CharField(max_length=500, blank=True)
+    nutrition_reviewed = models.BooleanField(default=False, help_text='Publish only after checking the exact product and current packaging/manufacturer information.')
     sku = models.CharField(max_length=100, blank=True, db_index=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     collections = models.ManyToManyField(Category, related_name='collection_products', blank=True)
@@ -308,6 +313,9 @@ class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/')
     source_url = models.URLField(blank=True)
+    thumbnail = models.ImageField(upload_to='products/thumbnails/', blank=True)
+    checked_at = models.DateTimeField(null=True, blank=True)
+    check_error = models.CharField(max_length=250, blank=True)
     alt_text = models.CharField(max_length=200, blank=True)
     order = models.IntegerField(default=0)
     is_primary = models.BooleanField(default=False)
@@ -323,6 +331,10 @@ class ProductImage(models.Model):
     def display_url(self):
         """Use locally stored media when present, otherwise the imported Shopify URL."""
         return self.image.url if self.image else self.source_url
+
+    @property
+    def thumbnail_url(self):
+        return self.thumbnail.url if self.thumbnail else self.display_url
 
 
 class ProductSpecification(models.Model):

@@ -101,6 +101,9 @@ class ProductAdmin(admin.ModelAdmin):
         ('Pricing', {
             'fields': ('base_price', 'selling_price', 'discount_percentage', 'current_price', 'original_price')
         }),
+        ('Ingredients and nutrition (verify before publishing)', {
+            'fields': ('ingredients', 'nutrition_information', 'nutrition_source', 'nutrition_source_note', 'nutrition_reviewed')
+        }),
         ('Product Details', {
             'fields': ('manufacturer', 'stock_quantity', 'track_inventory', 'is_in_stock', 'availability_label', 'requires_prescription', 'is_featured', 'is_bestseller', 'is_active')
         }),

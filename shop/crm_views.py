@@ -183,6 +183,13 @@ def customer_note(request, key):
 def inventory(request):
     qs = Product.objects.select_related('brand', 'category').prefetch_related('images').order_by('name', 'pk')
     visibility = request.GET.get('visibility', '')
+    media_filter = request.GET.get('media', '')
+    if media_filter == 'missing':
+        qs = qs.exclude(Q(images__image__gt='') | Q(images__source_url__gt=''))
+    elif media_filter == 'broken':
+        qs = qs.filter(images__check_error__gt='').distinct()
+    elif media_filter == 'nutrition':
+        qs = qs.filter(nutrition_reviewed=False).exclude(ingredients='', nutrition_information='')
     if visibility in ('active', 'archived'):
         qs = qs.filter(is_active=visibility == 'active')
     q = request.GET.get('q', '').strip()[:150]
@@ -198,7 +205,7 @@ def inventory(request):
     stats = Product.objects.aggregate(total=Count('pk'), active=Count('pk', filter=Q(is_active=True)),
         archived=Count('pk', filter=Q(is_active=False)))
     return render(request, 'crm/catalog_inventory.html', {**page_context(request, qs), 'section': 'inventory',
-        'title': 'Products & inventory', 'stock': stock, 'visibility': visibility, 'stats': stats})
+        'title': 'Products & inventory', 'stock': stock, 'visibility': visibility, 'stats': stats, 'media_filter': media_filter})
 
 
 @staff_page()
