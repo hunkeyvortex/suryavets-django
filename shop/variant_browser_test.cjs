@@ -13,11 +13,26 @@ const path=require('node:path');
       page.on('pageerror',e=>errors.push(e.message));
       await page.goto(origin+'/categories/');
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Card grid overflow ${width}`);
+      const inlineCard = page.locator('[data-product-card]');
+      await inlineCard.locator('input[data-name="5 kg"]').check();
+      assert.equal(await inlineCard.locator('[data-card-price]').innerText(),'₹2,950.00');
+      assert.equal(await inlineCard.locator('[data-card-regular]').innerText(),'₹3,500.00');
+      assert.equal(await inlineCard.locator('[data-card-saving]').innerText(),'You save ₹550.00');
+      assert.equal(await inlineCard.locator('[data-card-image]').getAttribute('alt'),'5 kg test fixture');
+      assert(await inlineCard.locator('input[data-name="10 kg"]').isDisabled());
+      await inlineCard.getByRole('button',{name:'Increase quantity',exact:true}).click();
+      assert.equal(await inlineCard.locator('[name="quantity"]').inputValue(),'2');
       if(process.env.SURYA_BROWSER_ARTIFACTS && [320,390,1440].includes(width)) {
         fs.mkdirSync(process.env.SURYA_BROWSER_ARTIFACTS,{recursive:true});
         await page.locator('.catalog-product-grid').screenshot({path:path.join(process.env.SURYA_BROWSER_ARTIFACTS,`variant-cards-${width}.png`)});
       }
-      await page.getByRole('link',{name:'Choose size',exact:true}).click();
+      await inlineCard.getByRole('button',{name:'Add to Cart',exact:true}).click();
+      await page.goto(origin+'/cart/');
+      assert((await page.locator('body').innerText()).includes('5 kg'));
+      assert((await page.locator('body').innerText()).includes('5,900.00'));
+      await page.getByRole('button',{name:/^Remove /}).click();
+      await page.goto(origin+'/categories/');
+      await page.getByRole('link',{name:'View product',exact:true}).click();
       const overflow=async()=>assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Overflow ${width}: ${page.url()}`);
       await overflow();
       const small=page.locator('input[data-name="1.5 kg"]'), large=page.locator('input[data-name="5 kg"]');

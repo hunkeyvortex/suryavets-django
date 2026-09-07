@@ -1,0 +1,25 @@
+{% load shop_filters %}
+{% product_card_data product as card %}
+<article class="store-product-card sv-product-card" data-product-card>
+  <div class="sv-card__media">
+    <a class="store-product-card__image" href="{% url 'shop:product_detail' product.slug %}" aria-label="View {{ product.family_name|default:product.name }}">
+      <img data-card-image {% if card.selected.image %}src="{{ card.selected.image }}"{% else %}hidden{% endif %} alt="{{ card.selected.alt }}" loading="lazy" decoding="async">
+      <span class="sv-card__photo-missing" data-card-photo-missing {% if card.selected.image %}hidden{% endif %}>Product photo<br>not available</span>
+    </a>
+    <span class="store-product-card__sale" data-card-badge {% if not card.selected.sale %}hidden{% endif %}>{% if card.selected.discount %}{{ card.selected.discount }}% OFF{% else %}Sale{% endif %}</span>
+    {% if request.user.is_authenticated %}<form class="sv-card__wishlist" method="post" action="{% url 'shop:wishlist_save' product.pk %}">{% csrf_token %}<button type="submit" aria-label="Save {{ product.name }} to wishlist">{% include 'includes/card_heart.html' %}</button></form>{% else %}<a class="sv-card__wishlist" href="{% url 'shop:login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Sign in to save {{ product.name }} to wishlist">{% include 'includes/card_heart.html' %}</a>{% endif %}
+  </div>
+  <div class="store-product-card__body">
+    <p class="store-product-card__eyebrow">{% if product.brand %}{{ product.brand.name }}{% else %}Surya Vets{% endif %}{% if product.product_type %} · {{ product.product_type.name }}{% endif %}</p>
+    <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.family_name|default:product.name }}</a></h3>
+    <p class="sv-card__stock" data-card-stock>{% if card.selected.available %}In stock{% else %}Out of stock{% endif %}</p>
+    <form class="sv-card__purchase" method="post" action="{% url 'shop:add_to_cart' product.pk %}" data-card-form>
+      {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+      {% if card.choices %}<fieldset class="sv-card__sizes"><legend>Choose size</legend><div class="sv-card__chips">{% for option in card.choices|slice:':3' %}{% include 'includes/card_variant.html' %}{% endfor %}</div>{% if card.choices|length > 3 %}<details><summary>More sizes ({{ card.choices|length|add:'-3' }})</summary><div class="sv-card__chips">{% for option in card.choices|slice:'3:' %}{% include 'includes/card_variant.html' %}{% endfor %}</div></details>{% endif %}</fieldset>{% endif %}
+      <div class="sv-card__price-block" aria-live="polite" aria-atomic="true"><div class="store-product-card__price"><strong>{% if card.multiple %}<small data-card-from>From </small>{% endif %}<span data-card-price>₹{{ card.selected.price|money }}</span></strong><del data-card-regular {% if not card.selected.sale %}hidden{% endif %}>₹{{ card.selected.regular|money }}</del></div><p class="sv-card__saving" data-card-saving {% if not card.selected.sale %}hidden{% endif %}>You save ₹{{ card.selected.saving|money }}</p><p class="sv-card__selected" data-card-selected>{% if card.selected.variant %}{{ card.selected.variant.name }} selected{% endif %}</p></div>
+      <div class="sv-card__actions"><div class="sv-card__stepper"><button type="button" data-card-step="-1" aria-label="Decrease quantity">−</button><label><span class="sv-card__sr">Quantity for {{ product.name }}</span><input type="number" name="quantity" value="1" min="1" max="{{ card.selected.max_quantity }}" inputmode="numeric" required aria-label="Quantity for {{ product.name }}"></label><button type="button" data-card-step="1" aria-label="Increase quantity">+</button></div><button type="submit" class="sv-card__add" data-card-add {% if not card.selected.available %}disabled{% endif %}>Add to Cart</button></div>
+    </form>
+    <a class="sv-card__details" href="{% url 'shop:product_detail' product.slug %}">View product</a>
+    <noscript><p>Open the product to select a pack and review its current price.</p><a href="{% url 'shop:product_detail' product.slug %}">Choose size</a><style>.sv-card__purchase{display:none}</style></noscript>
+  </div>
+</article>

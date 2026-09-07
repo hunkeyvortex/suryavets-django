@@ -10,6 +10,12 @@ def product_offer(product):
     return card_offer(product)
 
 
+@register.simple_tag
+def product_card_data(product):
+    from shop.services.product_cards import product_card
+    return product_card(product)
+
+
 @register.filter
 def money(value):
     """Group exact Decimal prices without converting money to binary floats."""

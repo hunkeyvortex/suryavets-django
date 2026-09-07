@@ -1,0 +1,6 @@
+{% load shop_filters %}
+<label class="sv-card__chip">
+  <input type="radio" name="variant_id" value="{{ option.variant.pk }}" {% if option.variant.pk == card.selected.variant.pk %}checked{% endif %} {% if not option.available %}disabled{% endif %}
+    data-price="₹{{ option.price|money }}" data-regular="₹{{ option.regular|money }}" data-saving="You save ₹{{ option.saving|money }}" data-sale="{{ option.sale|yesno:'1,0' }}" data-badge="{% if option.discount %}{{ option.discount }}% OFF{% else %}Sale{% endif %}" data-stock="{{ option.available|yesno:'1,0' }}" data-max="{{ option.max_quantity }}" data-image="{{ option.image }}" data-alt="{{ option.alt }}" data-name="{{ option.variant.name }}">
+  <span>{{ option.variant.name }}{% if not option.available %}<small>Sold out</small>{% endif %}</span>
+</label>

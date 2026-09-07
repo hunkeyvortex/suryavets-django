@@ -143,7 +143,7 @@ def pet_delete(request, pk):
 
 @account_page
 def wishlist(request):
-    rows = request.user.wishlist.select_related('product').prefetch_related('product__images', 'product__variants', 'product__family_members__variants')
+    rows = request.user.wishlist.select_related('product', 'product__brand', 'product__product_type').prefetch_related('product__images', 'product__variants', 'product__family_members__variants', 'product__family_members__images')
     return show(request, 'wishlist', 'Wishlist', page=Paginator(rows, 12).get_page(request.GET.get('page')))
 
 
