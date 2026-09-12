@@ -540,6 +540,7 @@ class Coupon(models.Model):
 class Order(models.Model):
     """Checkout snapshot; payment confirmation is a separate operation."""
     class Status(models.TextChoices):
+        AWAITING_PAYMENT = 'awaiting_payment', 'Awaiting payment'
         PENDING = 'pending', 'Placed'
         CONFIRMED = 'confirmed', 'Confirmed'
         PROCESSING = 'processing', 'Processing'
@@ -714,13 +715,27 @@ class OrderStatusHistory(models.Model):
 class OrderNotification(models.Model):
     event = models.ForeignKey(OrderStatusHistory, on_delete=models.PROTECT, related_name='notifications')
     channel = models.CharField(max_length=20, default='email')
+    audience = models.CharField(max_length=10, default='customer', choices=[('customer', 'Customer'), ('admin', 'Admin')])
+    recipient = models.EmailField(blank=True)
     state = models.CharField(max_length=12, default='pending', choices=[('pending', 'Pending'), ('sending', 'Sending'), ('sent', 'Sent'), ('failed', 'Failed')])
     sent_at = models.DateTimeField(null=True, blank=True)
     attempts = models.PositiveIntegerField(default=0)
     error = models.CharField(max_length=200, blank=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['event', 'channel'], name='one_notification_per_order_event_channel')]
+        constraints = [models.UniqueConstraint(fields=['event', 'channel', 'audience'], name='one_notification_per_event_audience')]
+
+
+class PaymentAttempt(models.Model):
+    """One gateway order per checkout. Unknown network outcomes require reconciliation."""
+    order = models.OneToOneField(Order, on_delete=models.PROTECT, related_name='payment_attempt')
+    gateway_order_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    gateway_payment_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    amount = models.PositiveBigIntegerField(help_text='Server-calculated INR paise')
+    currency = models.CharField(max_length=3, default='INR')
+    state = models.CharField(max_length=12, default='new', choices=[('new', 'Not started'), ('creating', 'Creating'), ('ready', 'Ready'), ('uncertain', 'Needs reconciliation'), ('paid', 'Verified paid')])
+    verified_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class CustomerProfile(models.Model):

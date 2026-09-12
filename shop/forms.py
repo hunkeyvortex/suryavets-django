@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.forms import UserCreationForm
 
 from .models import CustomerAddress
+from .services.payments import enabled as online_payments_enabled
 
 
 class EmailLoginForm(forms.Form):
@@ -63,7 +64,7 @@ class RegistrationForm(UserCreationForm):
 class PaymentRadioSelect(forms.RadioSelect):
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
         option = super().create_option(name, value, label, selected, index, subindex, attrs)
-        if str(value) == 'online':
+        if str(value) == 'online' and not online_payments_enabled():
             option['attrs']['disabled'] = True
         return option
 
@@ -107,10 +108,11 @@ class CheckoutForm(forms.Form):
         self.fields['notes'].label = 'Delivery notes (optional)'
         self.fields['notes'].widget.attrs.update({'rows': 2, 'placeholder': 'Anything that will help us deliver your order?'})
         self.fields['payment_method'].widget = PaymentRadioSelect(choices=self.PAYMENT_CHOICES)
+        self.online_enabled = online_payments_enabled()
 
     def clean_payment_method(self):
         method = self.cleaned_data['payment_method']
-        if method == 'online':
+        if method == 'online' and not online_payments_enabled():
             raise forms.ValidationError('Online payments are not available yet. Please choose Cash on Delivery.')
         return method
 

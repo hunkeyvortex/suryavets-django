@@ -58,9 +58,9 @@ def place_order(cart, user, token, data):
     if existing:
         return existing
 
-    # Until a verified gateway flow exists, never create unpaid online orders.
-    # Guard the service too, so bypassing the form cannot reserve stock/coupons.
-    if data.get('payment_method') != 'cash_on_delivery':
+    from .payments import enabled
+    online = data.get('payment_method') == 'online'
+    if data.get('payment_method') != 'cash_on_delivery' and not (online and enabled()):
         raise CheckoutError('Online payments are not available yet. Please choose Cash on Delivery.')
 
     items = list(cart_items(cart))
@@ -121,6 +121,7 @@ def place_order(cart, user, token, data):
         for suffix in ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'postal_code'):
             values['billing_' + suffix] = values['shipping_' + suffix]
     order = Order.objects.create(user_id=user_id, checkout_key=key, checkout_cart=cart,
+        status='awaiting_payment' if online else 'pending',
         stock_deducted=bool(product_stock or variant_stock), inventory_recorded=True,
         subtotal=totals['subtotal'], shipping_cost=totals['shipping'], total=totals['total'],
         discount_amount=totals['discount_amount'], coupon=totals['coupon'],
@@ -135,6 +136,11 @@ def place_order(cart, user, token, data):
         variant_name=item.product_variant.name if item.product_variant else '',
         unit_price=(item.product_variant or item.product).current_price, quantity=item.quantity,
         image_reference=(item.product_variant.image.display_url if item.product_variant and item.product_variant.image else item.product.images.first().display_url if item.product.images.exists() else '')) for item in items])
+    if online:
+        from shop.models import PaymentAttempt
+        if order.total <= 0:
+            raise CheckoutError('Online payment requires a positive order total.')
+        PaymentAttempt.objects.create(order=order, amount=int(order.total * 100))
     from .order_tracking import record_event
     record_event(order, order.status, actor=user if user_id else None)
     # Record only quantities actually deducted, inside the same transaction.

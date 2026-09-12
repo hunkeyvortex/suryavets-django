@@ -28,6 +28,7 @@ const path=require('node:path');
         await page.locator('.catalog-product-grid').screenshot({path:path.join(process.env.SURYA_BROWSER_ARTIFACTS,`variant-cards-${width}.png`)});
       }
       await inlineCard.getByRole('button',{name:'Add to Cart',exact:true}).click();
+      await page.waitForURL('**/cart/');
       await page.goto(origin+'/cart/');
       assert((await page.locator('body').innerText()).includes('5 kg'));
       assert.equal(await page.locator('.basket-quantity input[name="quantity"]').inputValue(),'1');

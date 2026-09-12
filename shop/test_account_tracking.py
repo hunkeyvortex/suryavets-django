@@ -101,7 +101,8 @@ class AccountTrackingTests(TestCase):
         transition_order(self.manager, self.order.pk, 'pending', 'confirmed', 'Reviewed order')
         transition_order(self.manager, self.order.pk, 'pending', 'confirmed', 'Duplicate submit')
         self.assertEqual(self.order.events.count(), 2)
-        self.assertEqual(OrderNotification.objects.filter(event__order=self.order).count(), 2)
+        self.assertEqual(OrderNotification.objects.filter(event__order=self.order, audience='customer').count(), 2)
+        self.assertEqual(OrderNotification.objects.filter(event__order=self.order, audience='admin').count(), 1)
         with self.assertRaises(CRMError):
             transition_order(self.manager, self.order.pk, 'pending', 'cancelled', 'Stale request')
 

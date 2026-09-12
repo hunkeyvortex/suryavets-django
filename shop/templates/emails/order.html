@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ title }}</title></head>
+<body style="margin:0;background:#f3f7f4;color:#243e32;font-family:Arial,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 10px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#fff;border:1px solid #dce9df;border-radius:16px;overflow:hidden">
+<tr><td style="padding:26px;background:#00884a;color:white;font-size:28px;font-weight:bold">Surya<span style="color:#ffd371">Vets</span><br><span style="font-size:12px;font-weight:normal">Pet's Lifeline</span></td></tr>
+<tr><td style="padding:24px;overflow-wrap:anywhere;word-break:break-word">
+<h1 style="font-size:24px;margin:0 0 20px">{{ title }}</h1>
+{% if admin_email %}<p>A new order has been received.</p><p><strong>{{ order.shipping_name }}</strong><br>{{ order.email }}<br>{{ order.phone }}</p>{% else %}<p>Hello {{ order.shipping_name }},</p>{% if new_order %}<p>Thank you for shopping with SuryaVets. Your order has been placed successfully.</p>{% endif %}{% endif %}
+{% if customer_note %}<p>{{ customer_note|linebreaksbr }}</p>{% endif %}
+<p style="padding:16px;background:#eff7f1;border-radius:10px"><strong>#{{ order.order_number }}</strong><br>{{ order.created_at|date:'d M Y, H:i' }}<br>{{ order.get_status_display }}</p>
+<h2 style="font-size:18px">Your items</h2>
+{% for item in items %}<div style="padding:16px 0;border-bottom:1px solid #e5eee8"><strong>{{ item.product_name }}</strong><br>{% if item.variant_name %}Pack: {{ item.variant_name }}<br>{% endif %}<span style="font-size:13px;color:#61766a">SKU: {{ item.sku|default:'Not recorded' }} · Qty {{ item.quantity }}</span><br>₹{{ item.unit_price }} each · <strong>₹{{ item.line_total }}</strong></div>{% endfor %}
+<table role="presentation" width="100%" cellpadding="6" style="margin:16px 0;font-size:14px"><tr><td>Subtotal</td><td align="right">₹{{ order.subtotal }}</td></tr><tr><td>Discount</td><td align="right">−₹{{ order.discount_amount }}</td></tr><tr><td>Delivery</td><td align="right">₹{{ order.shipping_cost }}</td></tr><tr style="color:#007b43;font-size:19px"><td><strong>Total</strong></td><td align="right"><strong>₹{{ order.total }}</strong></td></tr></table>
+<h2 style="font-size:18px">Delivery address</h2><p style="line-height:1.7">{{ order.shipping_name }}<br>{{ order.shipping_address_line_1 }}<br>{% if order.shipping_address_line_2 %}{{ order.shipping_address_line_2 }}<br>{% endif %}{{ order.shipping_city }}, {{ order.shipping_state }} {{ order.shipping_postal_code }}<br>{{ order.shipping_country }}</p>
+<h2 style="font-size:18px">Payment</h2><p>{{ order.payment_method_label }}<br>Status: <strong>{{ order.get_payment_status_display }}</strong></p>{% if order.payment_method == 'cash_on_delivery' %}<p>Payment is due on delivery unless already recorded as paid.</p>{% endif %}
+{% if order_url %}<p style="margin:28px 0"><a href="{{ order_url }}" style="display:inline-block;background:#009b51;color:#fff;padding:15px 22px;text-decoration:none;border-radius:9px;font-weight:bold">{{ link_label }}</a></p>{% else %}<p>Keep this email and quote your order number when contacting SuryaVets.</p>{% endif %}
+<p style="font-size:14px;line-height:1.6">Thank you,<br><strong>Team SuryaVets</strong></p>
+</td></tr></table></td></tr></table></body></html>

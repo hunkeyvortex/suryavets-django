@@ -280,7 +280,7 @@ class CouponAdmin(ImmutableAuditAdmin):
     list_filter = ['is_active', 'kind']
 
 
-from .models import OrderStatusHistory, OrderNotification
+from .models import OrderStatusHistory, OrderNotification, PaymentAttempt
 
 
 @admin.register(OrderStatusHistory)
@@ -292,5 +292,12 @@ class OrderEventAdmin(ImmutableAuditAdmin):
 
 @admin.register(OrderNotification)
 class OrderNotificationAdmin(ImmutableAuditAdmin):
-    list_display = ['event', 'channel', 'state', 'sent_at', 'attempts']
+    list_display = ['event', 'audience', 'channel', 'state', 'sent_at', 'attempts']
     list_filter = ['channel', 'state']
+
+
+@admin.register(PaymentAttempt)
+class PaymentAttemptAdmin(ImmutableAuditAdmin):
+    list_display = ['order', 'state', 'gateway_order_id', 'gateway_payment_id', 'amount', 'verified_at']
+    list_filter = ['state']
+    search_fields = ['order__order_number', 'gateway_order_id', 'gateway_payment_id']

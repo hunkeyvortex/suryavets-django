@@ -1,0 +1,37 @@
+SURYA VETS — Pet's Lifeline
+{{ title }} — #{{ order.order_number }}
+
+{% if admin_email %}A new order has been received.
+Customer: {{ order.shipping_name }}
+Email: {{ order.email }}
+Phone: {{ order.phone }}{% else %}Hello {{ order.shipping_name }},
+{% if new_order %}Thank you for shopping with SuryaVets. Your order has been placed successfully.{% endif %}{% endif %}
+{{ customer_note }}
+
+Order: {{ order.order_number }}
+Date: {{ order.created_at|date:'d M Y, H:i' }}
+Status: {{ order.get_status_display }}
+{% for item in items %}
+{{ item.product_name }} — {{ item.variant_name }}
+SKU: {{ item.sku }} | Quantity: {{ item.quantity }}
+Unit price: INR {{ item.unit_price }} | Line total: INR {{ item.line_total }}
+{% endfor %}
+Subtotal: INR {{ order.subtotal }}
+Discount: INR {{ order.discount_amount }}
+Delivery: INR {{ order.shipping_cost }}
+Total: INR {{ order.total }}
+
+Deliver to:
+{{ order.shipping_name }}
+{{ order.shipping_address_line_1 }}
+{{ order.shipping_address_line_2 }}
+{{ order.shipping_city }}, {{ order.shipping_state }} {{ order.shipping_postal_code }}
+{{ order.shipping_country }}
+
+Payment method: {{ order.payment_method_label }}
+Payment status: {{ order.get_payment_status_display }}
+{% if order.payment_method == 'cash_on_delivery' %}Payment is due on delivery unless already recorded as paid.{% endif %}
+{% if order_url %}{{ link_label }}: {{ order_url }}{% else %}Keep this email and quote your order number when contacting SuryaVets.{% endif %}
+
+Thank you,
+Team SuryaVets

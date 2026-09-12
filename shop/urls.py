@@ -1,5 +1,6 @@
 from django.urls import path, re_path
 from . import catalog_views, views, account_views as account
+from . import payment_views
 
 app_name = 'shop'
 
@@ -23,6 +24,8 @@ urlpatterns = [
     
     # Checkout
     path('checkout/', views.checkout, name='checkout'),
+    path('checkout/payment/<uuid:order_id>/', payment_views.payment, name='payment'),
+    path('payments/razorpay/webhook/', payment_views.webhook, name='razorpay_webhook'),
     path('checkout/confirmation/<uuid:order_id>/', views.order_confirmation, name='order_confirmation'),
     
     # Search

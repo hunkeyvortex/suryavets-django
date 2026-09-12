@@ -420,3 +420,15 @@ Latest payment UI update: new checkouts now offer COD with an unavailable Online
 | CRM orders | Existing CRM extended | /crm/orders/ | Tested | Seven widths | Guarded transitions, shipment, reviews, timeline | IMPLEMENTED LOCALLY |
 | Support | Simple structured requests | /account/support/ and /crm/support/ | Tested | Overflow tested | Owned order links and customer-visible replies | IMPLEMENTED LOCALLY |
 | Notifications | Shared event outbox | send_order_notifications command | Backend tested | — | Deduplicated, disabled by default | TRANSPORT/DEPLOYMENT REMAINS |
+
+## Purchase flow update — 13 September 2026
+
+Full audit, changed-file inventory, configuration, recovery procedures and caveats: `docs/purchase-flow-20260913.md`.
+
+- Normal Add to Cart now opens `/cart/`; explicit Buy Now opens checkout. Existing variant/cart/price checks are reused.
+- Additive migration 0014 introduces test-gateway attempts, Awaiting-payment status and customer/admin outbox audiences. Database backup and old-column comparisons confirm existing data is unchanged.
+- Test-only Razorpay adapter checks HMAC and captured payment/order data server-side; signed webhooks and callbacks share an idempotent finalizer. No online confirmation is sent for unverified payments. Uncertain creation requires reconciliation, not another payment attempt.
+- Customer/admin HTML and plain-text messages use the existing event outbox and after-commit delivery. SMTP errors cannot undo orders; ambiguous delivery is retained for provider review, never automatically resent.
+- Mobile confirmation pages and both email templates have been visually inspected. COD, exact variants, shared CRM/account orders and simulated online checkout are exercised in disposable browser fixtures.
+- Real Razorpay test keys and SMTP credentials are not configured. No real payment or inbox-delivery test was performed. Both integrations remain disabled locally. Unpaid reservation expiry and live payment/refund operations remain production prerequisites.
+- No Shopify, DNS, deployment or PIN-code-system changes.

@@ -37,7 +37,7 @@
         </section>
         <section class="checkout-panel">
           <div class="checkout-panel-heading"><span class="section-number">3</span><div><h2>Payment preference</h2><p>Choose how you'd like to pay.</p></div></div>
-          <fieldset class="checkout-payment"><legend class="checkout-sr-only">Payment method</legend>{% for choice in form.payment_method %}<label>{{ choice.tag }}<span><strong>{{ choice.choice_label }}</strong>{% if choice.data.value == 'cash_on_delivery' %}<small>Pay in cash when your order arrives.</small>{% else %}<small>UPI, cards &amp; net banking — coming soon.</small><small>Not available until our payment gateway is connected.</small>{% endif %}</span>{% if choice.data.value == 'online' %}<em>Coming soon</em>{% endif %}</label>{% endfor %}</fieldset>
+          <fieldset class="checkout-payment"><legend class="checkout-sr-only">Payment method</legend>{% for choice in form.payment_method %}<label>{{ choice.tag }}<span><strong>{{ choice.choice_label }}</strong>{% if choice.data.value == 'cash_on_delivery' %}<small>Pay in cash when your order arrives.</small>{% elif form.online_enabled %}<small>Razorpay TEST checkout. No real payment methods or live charges.</small>{% else %}<small>UPI, cards &amp; net banking — coming soon.</small><small>Not available until our payment gateway is connected.</small>{% endif %}</span>{% if choice.data.value == 'online' and not form.online_enabled %}<em>Coming soon</em>{% endif %}</label>{% endfor %}</fieldset>
           {% if form.payment_method.errors %}<div class="checkout-field-error" role="alert">{{ form.payment_method.errors }}</div>{% endif %}
           <p class="checkout-small">COD orders are recorded as payment pending. No payment is collected on this page.</p>
         </section>
@@ -55,7 +55,7 @@
         <label class="checkout-check checkout-terms">{{ form.terms }}<span>I agree to the <a href="{% url 'shop:terms' %}" target="_blank" rel="noopener">Terms</a> and have read the <a href="{% url 'shop:privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
         {% if form.terms.errors %}<div class="checkout-field-error" role="alert">{{ form.terms.errors }}</div>{% endif %}
         <button class="checkout-place-order" type="submit" name="action" value="place_order" data-place-order {% if not cart_items %}disabled{% endif %}>Place order</button>
-        <p class="checkout-reassurance"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z M8 12l3 3 5-6"/></svg>No online charge today</p>
+        <p class="checkout-reassurance"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z M8 12l3 3 5-6"/></svg>{% if form.online_enabled %}Online payment opens in Razorpay test checkout{% else %}No online charge today{% endif %}</p>
       </div><p class="checkout-help">Need a hand? <a href="{% url 'shop:contact' %}">Talk to the SuryaVets team</a></p></aside>
     </form>
   </div>

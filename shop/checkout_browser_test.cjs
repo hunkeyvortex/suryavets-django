@@ -59,7 +59,7 @@ const path = require('node:path');
     await page.getByRole('button', {name: 'Update', exact: true}).click();
     await page.waitForURL('**/cart/');
     assert.match(await page.locator('[data-basket-total]').innerText(), /230/);
-    for (const width of [375, 390, 430, 768, 1024, 1440]) {
+    for (const width of [320, 360, 375, 390, 412, 430, 768, 1024, 1440]) {
       await page.setViewportSize({width, height: 900});
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       const items = await page.locator('.basket-products').boundingBox();
@@ -112,7 +112,12 @@ const path = require('node:path');
     await page.getByRole('button', {name: 'Place order', exact:true}).click();
     await page.waitForURL('**/checkout/confirmation/**');
     const receipt = page.url();
-    assert.match(await page.locator('body').innerText(), /Order Placed Successfully/);
+    assert.match(await page.locator('body').innerText(), /Order placed successfully/i);
+    for (const width of [320, 360, 375, 390, 412, 430, 768, 1440]) {
+      await page.setViewportSize({width, height:900});
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+      if (output && [390,1440].includes(width)) await page.locator('.receipt-card').screenshot({path:path.join(output, `confirmation-${width}.png`)});
+    }
     const duplicate = await page.request.post(origin + '/checkout/', {form: payload, headers: {Referer: origin + '/checkout/'}});
     assert.equal(duplicate.status(), 200); assert.equal(duplicate.url(), receipt);
     const stranger = await browser.newContext();

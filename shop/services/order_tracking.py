@@ -11,7 +11,12 @@ def record_event(order, status, *, kind='order', actor=None, internal_note='', c
     event = OrderStatusHistory.objects.create(order=order, kind=kind, status=status,
         timestamp=timezone.now(), changed_by=actor, internal_note=internal_note, customer_note=customer_note)
     if (kind == 'order' and status in NOTIFIABLE) or (kind == 'payment' and status == 'refunded'):
-        OrderNotification.objects.get_or_create(event=event, channel='email')
+        OrderNotification.objects.get_or_create(event=event, channel='email', audience='customer', defaults={'recipient': order.email})
+        if kind == 'order' and status == 'pending':
+            from django.conf import settings
+            OrderNotification.objects.get_or_create(event=event, channel='email', audience='admin', defaults={'recipient': settings.ORDER_NOTIFICATION_EMAIL})
+        from .notifications import deliver_event_safely
+        transaction.on_commit(lambda: deliver_event_safely(event.pk))
     return event
 
 
@@ -36,6 +41,8 @@ def update_review(user, order_id, kind, expected, status, note, reference=''):
     if kind not in ('payment', 'return') or not 3 <= len(note.strip()) <= 1000:
         raise CRMError('Select a valid review type and explain the outcome.')
     order = Order.objects.select_for_update().get(pk=order_id)
+    if kind == 'payment' and order.payment_method == 'online' and status == 'paid':
+        raise CRMError('Online payments must be verified through the gateway, not marked paid manually.')
     field = kind + '_status'
     transitions = ({'pending': ('paid', 'failed'), 'failed': ('paid',), 'paid': ('refund_pending', 'partially_refunded', 'refunded'),
                    'refund_pending': ('partially_refunded', 'refunded'), 'partially_refunded': ('refund_pending', 'refunded')}

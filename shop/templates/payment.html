@@ -1,0 +1,16 @@
+{% extends 'base_shared.html' %}{% load static %}
+{% block title %}Complete test payment | SuryaVets{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/order-confirmation.css' %}">{% endblock %}
+{% block content %}<section class="receipt-shell site-shell"><div class="receipt-card">
+<p class="receipt-eyebrow">SECURE TEST CHECKOUT</p><h1>Complete your payment</h1><p>Order #{{ order.order_number }}</p>
+<p>Payment is pending. Your selected items are reserved; this is not a paid-order confirmation.</p>
+{% include 'includes/order_totals.html' %}
+{% if payment_error %}<p role="alert">{{ payment_error }}</p>{% endif %}
+{% if verification %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="verify"><input type="hidden" name="razorpay_order_id" value="{{ verification.razorpay_order_id }}"><input type="hidden" name="razorpay_payment_id" value="{{ verification.razorpay_payment_id }}"><input type="hidden" name="razorpay_signature" value="{{ verification.razorpay_signature }}"><button class="receipt-button">Retry verification — do not pay again</button></form>
+{% elif gateway_ready %}<button class="receipt-button" id="open-payment" type="button">Open Razorpay test payment</button><p id="payment-message" role="status"></p>
+{{ gateway_options|json_script:'gateway-options' }}
+<form id="payment-verification" method="post">{% csrf_token %}<input type="hidden" name="action" value="verify"><input type="hidden" name="razorpay_order_id"><input type="hidden" name="razorpay_payment_id"><input type="hidden" name="razorpay_signature"></form>
+<script src="https://checkout.razorpay.com/v1/checkout.js" defer></script><script src="{% static 'js/payment.js' %}" defer></script>
+{% elif attempt.state == 'new' %}<form method="post">{% csrf_token %}<button class="receipt-button" name="action" value="initialize">Prepare test payment</button></form>
+{% else %}<p>Payment setup needs staff review. Do not create another order or pay again until this attempt is reconciled.</p>{% endif %}
+<p><a href="{% url 'shop:contact' %}">Contact support</a></p></div></section>{% endblock %}

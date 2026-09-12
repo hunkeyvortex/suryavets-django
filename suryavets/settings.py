@@ -183,6 +183,18 @@ MAILERS = {
 
 LOGIN_URL = 'shop:login'
 ORDER_EMAIL_ENABLED = env_bool('ORDER_EMAIL_ENABLED', default=False)
+ORDER_EMAIL_AUTO_SEND = env_bool('ORDER_EMAIL_AUTO_SEND', default=True)
+ORDER_NOTIFICATION_EMAIL = os.environ.get('ORDER_NOTIFICATION_EMAIL', '')
+PUBLIC_SITE_URL = os.environ.get('PUBLIC_SITE_URL', '').rstrip('/')
+if MAILERS['default']['BACKEND'] == 'django.core.mail.backends.smtp.EmailBackend':
+    MAILERS['default']['OPTIONS'] = {'host': os.environ.get('EMAIL_HOST', ''), 'port': int(os.environ.get('EMAIL_PORT') or 587),
+        'username': os.environ.get('EMAIL_HOST_USER', ''), 'password': os.environ.get('EMAIL_HOST_PASSWORD', ''),
+        'use_tls': env_bool('EMAIL_USE_TLS', default=True), 'timeout': 15}
+# Deliberately test-only. Live credentials are rejected by the payment service.
+RAZORPAY_ENABLED = env_bool('RAZORPAY_ENABLED', default=False)
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Surya Vets <noreply@localhost>')
 LOGIN_REDIRECT_URL = 'shop:profile'
 LOGOUT_REDIRECT_URL = 'shop:index'

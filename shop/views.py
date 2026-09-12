@@ -279,7 +279,7 @@ def add_to_cart(request, product_id):
         item.quantity = desired_quantity
         item.save(update_fields=['quantity'])
     messages.success(request, f'{product.name} was added to your cart.')
-    return redirect(_cart_return_url(request))
+    return redirect('shop:checkout' if request.POST.get('intent') == 'buy_now' else 'shop:cart')
 
 @require_POST
 @transaction.atomic
@@ -385,6 +385,8 @@ def checkout(request):
                     token=request.POST.get('checkout_token', ''), status=503)
             else:
                 request.session.pop('checkout_coupon', None)
+                if order.payment_method == 'online' and order.payment_status != 'paid':
+                    return redirect('shop:payment', order_id=order.pk)
                 return redirect('shop:order_confirmation', order_id=order.pk)
     else:
         form = CheckoutForm(initial=initial)
@@ -399,6 +401,8 @@ def order_confirmation(request, order_id):
         cart = get_cart(request, create=False)
         orders = Order.objects.filter(user__isnull=True, checkout_cart=cart) if cart else Order.objects.none()
     order = get_object_or_404(orders, pk=order_id)
+    if order.payment_method == 'online' and order.payment_status == 'pending':
+        return redirect('shop:payment', order_id=order.pk)
     response = render(request, 'order_success.html', {'order': order})
     response['Cache-Control'] = 'private, no-store'
     return response
