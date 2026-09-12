@@ -717,10 +717,13 @@ class OrderNotification(models.Model):
     channel = models.CharField(max_length=20, default='email')
     audience = models.CharField(max_length=10, default='customer', choices=[('customer', 'Customer'), ('admin', 'Admin')])
     recipient = models.EmailField(blank=True)
-    state = models.CharField(max_length=12, default='pending', choices=[('pending', 'Pending'), ('sending', 'Sending'), ('sent', 'Sent'), ('failed', 'Failed')])
+    state = models.CharField(max_length=12, default='pending', choices=[('pending', 'Pending'), ('sending', 'Sending'), ('sent', 'Provider accepted'), ('failed', 'Failed'), ('preview', 'Sandbox preview only')])
     sent_at = models.DateTimeField(null=True, blank=True)
     attempts = models.PositiveIntegerField(default=0)
     error = models.CharField(max_length=200, blank=True)
+    provider_message_id = models.CharField(max_length=255, blank=True)
+    retryable = models.BooleanField(default=False)
+    next_attempt_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['event', 'channel', 'audience'], name='one_notification_per_event_audience')]

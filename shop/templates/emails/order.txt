@@ -9,7 +9,7 @@ Phone: {{ order.phone }}{% else %}Hello {{ order.shipping_name }},
 {{ customer_note }}
 
 Order: {{ order.order_number }}
-Date: {{ order.created_at|date:'d M Y, H:i' }}
+Date: {{ order.created_at|date:'d M Y, H:i e' }}
 Status: {{ order.get_status_display }}
 {% for item in items %}
 {{ item.product_name }} — {{ item.variant_name }}
@@ -32,6 +32,7 @@ Payment method: {{ order.payment_method_label }}
 Payment status: {{ order.get_payment_status_display }}
 {% if order.payment_method == 'cash_on_delivery' %}Payment is due on delivery unless already recorded as paid.{% endif %}
 {% if order_url %}{{ link_label }}: {{ order_url }}{% else %}Keep this email and quote your order number when contacting SuryaVets.{% endif %}
+{% if tracking_url %}Track your order: {{ tracking_url }}{% endif %}
 
 Thank you,
 Team SuryaVets

@@ -186,6 +186,12 @@ ORDER_EMAIL_ENABLED = env_bool('ORDER_EMAIL_ENABLED', default=False)
 ORDER_EMAIL_AUTO_SEND = env_bool('ORDER_EMAIL_AUTO_SEND', default=True)
 ORDER_NOTIFICATION_EMAIL = os.environ.get('ORDER_NOTIFICATION_EMAIL', '')
 PUBLIC_SITE_URL = os.environ.get('PUBLIC_SITE_URL', '').rstrip('/')
+DEFAULT_FROM_NAME = os.environ.get('DEFAULT_FROM_NAME') or 'SuryaVets'
+BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')
+# Selecting the Brevo backend alone cannot send real email; live sending is explicit.
+BREVO_SANDBOX = env_bool('BREVO_SANDBOX', default=True) if os.environ.get('BREVO_SANDBOX') else True
+BREVO_TIMEOUT = max(1, min(30, int(os.environ.get('BREVO_TIMEOUT') or 15)))
+ORDER_EMAIL_MAX_ATTEMPTS = 5
 if MAILERS['default']['BACKEND'] == 'django.core.mail.backends.smtp.EmailBackend':
     MAILERS['default']['OPTIONS'] = {'host': os.environ.get('EMAIL_HOST', ''), 'port': int(os.environ.get('EMAIL_PORT') or 587),
         'username': os.environ.get('EMAIL_HOST_USER', ''), 'password': os.environ.get('EMAIL_HOST_PASSWORD', ''),

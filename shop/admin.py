@@ -292,8 +292,9 @@ class OrderEventAdmin(ImmutableAuditAdmin):
 
 @admin.register(OrderNotification)
 class OrderNotificationAdmin(ImmutableAuditAdmin):
-    list_display = ['event', 'audience', 'channel', 'state', 'sent_at', 'attempts']
-    list_filter = ['channel', 'state']
+    list_display = ['event', 'audience', 'channel', 'state', 'sent_at', 'attempts', 'retryable', 'next_attempt_at', 'provider_message_id']
+    list_filter = ['channel', 'state', 'audience', 'retryable']
+    search_fields = ['event__order__order_number', 'provider_message_id']
 
 
 @admin.register(PaymentAttempt)
