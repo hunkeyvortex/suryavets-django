@@ -389,7 +389,7 @@ class ProductImage(models.Model):
     """Product images"""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/')
-    source_url = models.URLField(blank=True)
+    source_url = models.URLField(max_length=500, blank=True)
     thumbnail = models.ImageField(upload_to='products/thumbnails/', blank=True)
     checked_at = models.DateTimeField(null=True, blank=True)
     check_error = models.CharField(max_length=250, blank=True)
