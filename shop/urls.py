@@ -1,4 +1,6 @@
-from django.urls import path, re_path
+from django.urls import path, re_path, reverse_lazy
+from django.contrib.auth import views as auth_views
+from . import public_views
 from . import catalog_views, views, account_views as account
 from . import payment_views
 
@@ -57,7 +59,7 @@ urlpatterns = [
     
     # Informational pages
     path('about/', views.about, name='about'),
-    path('contact/', views.contact, name='contact'),
+    path('contact/', public_views.contact, name='contact'),
     path('help/', views.help, name='help'),
     path('shipping/', views.shipping, name='shipping'),
     path('privacy/', views.privacy, name='privacy'),
@@ -65,5 +67,9 @@ urlpatterns = [
     path('returns/', views.returns, name='returns'),
     
     # Newsletter
-    path('newsletter/', views.newsletter_signup, name='newsletter_signup'),
+    path('newsletter/', public_views.newsletter, name='newsletter_signup'),
+    path('password-reset/', public_views.SafePasswordResetView.as_view(), name='password_reset'),
+    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='registration/reset_done.html'), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='registration/reset_confirm.html', success_url=reverse_lazy('shop:password_reset_complete')), name='password_reset_confirm'),
+    path('reset/complete/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/reset_complete.html'), name='password_reset_complete'),
 ]

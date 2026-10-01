@@ -72,28 +72,30 @@ def place_order(cart, user, token, data):
     except CouponError as error:
         raise CheckoutError(str(error)) from error
     # Lock in a stable order across carts. Do not lock nullable select_related joins.
-    products = {p.pk: p for p in Product.objects.select_for_update().filter(pk__in=[i.product_id for i in items]).order_by('pk')}
+    ids = {i.product_id for i in items}
+    ids.update(Product.objects.filter(pk__in=ids, variant_family__isnull=False).values_list('variant_family_id', flat=True))
+    products = {p.pk: p for p in Product.objects.select_for_update().filter(pk__in=ids).order_by('pk')}
+    for product in products.values():
+        if product.variant_family_id:
+            product.variant_family = products[product.variant_family_id]
     variants = {v.pk: v for v in ProductVariant.objects.select_for_update().filter(pk__in=[i.product_variant_id for i in items if i.product_variant_id]).order_by('pk')}
     product_stock, variant_stock = defaultdict(int), defaultdict(int)
     for item in items:
         product = products.get(item.product_id)
         variant = variants.get(item.product_variant_id)
-        if not product or not product.is_active:
-            raise CheckoutError('A product in your cart is no longer available. Please update your cart.')
-        if item.quantity < 1 or item.quantity > 10000:
-            raise CheckoutError('Please choose a valid quantity for every cart item.')
-        if item.product_variant_id and (not variant or not variant.is_active or variant.product_id != product.pk):
-            raise CheckoutError(f'{product.name}: the selected pack is no longer available.')
-        if not variant and product.variants.exists():
-            raise CheckoutError(f'{product.name}: please select a pack again.')
+        from .purchasing import purchase_state, rejected
+        if variant and product:
+            variant.product = product
+        state = purchase_state(product, variant, item.quantity, required_variant=bool(item.product_variant_id))
+        if not state.allowed:
+            rejected(state, product, variant, 'checkout')
+            raise CheckoutError(f'{product.name if product else "Cart item"}: {state.message}')
         item.product, item.product_variant = product, variant
         if variant:
             variant.product = product
             variant_stock[variant.pk] += item.quantity
         elif product.track_inventory:
             product_stock[product.pk] += item.quantity
-        if (variant or product).current_price < 0:
-            raise CheckoutError(f'{product.name}: pricing needs review before purchase.')
     # Refresh prices from the locked product objects, retaining the locked coupon.
     try:
         totals = checkout_totals(items, data.get('coupon_code', ''), lock=True)
@@ -131,11 +133,12 @@ def place_order(cart, user, token, data):
             'shipping_city', 'shipping_state', 'shipping_postal_code', 'billing_same_as_shipping',
             'billing_name', 'billing_address_line_1', 'billing_address_line_2', 'billing_city',
             'billing_state', 'billing_postal_code', 'notes', 'payment_method')})
+    snapshot_images = {item.pk: item.display_image for item in items}
     OrderItem.objects.bulk_create([OrderItem(order=order, product=item.product, product_variant=item.product_variant,
         product_name=item.product.name, sku=(item.product_variant or item.product).sku,
         variant_name=item.product_variant.name if item.product_variant else '',
         unit_price=(item.product_variant or item.product).current_price, quantity=item.quantity,
-        image_reference=(item.product_variant.image.display_url if item.product_variant and item.product_variant.image else item.product.images.first().display_url if item.product.images.exists() else '')) for item in items])
+        image_reference=snapshot_images[item.pk].display_url if snapshot_images[item.pk] else '') for item in items])
     if online:
         from shop.models import PaymentAttempt
         if order.total <= 0:

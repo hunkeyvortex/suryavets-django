@@ -2,10 +2,11 @@
 import io
 import json
 import os
+import ssl
 import subprocess
 from datetime import timedelta
 from pathlib import Path
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from unittest import skipUnless
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
@@ -188,6 +189,9 @@ class BrevoTransportTests(SimpleTestCase):
         self.assertNotIn(CONFIG['BREVO_API_KEY'].encode(), request.data)
         self.assertEqual(opener.return_value.open.call_args.kwargs['timeout'], 15)
         self.assertIsInstance(opener.call_args.args[0], NoRedirect)
+        tls_context = opener.call_args.args[1]._context
+        self.assertTrue(tls_context.check_hostname)
+        self.assertEqual(tls_context.verify_mode, ssl.CERT_REQUIRED)
         for body in [b'{}', b'[]', b'{"messageId":""}', b'not-json']:
             response.read.return_value = body
             with self.assertRaises(DeliveryError): post_email({})
@@ -200,3 +204,12 @@ class BrevoTransportTests(SimpleTestCase):
 
     def test_no_redirect_for_credentials(self):
         self.assertIsNone(NoRedirect().redirect_request(None, None, 302, '', {}, 'https://other.invalid'))
+
+    @patch('shop.mail_backends.build_opener')
+    def test_certificate_rejection_is_sanitized_and_not_bypassed(self, opener):
+        opener.return_value.open.side_effect = URLError(ssl.SSLCertVerificationError('private TLS diagnostics'))
+        with self.assertRaises(DeliveryError) as error:
+            post_email({})
+        self.assertEqual(str(error.exception), 'brevo_tls_verification_failed')
+        self.assertTrue(error.exception.retryable)
+        self.assertEqual(opener.return_value.open.call_count, 1)

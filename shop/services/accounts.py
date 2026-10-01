@@ -31,6 +31,11 @@ def merge_guest_cart(request, user):
         quantity = item.quantity + (existing.quantity if existing else 0)
         if quantity > 10000:
             raise CartMergeError('The combined basket exceeds the quantity limit. Reduce your guest basket before signing in.')
+        from .purchasing import purchase_state, rejected
+        state = purchase_state(item.product, item.product_variant, quantity, required_variant=bool(item.product_variant_id))
+        if not state.allowed:
+            rejected(state, item.product, item.product_variant, 'login_cart_merge')
+            raise CartMergeError(f'{item.product.name}: {state.message} Please update your guest basket.')
         if existing:
             existing.quantity = quantity
             existing.save(update_fields=['quantity'])

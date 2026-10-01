@@ -207,7 +207,11 @@ class Command(BaseCommand):
             return category_name, pet_names, subcategory_name, product_type_name, len(variant_rows), len({row.get('Image Src') for row in rows if row.get('Image Src')})
 
         # Wait for stock operations on this product, then recheck before writing.
-        Product.objects.select_for_update().filter(slug=handle).first()
+        existing = Product.objects.select_for_update().filter(slug=handle).first()
+        if existing and existing.merchandising_active:
+            # A later source import must not overwrite an owner's curated labels.
+            payload.pop('is_featured', None)
+            payload.pop('is_bestseller', None)
         if Order.objects.filter(stock_deducted=True).exists() or InventoryMovement.objects.exists():
             raise CommandError('Stock movements occurred during import. No snapshot was applied to this product; reconcile first.')
 

@@ -1,0 +1,11 @@
+<section class="sv-home-section {% if soft %}sv-home-section--soft{% endif %}" id="{{ section_id }}" aria-labelledby="{{ section_id }}-title">
+  <div class="site-shell">
+    <header class="sv-home-heading"><div><span class="sv-home-eyebrow">{{ eyebrow }}</span><h2 id="{{ section_id }}-title">{{ title }}</h2><p>{{ subtitle }}</p></div><a class="sv-home-link" href="{% url 'shop:category_list' %}">Shop all {% include 'includes/ui_icon.html' with icon='arrow' %}</a></header>
+    <div class="home-product-showcase" data-product-carousel>
+      <div class="sv-home-product-rail" data-product-track tabindex="0" aria-label="{{ title }} products">
+        {% for product in products %}{% include 'includes/product_card.html' %}{% empty %}<p class="sv-home-empty">Our catalogue is being prepared. <a href="{% url 'shop:category_list' %}">Explore the catalogue</a></p>{% endfor %}
+      </div>
+      {% if products %}<div class="sv-home-rail-controls"><button type="button" aria-label="Previous products" data-product-previous>←</button><span>More to discover</span><button type="button" aria-label="Next products" data-product-next>→</button></div>{% endif %}
+    </div>
+  </div>
+</section>

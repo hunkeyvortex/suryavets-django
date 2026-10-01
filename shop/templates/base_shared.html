@@ -1,9 +1,11 @@
-{% load static %}
+{% load static seo_tags analytics_tags %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% seo_metadata %}
+  <link rel="stylesheet" href="{% static 'css/public-forms.css' %}">
   <meta name="description" content="{% block meta_description %}Surya Vets — trusted pet pharmacy, food and supplies.{% endblock %}">
   <title>{% block title %}Surya Vets | Pet's Lifeline{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,11 +19,15 @@
   <link rel="stylesheet" href="{% static 'css/product-card.css' %}">
   <link rel="stylesheet" href="{% static 'css/buying.css' %}">
   <link rel="stylesheet" href="{% static 'css/product-cards-v2.css' %}">
+  <link rel="stylesheet" href="{% static 'css/mobile-commerce.css' %}">
+  {% block page_styles %}{% endblock %}
+  <link rel="stylesheet" href="{% static 'css/image-polish.css' %}">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to content</a>
   {% include 'includes/announcement_bar.html' %}
   {% include 'includes/header.html' %}
+  {% include 'includes/mobile_shortcuts.html' %}
   {% include 'includes/navigation.html' %}
 
   <main id="main-content" class="store-main">
@@ -34,9 +40,12 @@
   </main>
 
   {% include 'includes/footer.html' %}
+  {% include 'includes/mobile_dock.html' %}
   <script src="{% static 'js/storefront.js' %}" defer></script>
+  {% commerce_events %}<script src="{% static 'js/commerce-events.js' %}" defer></script>
   <script src="{% static 'js/navigation.js' %}" defer></script>
   <script src="{% static 'js/product-cards.js' %}" defer></script>
+  <script src="{% static 'js/mobile-commerce.js' %}" defer></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

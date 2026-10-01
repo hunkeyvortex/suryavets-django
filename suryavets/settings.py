@@ -65,6 +65,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'shop.seo.IndexingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -148,9 +149,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'shop' / 'static',
-]
+STATICFILES_DIRS = []  # AppDirectoriesFinder already discovers shop/static.
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
     'staticfiles': {
@@ -203,7 +202,44 @@ RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Surya Vets <noreply@localhost>')
 LOGIN_REDIRECT_URL = 'shop:profile'
+HOMEPAGE_MERCHANDISING_LIMIT = 12  # Manual picks per main section, clamped to 1–20.
 LOGOUT_REDIRECT_URL = 'shop:index'
+SITE_NOINDEX = env_bool('SITE_NOINDEX', default=True)
+ANALYTICS_EVENTS_ENABLED = env_bool('ANALYTICS_EVENTS_ENABLED', default=False)
+PASSWORD_RESET_EMAIL_ENABLED = env_bool('PASSWORD_RESET_EMAIL_ENABLED', default=False)
+PASSWORD_RESET_TIMEOUT = 3600
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+X_FRAME_OPTIONS = 'DENY'
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
+MEDIA_STORAGE_BACKEND = os.environ.get('MEDIA_STORAGE_BACKEND', 'django.core.files.storage.FileSystemStorage')
+STORAGES['default']['BACKEND'] = MEDIA_STORAGE_BACKEND
+if MEDIA_STORAGE_BACKEND == 'storages.backends.s3.S3Storage':
+    STORAGES['default']['OPTIONS'] = {
+        'bucket_name': os.environ.get('AWS_STORAGE_BUCKET_NAME', ''),
+        'region_name': os.environ.get('AWS_S3_REGION_NAME') or None,
+        'endpoint_url': os.environ.get('AWS_S3_ENDPOINT_URL') or None,
+        'file_overwrite': False,
+    }
+    if not DEBUG and not STORAGES['default']['OPTIONS']['bucket_name']:
+        raise ImproperlyConfigured('Set AWS_STORAGE_BUCKET_NAME for external media.')
+if not DEBUG:
+    if not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS:
+        raise ImproperlyConfigured('Set explicit DJANGO_ALLOWED_HOSTS for production.')
+    if len(SECRET_KEY) < 50 or SECRET_KEY.startswith('django-insecure-'):
+        raise ImproperlyConfigured('Use a strong production DJANGO_SECRET_KEY.')
+    if not DATABASE_URL or DATABASES['default']['ENGINE'] != 'django.db.backends.postgresql':
+        raise ImproperlyConfigured('Production requires a PostgreSQL DATABASE_URL.')
+    if not HAS_WHITENOISE:
+        raise ImproperlyConfigured('Install WhiteNoise for production static assets.')
+    from urllib.parse import urlsplit
+    public_origin = urlsplit(PUBLIC_SITE_URL)
+    if public_origin.scheme != 'https' or not public_origin.netloc or public_origin.path or public_origin.query or public_origin.fragment or public_origin.username:
+        raise ImproperlyConfigured('PUBLIC_SITE_URL must be an HTTPS origin, without a path.')
+    if MEDIA_STORAGE_BACKEND == 'django.core.files.storage.FileSystemStorage' and not os.environ.get('PERSISTENT_MEDIA_ROOT'):
+        raise ImproperlyConfigured('Configure persistent/external media before production.')
+if os.environ.get('PERSISTENT_MEDIA_ROOT'):
+    MEDIA_ROOT = Path(os.environ['PERSISTENT_MEDIA_ROOT'])
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -212,5 +248,5 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = 'same-origin'
-    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True)
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False)

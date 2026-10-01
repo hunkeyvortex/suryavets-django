@@ -3,12 +3,12 @@
 from decimal import Decimal, InvalidOperation
 
 from django.core.paginator import Paginator
-from django.db.models import Count, Prefetch, Q, Exists, OuterRef
+from django.db.models import Count, Q, Exists, OuterRef, Prefetch, F
 from django.shortcuts import get_object_or_404, render
 
 from .models import Brand, Category, PetCategory, Product, ProductType, ProductVariant, Subcategory
 from .services.navigation import descendant_ids
-from .services.pricing import catalog_price_expression
+from .services.pricing import catalog_price_expression, family_variant_queryset
 
 
 CATALOG_PAGE_SIZE = 12
@@ -21,9 +21,11 @@ def _categories_with_counts():
 
 
 def _product_queryset():
-    return Product.objects.filter(is_active=True, variant_family__isnull=True).select_related(
+    from .services.purchasing import annotate_products
+    members = annotate_products(Product.objects.select_related('variant_family')).prefetch_related('variants', 'images')
+    return annotate_products(Product.objects.filter(is_active=True, variant_family__isnull=True)).select_related(
         'category', 'subcategory', 'brand', 'product_type'
-    ).prefetch_related('images', 'pet_categories', 'variants', 'family_members__variants', 'family_members__images').order_by('-created_at')
+    ).prefetch_related('images', 'pet_categories', 'variants', Prefetch('family_members', queryset=members)).order_by('-created_at')
 
 
 def _valid_decimal(value):
@@ -36,7 +38,6 @@ def _valid_decimal(value):
 
 def _apply_catalog_controls(request, products, *, category=None, subcategory=None):
     """Apply safe query-string controls shared by browsing and search."""
-    products = products.annotate(catalog_price=catalog_price_expression())
     selected_category = request.GET.get('category', '')
     selected_brand = request.GET.get('brand', '')
     selected_product_type = request.GET.get('product_type', '')
@@ -45,6 +46,12 @@ def _apply_catalog_controls(request, products, *, category=None, subcategory=Non
     minimum_price = _valid_decimal(request.GET.get('min_price'))
     maximum_price = _valid_decimal(request.GET.get('max_price'))
     sort = request.GET.get('sort', 'featured')
+
+    # Cards already price the prefetched, paginated packs in Python. Do not
+    # calculate every family price just to count/browse the catalog. Alias keeps
+    # price expressions out of SELECT/count projections even for price sorting.
+    if minimum_price is not None or maximum_price is not None or sort in ('price_low', 'price_high'):
+        products = products.alias(catalog_price=catalog_price_expression())
 
     if not category and selected_category:
         products = products.filter(category__slug=selected_category)
@@ -59,20 +66,21 @@ def _apply_catalog_controls(request, products, *, category=None, subcategory=Non
     if maximum_price is not None:
         products = products.filter(catalog_price__lte=maximum_price)
     if availability in ('in_stock', 'out_of_stock'):
-        family_match=Q(product_id=OuterRef('pk')) | Q(product__variant_family_id=OuterRef('pk'))
-        products = products.annotate(has_pack=Exists(ProductVariant.objects.filter(family_match)),
-            has_stock_pack=Exists(ProductVariant.objects.filter(family_match, product__is_active=True, is_active=True, stock_quantity__gt=0)))
-        stock_filter = Q(has_stock_pack=True) | (Q(has_pack=False) & (Q(track_inventory=False) | Q(stock_quantity__gt=0)))
+        from .services.purchasing import eligible_variants, simple_price_expression
+        family_packs = family_variant_queryset()
+        products = products.alias(has_pack=Exists(family_packs),
+            has_stock_pack=Exists(eligible_variants(family_variant_queryset(active_products=True))), simple_purchase_price=simple_price_expression())
+        stock_filter = Q(has_stock_pack=True) | Q(simple_purchase_price__isnull=False)
         products = products.filter(stock_filter) if availability == 'in_stock' else products.exclude(stock_filter)
 
     ordering = {
         'newest': ('-created_at',),
-        'price_low': ('catalog_price', 'name'),
-        'price_high': ('-catalog_price', 'name'),
+        'price_low': (F('catalog_price').asc(nulls_last=True), 'name'),
+        'price_high': (F('catalog_price').desc(nulls_last=True), 'name'),
         'name': ('name',),
         'featured': ('-is_featured', '-is_bestseller', '-created_at'),
     }
-    return products.order_by(*ordering.get(sort, ordering['featured'])).distinct(), {
+    return products.order_by(*ordering.get(sort, ordering['featured']), 'pk'), {
         'category': selected_category,
         'brand': selected_brand,
         'product_type': selected_product_type,
@@ -88,9 +96,9 @@ def _render_product_list(request, products, *, category=None, subcategory=None, 
     products, selected_filters = _apply_catalog_controls(
         request, products, category=category, subcategory=subcategory
     )
-    total_count = products.count()
     paginator = Paginator(products, CATALOG_PAGE_SIZE)
     page_obj = paginator.get_page(request.GET.get('page'))
+    total_count = paginator.count  # cached; avoid a second identical COUNT query
     querystring = request.GET.copy()
     querystring.pop('page', None)
     return render(request, 'catalog/product_list.html', {
@@ -123,8 +131,9 @@ def category_detail(request, category_slug):
         from django.http import Http404
         raise Http404('Category unavailable')
     ids = descendant_ids(category)
+    collection_match = Product.collections.through.objects.filter(product_id=OuterRef('pk'), category_id__in=ids)
     return _render_product_list(
-        request, _product_queryset().filter(Q(category_id__in=ids) | Q(collections__id__in=ids)).distinct(), category=category
+        request, _product_queryset().filter(Q(category_id__in=ids) | Exists(collection_match)), category=category
     )
 
 
@@ -149,6 +158,10 @@ def product_search(request):
     query = request.GET.get('q', '').strip()
     products = _product_queryset()
     if query:
+        # EXISTS avoids multiplying root listings by every matching family pack.
+        member_pack_match = ProductVariant.objects.filter(product_id=OuterRef('pk'), sku__icontains=query)
+        matching_members = Product.objects.filter(variant_family_id=OuterRef('pk')).filter(
+            Q(name__icontains=query) | Q(sku__icontains=query) | Exists(member_pack_match))
         products = products.filter(
             Q(name__icontains=query)
             | Q(sku__icontains=query)
@@ -159,9 +172,8 @@ def product_search(request):
             | Q(category__name__icontains=query)
             | Q(subcategory__name__icontains=query)
             | Q(product_type__name__icontains=query)
-            | Q(family_members__name__icontains=query)
-            | Q(family_members__sku__icontains=query)
-            | Q(family_members__variants__sku__icontains=query)
+            | Exists(matching_members)
+            | Exists(member_pack_match)
         )
     else:
         products = Product.objects.none()
@@ -193,19 +205,39 @@ def product_detail(request, product_slug):
         product = get_object_or_404(_product_queryset(), pk=product.variant_family_id)
     members = family_products(product)
     family_photos = [photo for member in members for photo in member.images.all()]
-    product._prefetched_objects_cache['images'] = family_photos
     variants = sorted(buying_variants(product), key=lambda v:(v.display_order,v.name,v.pk))
     from .services.variants import variant_options
     options = variant_options(product, variants)
-    selected_variant = next((variant for variant in variants if variant.is_in_stock), variants[0] if variants else None)
+    from .services.purchasing import purchase_state
+    eligible = [o['variant'] for o in options if o['available']]
+    selected_variant = next(iter(eligible), None)
+    selection_error = ''
     if requested_product.pk != product.pk:
-        selected_variant = next((v for v in variants if v.product_id == requested_product.pk and v.is_in_stock), selected_variant)
+        requested_packs = [v for v in variants if v.product_id == requested_product.pk]
+        selected_variant = requested_packs[0] if len(requested_packs) == 1 else None
+        if selected_variant is None:
+            selection_error = 'Please choose an exact pack for this product. No other size has been selected.'
+    if 'variant' in request.GET or 'variant_id' in request.GET:
+        values = request.GET.getlist('variant') + request.GET.getlist('variant_id')
+        selected_variant = next((v for v in variants if len(values) == 1 and str(v.pk) == values[0]), None)
+        if selected_variant is None:
+            selection_error = 'The requested pack is unavailable or does not belong to this family. No size has been substituted.'
     priced_item = selected_variant or product
     saving = max(Decimal(0), priced_item.original_price - priced_item.current_price)
+    buying_allowed = purchase_state(selected_variant.product, selected_variant).allowed if selected_variant else (not variants and not selection_error and purchase_state(product).allowed)
+    chosen = next((o for o in options if o['variant'] == selected_variant), None)
+    if selected_variant and not buying_allowed:
+        selection_error = 'The requested pack cannot currently be purchased. Choose another pack explicitly if suitable.'
+    primary = next(iter(chosen['photos']), None) if chosen else (next(iter(product.images.all()), None) if not variants and not selection_error else None)
+    visible_photos = chosen['photos'] if chosen else (list(product.images.all()) if not variants and not selection_error else [])
+    gallery_images = [{'photo': photo, 'visible': photo in visible_photos} for photo in family_photos]
     return render(request, 'catalog/product_detail.html', {
         'product': product,
         'selected_variant': selected_variant,
-        'buying_in_stock': any(v.is_in_stock for v in variants) if variants else product.is_in_stock,
+        'selection_error': selection_error,
+        'gallery_primary': primary,
+        'gallery_images': gallery_images,
+        'buying_in_stock': buying_allowed,
         'variant_options': options,
         'selected_option': next((o for o in options if o['variant'] == selected_variant), {'saving': saving, 'discount': int(saving * 100 / priced_item.original_price) if priced_item.original_price > 0 else 0, 'unit_price': None}),
         'display_price': priced_item.current_price,

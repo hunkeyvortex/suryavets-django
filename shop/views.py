@@ -24,27 +24,9 @@ from .forms import AddressForm, CheckoutForm, EmailLoginForm, RegistrationForm
 from .models import CustomerAddress, Order, OrderItem
 
 def index(request):
-    """Home page view"""
-    categories = Category.objects.filter(is_active=True, parent__isnull=True).order_by('order', 'name')
-    reference_images = {'cat': 'reference-cat.png', 'dog': 'reference-dog.png', 'farm-animals': 'reference-farm.jpg', 'fish-and-reptiles': 'reference-reptiles.png', 'vaccination': 'reference-vaccination.jpg', 'pet-grooming': 'reference-grooming.jpg'}
-    categories = list(categories)
-    for category in categories:
-        category.reference_image = 'images/' + reference_images[category.slug] if category.slug in reference_images else ''
-    banners = Banner.objects.filter(is_active=True).order_by('order')[:3]
-    top_products = Product.objects.filter(
-        is_active=True, variant_family__isnull=True
-    ).filter(
-        Q(is_bestseller=True) | Q(is_featured=True)
-    ).select_related(
-        'category', 'subcategory', 'brand', 'product_type'
-    ).prefetch_related('images', 'variants', 'family_members__variants', 'family_members__images')[:8]
-    
-    context = {
-        'categories': categories,
-        'banners': banners,
-        'top_products': top_products,
-    }
-    return render(request, 'home_new.html', context)
+    """Home merchandising shares the catalog's prefetched product cards."""
+    from .services.homepage import homepage_context
+    return render(request, 'home_new.html', homepage_context())
 
 def category_list(request):
     """List all categories"""
@@ -216,8 +198,9 @@ def product_detail(request, product_slug):
 def cart_detail(request):
     """Display the current cart for an anonymous or authenticated shopper."""
     cart = get_cart(request, create=False)
+    from .services.purchasing import cart_issues
     items = cart_items(cart)
-    context = {'cart': cart, 'cart_items': items, **cart_totals(items)}
+    context = {'cart': cart, 'cart_items': items, 'purchase_issues': cart_issues(items), **cart_totals(items)}
     return render(request, 'basket.html', context)
 
 def _cart_return_url(request):
@@ -248,7 +231,7 @@ def add_to_cart(request, product_id):
             return redirect('shop:product_detail', product_slug=product.slug)
         root_id = product.variant_family_id or product.pk
         variant = get_object_or_404(ProductVariant.objects.select_related('product').filter(
-            Q(product_id=root_id) | Q(product__variant_family_id=root_id)), id=variant_id, is_active=True, product__is_active=True)
+            Q(product_id=root_id) | Q(product__variant_family_id=root_id)), id=variant_id)
         product = variant.product  # Preserve the existing SKU's stock/cart/order ownership.
     else:
         from .services.pack_families import buying_variants
@@ -263,9 +246,11 @@ def add_to_cart(request, product_id):
             messages.error(request, 'This product has no available packs.')
             return redirect('shop:product_detail', product_slug=product.slug)
 
-    available_quantity = variant.stock_quantity if variant else product.stock_quantity
-    if (variant or product.track_inventory) and available_quantity < quantity:
-        messages.error(request, 'The requested quantity is not currently available.')
+    from .services.purchasing import purchase_state, rejected
+    state = purchase_state(product, variant, quantity)
+    if not state.allowed:
+        rejected(state, product, variant, 'add_to_cart')
+        messages.error(request, state.message)
         return redirect(_cart_return_url(request))
 
     item, created = CartItem.objects.get_or_create(
@@ -273,37 +258,52 @@ def add_to_cart(request, product_id):
     )
     if not created:
         desired_quantity = item.quantity + quantity
-        if (variant or product.track_inventory) and desired_quantity > available_quantity:
+        if not purchase_state(product, variant, desired_quantity).allowed:
             messages.error(request, 'There is not enough stock to add more of this item.')
             return redirect(_cart_return_url(request))
         item.quantity = desired_quantity
         item.save(update_fields=['quantity'])
     messages.success(request, f'{product.name} was added to your cart.')
+    from django.conf import settings
+    if settings.ANALYTICS_EVENTS_ENABLED:
+        request.session['commerce_event'] = {'event': 'add_to_cart', 'item_id': str(product.pk), 'variant_id': variant.pk if variant else None, 'quantity': quantity}
     return redirect('shop:checkout' if request.POST.get('intent') == 'buy_now' else 'shop:cart')
 
 @require_POST
 @transaction.atomic
 def update_cart_item(request, item_id):
-    """Change a cart quantity through a normal CSRF-protected form post."""
+    """CSRF-protected quantity update with an optional authoritative JSON snapshot."""
     cart = get_cart(request, create=False)
     cart = get_object_or_404(Cart.objects.select_for_update(), pk=cart.pk if cart else None)
     item = get_object_or_404(CartItem, id=item_id, cart=cart)
+    asynchronous = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    error = ''
     try:
         quantity = int(request.POST.get('quantity', 1))
-        if not 0 <= quantity <= 10000:
+        if not (1 if asynchronous else 0) <= quantity <= 10000:
             raise ValueError
     except (TypeError, ValueError):
-        messages.error(request, 'Please enter a quantity between 0 and 10000.')
-        return redirect('shop:cart')
-    if quantity < 1:
+        error = 'Please enter a quantity between 1 and 10000.' if asynchronous else 'Please enter a quantity between 0 and 10000.'
+    if error:
+        pass
+    elif quantity < 1:
         item.delete()
     else:
-        available_quantity = item.product_variant.stock_quantity if item.product_variant else item.product.stock_quantity
-        if (item.product_variant or item.product.track_inventory) and quantity > available_quantity:
-            messages.error(request, 'The requested quantity is not currently available.')
+        from .services.purchasing import purchase_state, rejected
+        state = purchase_state(item.product, item.product_variant, quantity, required_variant=bool(item.product_variant_id))
+        if not state.allowed:
+            rejected(state, item.product, item.product_variant, 'cart_quantity')
+            error = state.message + ' Your previous quantity has been kept.'
         else:
             item.quantity = quantity
             item.save(update_fields=['quantity'])
+    if asynchronous:
+        from .services.cart import cart_snapshot
+        response = JsonResponse({'ok': not error, 'message': error or 'Basket updated.', **cart_snapshot(cart)}, status=400 if error else 200)
+        response['Cache-Control'] = 'no-store'
+        return response
+    if error:
+        messages.error(request, error)
     return redirect('shop:cart')
 
 @require_POST
@@ -317,6 +317,13 @@ def remove_from_cart(request, item_id):
     return redirect('shop:cart')
 
 def render_checkout(request, cart, form, items, code='', *, token=None, status=200, coupon_message=''):
+    from .services.purchasing import cart_issues
+    problems = cart_issues(items)
+    if problems:
+        for problem in problems:
+            messages.error(request, problem)
+        return render(request, 'basket.html', {'cart': cart, 'cart_items': items,
+            'purchase_issues': problems, **cart_totals(items)})
     coupon_error = ''
     try:
         pricing = checkout_totals(items, code)

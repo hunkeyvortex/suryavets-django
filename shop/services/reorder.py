@@ -25,9 +25,11 @@ def buy_again(user, order_id):
         target = variant or product
         existing = cart.items.filter(product=product, product_variant=variant).first()
         quantity = line.quantity + (existing.quantity if existing else 0)
-        tracked = variant is not None or product.track_inventory
-        if quantity > 10000 or (tracked and quantity > target.stock_quantity) or target.current_price <= 0:
-            skipped.append(f'{line.product_name} {line.variant_name}: insufficient stock or price requires review.')
+        from .purchasing import purchase_state, rejected
+        state = purchase_state(product, variant, quantity, required_variant=bool(line.variant_name or line.product_variant_id))
+        if not state.allowed:
+            rejected(state, product, variant, 'reorder')
+            skipped.append(f'{line.product_name} {line.variant_name}: {state.message}')
             continue
         if existing:
             existing.quantity = quantity

@@ -14,6 +14,8 @@ class Category(models.Model):
     slug = models.SlugField(max_length=120, unique=True, blank=True)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.PROTECT, related_name='children')
     reference_path = models.CharField(max_length=255, blank=True)
+    meta_title = models.CharField(max_length=200, blank=True)
+    meta_description = models.TextField(blank=True)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='categories/', blank=True, null=True)
     order = models.IntegerField(default=0)
@@ -55,6 +57,26 @@ class Category(models.Model):
             node = node.parent
         return list(reversed(ancestors))
 
+
+class ContactSubmission(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=30, blank=True)
+    subject = models.CharField(max_length=150)
+    message = models.TextField(max_length=3000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved = models.BooleanField(default=False)
+
+class NewsletterSubscription(models.Model):
+    email = models.EmailField(unique=True)
+    consent_at = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    unsubscribed_at = models.DateTimeField(null=True, blank=True)
+
+class RequestThrottle(models.Model):
+    key = models.CharField(max_length=64, unique=True)
+    attempts = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField(db_index=True)
 
 class Subcategory(models.Model):
     """Product subcategories (Medicine, Supplements, Food, etc.)"""
@@ -179,8 +201,17 @@ class Product(models.Model):
     requires_prescription = models.BooleanField(default=False)
     is_featured = models.BooleanField(default=False)
     is_bestseller = models.BooleanField(default=False)
+    merchandising_active = models.BooleanField(default=False, db_index=True, help_text='Explicit manual homepage selection; imported flags alone never publish.')
+    merchandising_rank = models.PositiveIntegerField(default=100)
+    is_new_arrival = models.BooleanField(default=False)
+    is_promotional = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     
+    catalog_approved_digest = models.CharField(max_length=64, blank=True, editable=False)
+
+    def get_absolute_url(self):
+        return reverse('shop:product_detail', args=[self.slug])
+
     # SEO
     meta_title = models.CharField(max_length=200, blank=True)
     meta_description = models.TextField(blank=True)
@@ -191,6 +222,7 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        permissions = [('approve_catalog', 'Can approve catalog products for sale')]
         indexes = [
             models.Index(fields=['slug']),
             models.Index(fields=['category']),
@@ -250,6 +282,20 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class CatalogReviewEvent(models.Model):
+    """Append-only staff decision; stock and purchased history are never rewritten."""
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='catalog_reviews')
+    actor = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True)
+    decision = models.CharField(max_length=10, choices=[('approved', 'Approved'), ('held', 'Held for review')])
+    created_at = models.DateTimeField(auto_now_add=True)
+    digest = models.CharField(max_length=64, blank=True)
+    evidence = models.TextField()
+    snapshot = models.JSONField(default=dict)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
 
 
 class ProductVariant(models.Model):
@@ -452,8 +498,9 @@ class CartItem(models.Model):
 
     @property
     def display_image(self):
-        if self.product_variant and self.product_variant.image and self.product_variant.image.is_active:
-            return self.product_variant.image
+        if self.product_variant:
+            from .services.pack_images import pack_photos
+            return next(iter(pack_photos(self.product_variant)), None)
         return next(iter(self.product.images.all()), None) if self.product else None
 
     @property

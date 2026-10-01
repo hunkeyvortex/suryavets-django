@@ -4,7 +4,24 @@ Implementation date: 13 September 2026. Existing application: `C:\Users\danyb\De
 
 ## Current readiness
 
-Code is ready for a **controlled Brevo test after you configure a verified sender and API key**. Real provider acceptance, delivery, Gmail/Outlook rendering and sender authentication have NOT been verified against your account. No real email was sent during implementation. Do not call this production-delivery verification yet.
+The account is now connected for **local testing**. On 13 September 2026, after you completed Brevo email/phone verification, the active API key named `surya` was saved in `.env.brevo.local.json` (Git-ignored, Windows access restricted to the owner and SYSTEM). Your existing Gmail sender is verified; no branded domain is configured yet. The API key expires on 12 September 2027 according to Brevo's UI.
+
+Brevo accepted a sandbox request and then **one explicitly approved real connection-test email** to your own inbox. Brevo's transactional log shows **Sent and Delivered** for that single `[TEST] SuryaVets transactional email` at 03:08 on 13 September 2026. These are two events for one message, not two emails. Inbox/spam placement and Gmail/Outlook rendering still require checking by you. No customer/order emails were sent and the outbox was not processed. Domain authentication and production delivery setup are not complete.
+
+The delivery log shows that Brevo rewrote the Gmail From address onto a `brevosend.com` address. This is suitable for this initial connection test, not the final branded sender. Configure and authenticate a SuryaVets-owned sender/domain before production mail; DNS remains untouched.
+
+Use the local launcher (ordinary `manage.py` does not auto-load this private file):
+
+```powershell
+Set-Location 'C:\Users\danyb\Desktop\suryavets-django'
+.\.venv\Scripts\python.exe brevo_local.py check
+# Optional local server using the saved connection; order mail remains disabled:
+.\.venv\Scripts\python.exe brevo_local.py runserver
+```
+
+`brevo_local.py` never enables order emails or drains the outbox. Its `test --to YOUR_INBOX` command uses sandbox by default; adding `--allow-live` sends a new real test on each invocation. Do not repeat the real test merely to inspect its status. The temporary credential-entry server has been stopped. No secret values are contained in the launcher or this document.
+
+The local TLS issue was resolved using the project's existing `truststore` dependency and native OS certificate validation, scoped to the Brevo adapter. Certificate and hostname verification remain required; no unverified TLS context or security bypass was added. See [Truststore's native certificate API](https://truststore.readthedocs.io/en/latest/).
 
 Razorpay/payment logic, Shopify, DNS and Render were not changed. Email delivery remains off unless explicitly enabled in the environment. Selecting Brevo defaults to sandbox mode.
 
@@ -21,6 +38,7 @@ The existing order event → `OrderNotification` outbox → Django `EmailMultiAl
 - `shop/templates/emails/order.html`, `order.txt`: reused branded customer/admin content; added tracking links and explicit timezone. Email-compatible tables/inline styles and Outlook fixed-width fallback; no JavaScript.
 - `suryavets/settings.py`, `.env.example`: environment configuration only, no keys.
 - `shop/test_brevo_email.py`: mocked transport, outbox and optional browser tests.
+- `brevo_local.py`: explicit local-only private configuration helper/launcher; never imported by production settings.
 
 The customer email includes purchased item/variant/SKU/quantity/prices, totals, delivery address, actual payment status, and authenticated order/tracking links. Admin gets the same purchase snapshot plus customer contact information and an authorized CRM link. Internal notes are excluded. Guest emails deliberately omit private account links instead of exposing order data through a public URL. Historical item data comes from `OrderItem`, not current catalog prices.
 

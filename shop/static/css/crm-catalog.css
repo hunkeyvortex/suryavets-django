@@ -1,4 +1,24 @@
 /* Inventory-specific presentation; the rest of the CRM retains its layout. */
+.catalog-review { overflow-wrap:anywhere; min-width:0; }
+.catalog-review > .panel { min-width:0; }
+.catalog-review input[type="checkbox"] { width:20px; height:20px; min-height:20px; vertical-align:middle; accent-color:#009e58; }
+.catalog-review .helptext { display:block; color:#637368; font-size:13px; margin-top:6px; }
+.catalog-review .errorlist { color:#a12626; padding-left:20px; }
+.catalog-review-photos { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:16px; }
+.catalog-review-photos figure { margin:0; padding:12px; border:1px solid #dce7de; border-radius:12px; }
+.catalog-review-photos img { width:100%; height:140px; object-fit:contain; }
+.catalog-review-photos figcaption { color:#637368; font-size:12px; margin-top:8px; }
+.catalog-review .catalog-review-check { display:grid; grid-template-columns:22px minmax(0,1fr); gap:12px; align-items:start; padding:12px 0; line-height:1.6; cursor:pointer; }
+.catalog-review-check input { margin:3px 0 0; }
+.catalog-review-packs td:nth-child(3), .catalog-review-packs td:nth-child(4) { white-space:nowrap; }
+@media (max-width:640px) {
+  .catalog-review-packs, .catalog-review-packs tbody { display:block; }
+  .catalog-review-packs thead { display:none; }
+  .catalog-review-packs tr { display:block; padding:12px; margin:12px 0; border:1px solid #dce7de; border-radius:12px; }
+  .catalog-review-packs td { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; padding:8px 0; border:0; }
+  .catalog-review-packs td::before { content:attr(data-label); color:#637368; font-size:12px; white-space:normal; }
+  .catalog-review-packs td:first-child { font-weight:700; }
+}
 .catalog-hero { display:flex; justify-content:space-between; align-items:center; gap:25px; padding:32px; border:1px solid #d3e3cd; border-radius:20px; background:linear-gradient(120deg,#e7f0df,#f7f5e5); margin-bottom:24px; }
 .catalog-hero h2 { font-size:32px; line-height:1.2; letter-spacing:-.8px; margin:18px 0 12px; color:#174c37; }
 .catalog-hero p { max-width:520px; color:#62775d; font-size:14px; margin:0; }

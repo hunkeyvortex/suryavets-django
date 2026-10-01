@@ -9,20 +9,25 @@ UNITS = {'g': ('kg', Decimal('0.001')), 'kg': ('kg', Decimal(1)),
 
 def variant_options(product, variants):
     options, groups = [], defaultdict(list)
-    photos = {p.pk: p for p in product.images.all()}
     for variant in variants:
         if not variant.is_active:
             continue
         price, regular = variant.current_price, variant.original_price
-        saving = max(Decimal(0), regular - price)
-        photo = photos.get(variant.image_id)
+        from .purchasing import purchase_state
+        state = purchase_state(variant.product, variant)
+        saving = max(Decimal(0), regular - price) if state.allowed else Decimal(0)
+        from .pack_images import pack_photos
+        photos = pack_photos(variant)
+        photo = photos[0] if photos else None
         option = {'variant': variant, 'price': price, 'regular': regular, 'saving': saving,
                   'discount': int(saving * 100 / regular) if regular > 0 else 0,
                   'unit_price': None, 'unit_label': '', 'value_saving': Decimal(0),
-                  'best_value': False, 'baseline': '', 'image_url': photo.display_url if photo else '',
+                  'best_value': False, 'baseline': '', 'available': state.allowed, 'reason': state.message, 'image_url': photo.display_url if photo else '',
                   'image_alt': (photo.alt_text or f'{product.name} — {variant.name}') if photo else ''}
-        option['image_missing'] = bool(product.family_name and not photo)
-        if variant.quantity and variant.quantity > 0 and variant.unit in UNITS:
+        option['image_missing'] = not photo
+        option['photos'] = photos
+        option['image_ids'] = ','.join(str(p.pk) for p in photos)
+        if state.allowed and variant.quantity and variant.quantity > 0 and variant.unit in UNITS:
             label, factor = UNITS[variant.unit]
             quantity = variant.quantity * factor
             option.update(normalized_quantity=quantity, rate=price / quantity, unit_label=label,
@@ -47,12 +52,16 @@ def variant_options(product, variants):
 
 
 def card_offer(product):
+    from .purchasing import purchase_state
     from .pack_families import buying_variants
     variants = buying_variants(product)
-    available = [v for v in variants if v.is_in_stock]
+    available = [v for v in variants if purchase_state(v.product, v).allowed]
+    if not available and (variants or not purchase_state(product).allowed):
+        return {'price': None, 'regular': None, 'in_stock': False, 'discount': 0,
+                'sale': False, 'multiple': len(variants) > 1, 'variant': None}
     item = min(available or variants, key=lambda v: v.current_price) if variants else product
     return {'price': item.current_price, 'regular': item.original_price,
-            'in_stock': bool(available) if variants else product.is_in_stock,
+            'in_stock': bool(available) if variants else purchase_state(product).allowed,
             'discount': int((item.original_price - item.current_price) * 100 / item.original_price) if item.original_price > 0 and item.current_price < item.original_price else 0,
             'sale': item.current_price < item.original_price, 'multiple': len(variants) > 1,
             'variant': variants[0] if len(variants) == 1 else None}

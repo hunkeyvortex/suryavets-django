@@ -1,8 +1,8 @@
 {% extends 'base_shared.html' %}
 {% load static %}
 
-{% block title %}{% if search_query %}Search results{% elif catalog_title %}{{ catalog_title }}{% elif subcategory %}{{ subcategory.name }}{% elif category %}{{ category.name }}{% else %}Shop all products{% endif %} | Surya Vets{% endblock %}
-{% block meta_description %}Browse veterinary medicines, nutrition and pet essentials at Surya Vets.{% endblock %}
+{% block title %}{% if search_query %}Search results{% elif catalog_title %}{{ catalog_title }}{% elif subcategory %}{{ subcategory.name }}{% elif category %}{{ category.meta_title|default:category.name }}{% else %}Shop all products{% endif %} | Surya Vets{% endblock %}
+{% block meta_description %}{% if category %}{{ category.meta_description|default:category.description|striptags }}{% else %}Browse veterinary medicines, nutrition and pet essentials at Surya Vets.{% endif %}{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/catalog.css' %}">{% endblock %}
 
 {% block content %}

@@ -1,4 +1,22 @@
 from django.contrib import admin
+from .models import ContactSubmission, NewsletterSubscription
+
+@admin.register(ContactSubmission)
+class ContactSubmissionAdmin(admin.ModelAdmin):
+    list_display = ['subject', 'created_at', 'resolved']
+    list_filter = ['resolved']
+    readonly_fields = ['name', 'email', 'phone', 'subject', 'message', 'created_at']
+
+@admin.register(NewsletterSubscription)
+class NewsletterSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ['email', 'is_active', 'consent_at', 'unsubscribed_at']
+    list_filter = ['is_active']
+    readonly_fields = ['email', 'consent_at', 'unsubscribed_at']
+    def save_model(self, request, obj, form, change):
+        from django.utils import timezone
+        if not obj.is_active and not obj.unsubscribed_at:
+            obj.unsubscribed_at = timezone.now()
+        super().save_model(request, obj, form, change)
 from .models import (
     Category, Subcategory, ProductType, Brand, PetCategory, Product, ProductVariant,
     ProductImage, ProductSpecification, Banner, ContactInfo,
@@ -106,6 +124,10 @@ class ProductAdmin(admin.ModelAdmin):
         }),
         ('Product Details', {
             'fields': ('manufacturer', 'stock_quantity', 'track_inventory', 'is_in_stock', 'availability_label', 'requires_prescription', 'is_featured', 'is_bestseller', 'is_active')
+        }),
+        ('Manual homepage merchandising', {
+            'fields': ('merchandising_active', 'merchandising_rank', 'is_new_arrival', 'is_promotional'),
+            'description': 'Best Seller and Featured above are used only after manual homepage activation. Safety rules still apply. No automatic sales ranking.',
         }),
         ('SEO', {
             'fields': ('meta_title', 'meta_description'),
@@ -280,7 +302,14 @@ class CouponAdmin(ImmutableAuditAdmin):
     list_filter = ['is_active', 'kind']
 
 
-from .models import OrderStatusHistory, OrderNotification, PaymentAttempt
+from .models import OrderStatusHistory, OrderNotification, PaymentAttempt, CatalogReviewEvent
+
+
+@admin.register(CatalogReviewEvent)
+class CatalogReviewAdmin(ImmutableAuditAdmin):
+    list_display = ['product', 'decision', 'actor', 'created_at']
+    list_filter = ['decision', 'created_at']
+    search_fields = ['product__name', 'product__sku']
 
 
 @admin.register(OrderStatusHistory)

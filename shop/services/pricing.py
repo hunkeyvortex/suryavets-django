@@ -1,7 +1,7 @@
 """Money calculations shared by importers, models and catalogue queries."""
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
-from django.db.models import DecimalField, ExpressionWrapper, F, Value, OuterRef, Subquery, Q
+from django.db.models import DecimalField, ExpressionWrapper, F, Value, OuterRef, Subquery, Q, Exists
 from django.db.models.functions import Coalesce, Round
 
 
@@ -42,17 +42,30 @@ def export_prices(row):
     return regular, current, discount_percent(regular, current)
 
 
+def family_variant_queryset(*, active_products=False):
+    """Use indexed family IDs instead of an OR across a joined variant/product scan.
+
+    This queryset is embedded once in an outer Product query. The member lookup
+    is another level down, so its references must reach the outer Product.
+    """
+    from shop.models import Product, ProductVariant
+    members = Product.objects.filter(
+        Q(pk=OuterRef(OuterRef('pk'))) | Q(variant_family_id=OuterRef(OuterRef('pk')))
+    ).order_by()
+    members = members.values('pk')
+    variants = ProductVariant.objects.filter(product_id__in=Subquery(members))
+    if active_products:
+        # Keep the active flag out of the family-ID OR and the price join. On
+        # SQLite either can otherwise select the low-selectivity active index
+        # and rescan the entire catalog for each root. This is one PK lookup.
+        variants = variants.filter(Exists(Product.objects.filter(pk=OuterRef('product_id'), is_active=True)))
+    return variants
+
+
 def catalog_price_expression():
-    from shop.models import ProductVariant
+    from .purchasing import eligible_variants, simple_price_expression, effective_price
     money = DecimalField(max_digits=10, decimal_places=2)
-    legacy = ExpressionWrapper(
-        F('base_price') * (Value(Decimal('100.0')) - F('discount_percentage')) / Value(Decimal('100.0')),
-        output_field=money,
-    )
-    variant_regular = Coalesce(F('price_override'), F('product__base_price'), output_field=money)
-    variant_legacy = ExpressionWrapper(variant_regular * (Value(Decimal('100')) - F('discount_percentage')) / Value(Decimal('100')), output_field=money)
-    variants = ProductVariant.objects.filter(Q(product_id=OuterRef('pk')) | Q(product__variant_family_id=OuterRef('pk')), is_active=True, product__is_active=True).annotate(
-        offer_price=Coalesce(F('selling_price'), Round(variant_legacy, precision=2), output_field=money))
-    return Coalesce(Subquery(variants.filter(stock_quantity__gt=0).order_by('offer_price').values('offer_price')[:1]),
-                    Subquery(variants.order_by('offer_price').values('offer_price')[:1]),
-                    F('selling_price'), Round(legacy, precision=2), output_field=money)
+    variants = eligible_variants(family_variant_queryset(active_products=True)).annotate(
+        offer_price=effective_price(variant=True))
+    return Coalesce(Subquery(variants.order_by('offer_price').values('offer_price')[:1]),
+                    simple_price_expression(), output_field=money)

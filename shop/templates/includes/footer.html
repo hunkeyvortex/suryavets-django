@@ -6,6 +6,7 @@
         {% csrf_token %}
         <label class="sr-only" for="newsletter-email">Email address</label>
         <input id="newsletter-email" type="email" name="email" placeholder="Email address" required>
+        <label><input type="checkbox" name="consent" required> I agree to receive SuryaVets email updates.</label>
         <button type="submit">Sign up</button>
         <p class="newsletter-form__message" aria-live="polite" data-newsletter-message></p>
       </form>

@@ -1,0 +1,4 @@
+<nav class="sv-mobile-shortcuts" aria-label="Quick categories">
+  <a href="{% url 'shop:index' %}" {% if request.resolver_match.url_name == 'index' %}aria-current="page"{% endif %}>{% include 'includes/ui_icon.html' with icon='home' %}<span>Home</span></a>
+  {% for node in navigation_categories %}{% if node.slug != 'uncategorized' %}<a href="{{ node.get_absolute_url }}">{% include 'includes/ui_icon.html' with icon=node.slug %}<span>{{ node.name }}</span></a>{% endif %}{% endfor %}
+</nav>

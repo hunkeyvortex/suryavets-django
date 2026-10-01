@@ -1,0 +1,12 @@
+<nav class="sv-mobile-dock" aria-label="Mobile navigation">
+  <a href="{% url 'shop:index' %}" {% if request.resolver_match.url_name == 'index' %}aria-current="page"{% endif %}>{% include 'includes/ui_icon.html' with icon='home' %}<span>Home</span></a>
+  <button type="button" data-category-sheet-open aria-controls="sv-category-sheet" aria-expanded="false">{% include 'includes/ui_icon.html' with icon='grid' %}<span>Categories</span></button>
+  <a href="{% url 'shop:cart' %}" {% if request.resolver_match.url_name == 'cart' %}aria-current="page"{% endif %}>{% include 'includes/ui_icon.html' with icon='cart' %}<span>Cart</span>{% if cart_count %}<b class="sv-dock-badge">{{ cart_count }}</b>{% endif %}</a>
+  <a href="{% url 'shop:wishlist' %}" {% if request.resolver_match.url_name == 'wishlist' %}aria-current="page"{% endif %}>{% include 'includes/ui_icon.html' with icon='heart' %}<span>Wishlist</span></a>
+  <a href="{% url 'shop:profile' %}" {% if request.resolver_match.url_name == 'profile' %}aria-current="page"{% endif %}>{% include 'includes/ui_icon.html' with icon='user' %}<span>Account</span></a>
+</nav>
+<dialog id="sv-category-sheet" class="sv-category-sheet" aria-labelledby="sv-category-sheet-title">
+  <header><div><span class="sv-home-eyebrow">SHOP BY PET & NEED</span><h2 id="sv-category-sheet-title">Browse categories</h2></div><button type="button" data-category-sheet-close aria-label="Close categories">×</button></header>
+  <div class="sv-category-sheet-grid">{% for node in navigation_categories %}{% if node.slug != 'uncategorized' %}<a href="{{ node.get_absolute_url }}">{% include 'includes/ui_icon.html' with icon=node.slug %}<strong>{{ node.name }}</strong><span>Explore collection →</span></a>{% endif %}{% endfor %}</div>
+  <a class="sv-sheet-all" href="{% url 'shop:category_list' %}">View the full catalogue {% include 'includes/ui_icon.html' with icon='arrow' %}</a>
+</dialog>

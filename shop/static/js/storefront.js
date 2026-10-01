@@ -68,10 +68,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const dots = hero.querySelector('[data-hero-dots]');
     let activeIndex = 0;
     let timer;
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const pause = hero.querySelector('[data-hero-pause]');
+    let paused = reducedMotion.matches;
 
     const showSlide = (nextIndex) => {
       activeIndex = (nextIndex + slides.length) % slides.length;
-      slides.forEach((slide, index) => slide.classList.toggle('is-active', index === activeIndex));
+      slides.forEach((slide, index) => {
+        slide.classList.toggle('is-active', index === activeIndex);
+        slide.setAttribute('aria-hidden', String(index !== activeIndex));
+        slide.inert = index !== activeIndex;
+      });
       dots?.querySelectorAll('button').forEach((dot, index) => {
         dot.classList.toggle('is-active', index === activeIndex);
         dot.setAttribute('aria-current', String(index === activeIndex));
@@ -79,8 +86,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const restart = () => {
       window.clearInterval(timer);
-      if (slides.length > 1) timer = window.setInterval(() => showSlide(activeIndex + 1), 5500);
+      if (slides.length > 1 && !paused && !document.hidden && !hero.matches(':hover') && !hero.contains(document.activeElement)) {
+        timer = window.setInterval(() => showSlide(activeIndex + 1), 5500);
+      }
     };
+    const syncPause = () => {
+      if (!pause) return;
+      pause.textContent = paused ? 'Play' : 'Pause';
+      pause.setAttribute('aria-label', paused ? 'Play offers' : 'Pause offers');
+      pause.setAttribute('aria-pressed', String(paused));
+      pause.hidden = slides.length < 2;
+    };
+    pause?.addEventListener('click', () => { paused = !paused; syncPause(); restart(); });
+    hero.addEventListener('mouseenter', restart);
+    hero.addEventListener('mouseleave', restart);
+    hero.addEventListener('focusin', restart);
+    hero.addEventListener('focusout', () => setTimeout(restart, 0));
+    document.addEventListener('visibilitychange', restart);
+    reducedMotion.addEventListener('change', event => { paused = event.matches; syncPause(); restart(); });
 
     slides.forEach((_, index) => {
       const dot = document.createElement('button');
@@ -92,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hero.querySelector('[data-hero-previous]')?.addEventListener('click', () => { showSlide(activeIndex - 1); restart(); });
     hero.querySelector('[data-hero-next]')?.addEventListener('click', () => { showSlide(activeIndex + 1); restart(); });
     showSlide(0);
+    syncPause();
     restart();
   }
 

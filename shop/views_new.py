@@ -247,6 +247,7 @@ def add_to_cart(request, product_id):
     
     return JsonResponse({'success': False, 'message': 'Invalid request'})
 
+
 @login_required
 def update_cart_item(request, item_id):
     """Update cart item quantity via AJAX"""
@@ -395,3 +396,8 @@ def newsletter_signup(request):
         return JsonResponse({'success': True, 'message': 'Thank you for subscribing!'})
     
     return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+
+# This module is not routed. Future legacy callers must use the same audited
+# purchase paths; never revive the obsolete purchase implementations above.
+from .views import add_to_cart, cart_detail, update_cart_item, remove_from_cart, checkout

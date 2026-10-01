@@ -1,31 +1,32 @@
 {% load shop_filters %}
+{% if selection_error %}<p class="notice" role="status" data-selection-error>{{ selection_error }}</p>{% endif %}
 <p class="product-summary__sku">SKU: <span data-product-sku>{{ selected_variant.sku|default:product.sku|default:'Not supplied' }}</span></p>
 <div class="buying-price" aria-live="polite">
-  <strong data-product-price>₹{{ display_price|money }}</strong>
-  <div data-product-compare-wrap {% if display_regular_price <= display_price %}hidden{% endif %}>MRP <del data-product-compare>₹{{ display_regular_price|money }}</del> <span class="buying-discount" data-product-discount>{% if selected_option %}{{ selected_option.discount }}% OFF{% endif %}</span></div>
-  <p class="buying-saving" data-product-saving {% if not selected_option.saving %}hidden{% endif %}>You save ₹{{ selected_option.saving|money }} on MRP</p>
+  <strong data-product-price>{% if buying_in_stock %}₹{{ display_price|money }}{% else %}Currently unavailable{% endif %}</strong>
+  <div data-product-compare-wrap {% if not buying_in_stock or display_regular_price <= display_price %}hidden{% endif %}>MRP <del data-product-compare>₹{{ display_regular_price|money }}</del> <span class="buying-discount" data-product-discount>{% if selected_option %}{{ selected_option.discount }}% OFF{% endif %}</span></div>
+  <p class="buying-saving" data-product-saving {% if not buying_in_stock or not selected_option.saving %}hidden{% endif %}>You save ₹{{ selected_option.saving|money }} on MRP</p>
 </div>
 <form class="product-form buying-form" id="product-buying-form" action="{% url 'shop:add_to_cart' product.id %}" method="post">
   {% csrf_token %}
   {% if variant_options %}<fieldset><legend>Choose your pack</legend><div class="product-variants buying-options">
     {% for option in variant_options %}{% with variant=option.variant %}
-    <label class="buying-option {% if not variant.is_in_stock %}is-unavailable{% endif %}">
+    <label class="buying-option {% if not option.available %}is-unavailable{% endif %}">
       <input type="radio" name="variant_id" value="{{ variant.id }}" required
         data-price="{{ option.price|floatformat:'2u' }}" data-regular="{{ option.regular|floatformat:'2u' }}" data-stock="{{ variant.stock_quantity }}"
         data-name="{{ variant.name }}" data-sku="{{ variant.sku|default:product.sku }}" data-discount="{{ option.discount }}" data-saving="{{ option.saving|money }}"
         data-unit="{% if option.unit_price != None %}₹{{ option.unit_price|money }}/{{ option.unit_label }}{% endif %}"
-        data-image="{{ option.image_url }}" data-alt="{{ option.image_alt }}" data-image-missing="{% if option.image_missing %}1{% else %}0{% endif %}"
-        {% if variant.pk == selected_variant.pk %}checked{% endif %} {% if not variant.is_in_stock %}disabled{% endif %}>
-      <span class="buying-option__content"><strong>{{ variant.name }}</strong><span>₹{{ option.price|money }}</span>
+        data-image="{{ option.image_url }}" data-alt="{{ option.image_alt }}" data-image-ids="{{ option.image_ids }}" data-image-missing="{% if option.image_missing %}1{% else %}0{% endif %}"
+        {% if variant.pk == selected_variant.pk %}checked{% endif %} {% if not option.available %}disabled{% endif %}>
+      <span class="buying-option__content"><strong>{{ variant.name }}</strong><span>{% if option.available %}₹{{ option.price|money }}{% else %}Unavailable{% endif %}</span>
         {% if option.unit_price != None %}<small>₹{{ option.unit_price|money }}/{{ option.unit_label }}</small>{% endif %}
         {% if option.best_value %}<em>Best value</em>{% endif %}
         {% if option.value_saving > 0 %}<small class="buying-option__saving">Save ₹{{ option.value_saving|money }} vs {{ option.baseline }} rate</small>{% endif %}
-        {% if not variant.is_in_stock %}<small>Out of stock</small>{% endif %}
+        {% if not option.available %}<small>{{ option.reason }}</small>{% endif %}
       </span>
     </label>{% endwith %}{% endfor %}
   </div></fieldset>{% endif %}
   <p class="buying-selection" aria-live="polite"><strong data-selected-pack>{{ selected_variant.name }}</strong> <span data-product-unit>{% if selected_option.unit_price != None and selected_option %}₹{{ selected_option.unit_price|money }}/{{ selected_option.unit_label }}{% endif %}</span></p>
-  <p class="buying-stock" data-product-stock aria-live="polite">{% if buying_in_stock %}In stock · ready to add{% else %}Out of stock{% endif %}</p>
+  <p class="buying-stock" data-product-stock aria-live="polite">{% if buying_in_stock %}In stock · ready to add{% else %}Unavailable. Please contact SuryaVets for help with this item.{% endif %}</p>
   <div class="product-quantity"><label for="quantity">Quantity</label><div class="buying-stepper"><button type="button" data-quantity-step="-1" aria-label="Decrease quantity">−</button><input id="quantity" name="quantity" type="number" min="1" value="1" required {% if selected_variant %}max="{{ selected_variant.stock_quantity }}"{% elif product.track_inventory %}max="{{ product.stock_quantity }}"{% else %}max="10000"{% endif %}><button type="button" data-quantity-step="1" aria-label="Increase quantity">+</button></div></div>
-  <div class="buying-actions"><button type="submit" data-add-to-cart {% if not buying_in_stock %}disabled{% endif %}>{% if buying_in_stock %}Add to Cart{% else %}Out of Stock{% endif %}</button><button type="submit" class="buying-now" name="intent" value="buy_now" {% if not buying_in_stock %}disabled{% endif %}>Buy now</button></div>
+  <div class="buying-actions"><button type="submit" data-add-to-cart {% if not buying_in_stock %}disabled{% endif %}>{% if buying_in_stock %}Add to Cart{% else %}Unavailable{% endif %}</button><button type="submit" class="buying-now" name="intent" value="buy_now" {% if not buying_in_stock %}disabled{% endif %}>Buy now</button></div>
 </form>

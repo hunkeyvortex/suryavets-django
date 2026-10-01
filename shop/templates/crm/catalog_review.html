@@ -1,0 +1,26 @@
+{% extends 'crm/base.html' %}
+{% load shop_filters %}
+{% block content %}
+<a href="{% url 'crm:inventory' %}">Back to inventory</a>
+<section class="panel catalog-review"><p class="eyebrow">Catalog quality control</p><h2>{{ product.name }}</h2>
+<p class="notice"><strong>Purchase safety is enforced.</strong> Holding this product blocks purchases, including its family packs. Approval never bypasses price, activity or stock checks. No source prices or stock are changed by a review.</p>
+<p><strong>{{ review_status }}</strong></p>
+{% if identity_rows %}<section class="notice"><h3>Pack identity evidence</h3><p>Snapshot {{ identity_generated_at }}. Candidates require manual verification; no source records were corrected.</p>{% for row in identity_rows %}<details><summary>{{ row.Priority }} — review pack evidence</summary><dl>{% for key,value in row.items %}{% if value %}<dt>{{ key }}</dt><dd>{{ value }}</dd>{% endif %}{% endfor %}</dl></details>{% endfor %}</section>{% endif %}
+<section class="notice"><h3>Purchase eligibility</h3>{% for pack in packs %}{% purchase_status product pack as eligibility %}<p><strong>{{ pack.name }}:</strong> {% if eligibility.allowed %}Purchasable at its current price and recorded stock{% else %}{{ eligibility.message }}{% endif %}</p>{% empty %}{% purchase_status product as eligibility %}<p>{% if eligibility.allowed %}Purchasable at its current price and recorded stock{% else %}{{ eligibility.message }}{% endif %}</p>{% endfor %}<p>Recorded stock is not confirmation of physical stock.</p></section>
+<p>Changes to identity, prices, packs or image references require another review. Normal stock movements remain in the existing ledger.</p>
+{% if perms.shop.change_product %}<a href="{% url 'crm:product_edit' product.pk %}">Edit product and photos</a> · {% endif %}<a href="{% url 'crm:inventory_detail' product.pk %}">Review stock history</a>
+{% if problems %}<div class="notice"><h3>Resolve before review approval</h3><ul>{% for problem in problems %}<li>{{ problem }}</li>{% endfor %}</ul></div>{% endif %}
+<div class="table-wrap"><table class="catalog-review-packs"><thead><tr><th>Pack</th><th>SKU</th><th>MRP</th><th>Selling price</th><th>Recorded stock</th><th>Artwork</th></tr></thead><tbody>
+{% for pack in packs %}<tr><td data-label="Pack">{{ pack.name }}{% if not pack.is_active %} (inactive){% endif %}</td><td data-label="SKU">{{ pack.sku|default:'Missing' }}</td><td data-label="MRP">₹{{ pack.original_price }}</td><td data-label="Selling price">₹{{ pack.current_price }}</td><td data-label="Recorded stock">{{ pack.stock_quantity }}</td><td data-label="Artwork">{% if pack.image_id %}Image {{ pack.image_id }}{% else %}Product fallback{% endif %}</td></tr>
+{% empty %}<tr><td data-label="Pack">Simple product</td><td data-label="SKU">{{ product.sku|default:'Missing' }}</td><td data-label="MRP">₹{{ product.original_price }}</td><td data-label="Selling price">₹{{ product.current_price }}</td><td data-label="Recorded stock">{{ product.stock_quantity }}</td><td data-label="Artwork">Product image</td></tr>{% endfor %}</tbody></table></div>
+<h3>Verify product artwork</h3><div class="catalog-review-photos">{% for photo in photos %}<figure><img src="{{ photo.thumbnail_url }}" alt="{{ photo.alt_text|default:product.name }}" loading="lazy"><figcaption>Image {{ photo.pk }}{% if photo.check_error %} · Check failed{% endif %}</figcaption></figure>{% empty %}<p>No active product image. Do not substitute artwork from another product.</p>{% endfor %}</div>
+</section>
+<div class="detail-grid catalog-review"><section class="panel"><h2>Record your decision</h2><form method="post">{% csrf_token %}{{ form.token }}{{ form.non_field_errors }}
+<p>{{ form.decision.label_tag }}{{ form.decision }}{{ form.decision.errors }}</p>
+<p>{{ form.evidence.label_tag }}{{ form.evidence }}{{ form.evidence.errors }}<span class="helptext">{{ form.evidence.help_text }}</span></p>
+<label class="catalog-review-check" for="id_identity">{{ form.identity }}<span>{{ form.identity.label }}</span></label>
+<label class="catalog-review-check" for="id_prices">{{ form.prices }}<span>{{ form.prices.label }}</span></label>
+<label class="catalog-review-check" for="id_inventory">{{ form.inventory }}<span>{{ form.inventory.label }}</span></label>
+{{ form.token.errors }}<button type="submit">Save review decision</button></form></section>
+<section class="panel"><h2>Decision history</h2>{% for event in events %}<article><h3>{{ event.get_decision_display }}</h3><p>{{ event.created_at }} · {{ event.actor|default:'Former staff member' }}</p><p>{{ event.evidence|linebreaksbr }}</p></article>{% empty %}<p>No decisions recorded. Existing data has not been automatically approved.</p>{% endfor %}</section></div>
+{% endblock %}

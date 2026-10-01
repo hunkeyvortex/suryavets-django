@@ -37,7 +37,7 @@ def deliver_event_safely(event_id):
         logger.warning('Order outbox processing deferred for event %s', event_id)
 
 
-def deliver_pending(event_id=None, notification_id=None):
+def deliver_pending(event_id=None, notification_id=None, limit=100):
     if not settings.ORDER_EMAIL_ENABLED:
         return
     from django.db.models import Q
@@ -46,7 +46,7 @@ def deliver_pending(event_id=None, notification_id=None):
         rows = rows.filter(event_id=event_id)
     if notification_id is not None:
         rows = rows.filter(pk=notification_id)
-    for pk in list(rows.values_list('pk', flat=True)):
+    for pk in list(rows.order_by('pk').values_list('pk', flat=True)[:max(1, min(500, limit))]):
         item = OrderNotification.objects.select_related('event__order').get(pk=pk)
         event, order = item.event, item.event.order
         if not event.customer_visible:

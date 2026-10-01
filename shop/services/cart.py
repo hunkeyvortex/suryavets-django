@@ -49,3 +49,24 @@ def cart_totals(items):
         'amount_until_free_delivery': max(FREE_DELIVERY_THRESHOLD - subtotal, Decimal('0.00')),
         'free_delivery_threshold': FREE_DELIVERY_THRESHOLD,
     }
+
+
+def cart_snapshot(cart):
+    """Presentation values computed using the same Decimal totals as cart/checkout."""
+    items = list(cart_items(cart))
+    from .purchasing import cart_issues
+    problems = cart_issues(items)
+    totals = cart_totals(items)
+    def currency(amount):
+        return f'₹{amount:,.2f}'
+    return {
+        'purchase_issues': problems, 'checkout_allowed': not problems,
+        'items': [{'id': item.pk, 'quantity': item.quantity,
+                   'line_total': 'Unavailable' if item.purchase_issue else currency(item.total_price),
+                   'unit_price': 'Unavailable' if item.purchase_issue else currency((item.product_variant or item.product).current_price)} for item in items],
+        'total_items': totals['total_items'],
+        'subtotal': currency(totals['subtotal']), 'shipping': currency(totals['shipping']),
+        'total': currency(totals['total']), 'free_delivery': totals['shipping'] == 0,
+        'progress': str(totals['subtotal']), 'threshold': str(totals['free_delivery_threshold']),
+        'delivery_remaining': currency(totals['amount_until_free_delivery']),
+    }

@@ -1,0 +1,3 @@
+A password reset was requested for your SuryaVets account.
+{{ protocol }}://{{ domain }}{% url 'shop:password_reset_confirm' uidb64=uid token=token %}
+If you did not request this, ignore this email.

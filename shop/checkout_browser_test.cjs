@@ -52,12 +52,10 @@ const path = require('node:path');
     await page.locator('.basket-product').waitFor();
     await page.locator('[data-step="1"]').click();
     assert.equal(await page.locator('[data-basket-quantity] [name="quantity"]').inputValue(), '3');
-    await page.getByRole('button', {name: 'Update', exact: true}).click();
-    await page.waitForURL('**/cart/');
+    await page.waitForFunction(() => document.querySelector('[data-basket-total]').textContent.includes('320') && document.querySelector('.basket-checkout').getAttribute('aria-disabled') === 'false');
     assert.match(await page.locator('[data-basket-total]').innerText(), /320/);
     await page.locator('[data-step="-1"]').click();
-    await page.getByRole('button', {name: 'Update', exact: true}).click();
-    await page.waitForURL('**/cart/');
+    await page.waitForFunction(() => document.querySelector('[data-basket-total]').textContent.includes('230') && document.querySelector('.basket-checkout').getAttribute('aria-disabled') === 'false');
     assert.match(await page.locator('[data-basket-total]').innerText(), /230/);
     for (const width of [320, 360, 375, 390, 412, 430, 768, 1024, 1440]) {
       await page.setViewportSize({width, height: 900});

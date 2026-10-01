@@ -1,0 +1,1 @@
+{% extends 'base_shared.html' %}{% block title %}Contact | SuryaVets{% endblock %}{% block content %}<section class="site-shell public-form"><h1>Contact SuryaVets</h1><p>Send our team a message. Do not include passwords or payment-card details.</p><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Send message</button></form></section>{% endblock %}

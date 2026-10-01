@@ -5,6 +5,18 @@ register = template.Library()
 
 
 @register.simple_tag
+def purchase_status(product, variant=None):
+    from shop.services.purchasing import purchase_state
+    return purchase_state(product, variant)
+
+
+@register.simple_tag
+def catalog_review_status(product):
+    from shop.services.catalog_approval import status
+    return status(product)
+
+
+@register.simple_tag
 def product_offer(product):
     from shop.services.variants import card_offer
     return card_offer(product)

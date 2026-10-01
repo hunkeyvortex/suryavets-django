@@ -23,13 +23,9 @@ def get_banners(request):
 
 def get_featured_products(request):
     """Add featured products to context"""
-    products = []
-    try:
-        from .models import Product
-        products = list(Product.objects.filter(
-            is_active=True, 
-            is_featured=True
-        ).select_related('category', 'product_type').prefetch_related('images', 'variants')[:12])
-    except:
-        pass
-    return {'featured_products': products}
+    from django.utils.functional import SimpleLazyObject
+    def selected():
+        from .services.merchandising import curated
+        from .catalog_views import _product_queryset
+        return curated(_product_queryset().filter(is_featured=True))
+    return {'featured_products': SimpleLazyObject(selected)}

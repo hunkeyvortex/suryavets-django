@@ -121,7 +121,7 @@ class ExactPricingTests(TestCase):
 
     def test_filters_and_sorting_use_displayed_selling_price_not_compare_at(self):
         self.product.selling_price = Decimal('95.00'); self.product.save()
-        other = Product.objects.create(name='Second price', category=self.category, base_price='100.00', selling_price='100.00')
+        other = Product.objects.create(name='Second price', category=self.category, base_price='100.00', selling_price='100.00', stock_quantity=5)
         response = self.client.get(reverse('shop:category_list'), {'max_price': '96', 'sort': 'price_low'})
         self.assertEqual(list(response.context['products']), [self.product])
         response = self.client.get(reverse('shop:category_list'), {'sort': 'price_low'})

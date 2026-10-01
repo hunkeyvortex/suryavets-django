@@ -1,8 +1,10 @@
 """Small Brevo transactional API backend; business code uses Django email messages."""
 import json
+import ssl
+import truststore
 from email.utils import parseaddr
-from urllib.error import HTTPError
-from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, build_opener, HTTPRedirectHandler, HTTPSHandler
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
 from django.core.validators import validate_email
@@ -26,7 +28,9 @@ def post_email(payload):
     request = Request('https://api.brevo.com/v3/smtp/email', data=json.dumps(payload).encode('utf-8'),
         headers={'api-key': settings.BREVO_API_KEY, 'Accept':'application/json', 'Content-Type':'application/json'})
     try:
-        with build_opener(NoRedirect()).open(request, timeout=settings.BREVO_TIMEOUT) as response:
+        # Use the same native certificate validation as the existing media importer.
+        # Hostname/CA validation stays enabled; never bypass TLS for API credentials.
+        with build_opener(NoRedirect(), HTTPSHandler(context=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT))).open(request, timeout=settings.BREVO_TIMEOUT) as response:
             status = response.status
             result = json.loads(response.read(65536))
     except HTTPError as error:
@@ -38,6 +42,10 @@ def post_email(payload):
             except (TypeError, ValueError): delay = 60
         # duplicate_parameter may be returned with 400. Treat every 400 as review-required.
         raise DeliveryError(f'brevo_http_{status}', retryable=status in (401,403,404,422,429), retry_after=delay) from None
+    except URLError as error:
+        if isinstance(error.reason, ssl.SSLCertVerificationError):
+            raise DeliveryError('brevo_tls_verification_failed', retryable=True) from None
+        raise DeliveryError('brevo_outcome_unknown') from None
     except Exception:
         raise DeliveryError('brevo_outcome_unknown') from None
     message_id = result.get('messageId') if isinstance(result, dict) else None

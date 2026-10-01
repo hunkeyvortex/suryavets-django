@@ -58,7 +58,10 @@ def candidates(products):
 
 def family_products(product):
     root=product.variant_family if product.variant_family_id else product
-    return [root,*[p for p in root.family_members.all() if p.is_active]]
+    members = [p for p in root.family_members.all() if p.is_active]
+    for member in members:
+        member.variant_family = root  # reuse prefetched root policy metadata, no write
+    return [root, *members]
 
 
 def buying_variants(product):

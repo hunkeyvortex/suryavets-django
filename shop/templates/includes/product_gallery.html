@@ -1,6 +1,7 @@
-{% with primary=product.images.all.0 %}
-{% if primary.display_url %}
-<div class="product-gallery__main"><img src="{{ primary.display_url }}" alt="{{ primary.alt_text|default:product.name }}" data-product-main-image decoding="async" fetchpriority="high"><p data-variant-image-missing hidden>Photo required for this exact pack.</p></div>
-<div class="product-gallery__thumbnails" aria-label="Product photos">{% for image in product.images.all %}{% if image.display_url %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" data-product-image="{{ image.display_url }}" data-product-alt="{{ image.alt_text|default:product.name }}" aria-label="View product photo {{ forloop.counter }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"><img src="{{ image.thumbnail_url }}" alt="" loading="lazy" decoding="async"></button>{% endif %}{% endfor %}</div>
-{% else %}<div class="product-gallery__main product-gallery__placeholder"><p>Product photo awaiting verification</p></div>{% endif %}
-{% endwith %}
+<div class="product-gallery__main">
+  <img {% if gallery_primary %}src="{{ gallery_primary.display_url }}"{% else %}hidden{% endif %} alt="{{ gallery_primary.alt_text|default:product.name }}" data-product-main-image decoding="async" fetchpriority="high">
+  <p data-variant-image-missing {% if gallery_primary %}hidden{% endif %}><strong>SuryaVets</strong><span>Image coming soon</span><small>Photo for this exact pack</small></p>
+</div>
+<div class="product-gallery__thumbnails" aria-label="Product photos">
+{% for entry in gallery_images %}{% with image=entry.photo %}{% if image.display_url %}<button type="button" {% if not entry.visible %}hidden{% endif %} data-image-id="{{ image.pk }}" data-product-image="{{ image.display_url }}" data-product-alt="{{ image.alt_text|default:product.name }}" aria-label="View product photo {{ forloop.counter }}" aria-pressed="{% if image.pk == gallery_primary.pk %}true{% else %}false{% endif %}"><img src="{{ image.thumbnail_url }}" alt="" loading="lazy" decoding="async"></button>{% endif %}{% endwith %}{% endfor %}
+</div>

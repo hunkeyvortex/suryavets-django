@@ -8,6 +8,7 @@
 <a href="{% url 'crm:support' %}" {% if section == 'support' %}aria-current="page"{% endif %}>Customer support</a>
 <a href="{% url 'crm:customers' %}" {% if section == 'customers' %}aria-current="page"{% endif %}>Customers</a>
 <a href="{% url 'crm:inventory' %}" {% if section == 'inventory' %}aria-current="page"{% endif %}>Inventory</a>
+<a href="{% url 'crm:merchandising' %}">Homepage merchandising</a>
 <a href="{% url 'crm:coupons' %}" {% if section == 'coupons' %}aria-current="page"{% endif %}>Coupons</a>
 <a href="{% url 'crm:reports' %}" {% if section == 'reports' %}aria-current="page"{% endif %}>Reports & history</a>
 </nav><div class="sidebar-bottom"><a href="{% url 'shop:index' %}">View storefront ↗</a><a href="{% url 'admin:index' %}">Django Admin ↗</a><p>Staff workspace<br><small>Customer information is private.</small></p></div></aside>

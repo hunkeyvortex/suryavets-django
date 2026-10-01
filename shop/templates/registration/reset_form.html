@@ -1,0 +1,1 @@
+{% extends 'base_shared.html' %}{% block content %}<section class="site-shell public-form"><h1>Reset your password</h1><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Request reset link</button></form></section>{% endblock %}

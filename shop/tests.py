@@ -115,7 +115,7 @@ class StorefrontLayoutTests(TestCase):
         self.assertContains(response, 'Join our email list')
         self.assertContains(response, 'data-hero-slider')
         self.assertContains(response, 'Genuine Products')
-        self.assertContains(response, 'Our catalogue is being prepared')
+        self.assertNotContains(response, 'id="best-sellers"')
         self.assertNotContains(response, 'Why Choose Surya Vets?')
 
 

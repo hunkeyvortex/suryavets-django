@@ -2,6 +2,22 @@
   const gallery = document.querySelector('[data-product-gallery]');
   if (gallery) {
     const mainImage = gallery.querySelector('[data-product-main-image]');
+    const showMissing = () => {
+      mainImage.hidden = true;
+      gallery.querySelector('[data-variant-image-missing]').hidden = false;
+    };
+    mainImage.addEventListener('error', showMissing);
+    if (mainImage.getAttribute('src') && mainImage.complete && !mainImage.naturalWidth) showMissing();
+    let touchStart = null;
+    gallery.addEventListener('touchstart', event => { touchStart = event.touches[0].clientX; }, {passive: true});
+    gallery.addEventListener('touchend', event => {
+      if (touchStart === null) return;
+      const delta = event.changedTouches[0].clientX - touchStart; touchStart = null;
+      if (Math.abs(delta) < 60) return;
+      const visible = [...gallery.querySelectorAll('[data-product-image]')].filter(button => !button.hidden);
+      const current = visible.findIndex(button => button.getAttribute('aria-pressed') === 'true');
+      if (visible.length > 1) visible[(current + (delta < 0 ? 1 : -1) + visible.length) % visible.length].click();
+    }, {passive: true});
     gallery.querySelectorAll('[data-product-image]').forEach((button) => {
       button.addEventListener('click', () => {
         mainImage.src = button.dataset.productImage;
@@ -23,10 +39,9 @@
     // Browser formatting is presentation only; the server recalculates all prices.
     const money = value => '₹' + Number(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     const mainImage = document.querySelector('[data-product-main-image]');
-    const defaultImage = mainImage ? {src: mainImage.src, alt: mainImage.alt} : null;
     const syncVariant = () => {
       const selected = productForm.querySelector('[name="variant_id"]:checked');
-      if (!selected) return;
+      if (!selected || selected.disabled) return;
       document.querySelector('[data-product-price]').textContent = money(selected.dataset.price);
       document.querySelector('[data-product-compare]').textContent = money(selected.dataset.regular);
       document.querySelector('[data-product-compare-wrap]').hidden = Number(selected.dataset.regular) <= Number(selected.dataset.price);
@@ -41,9 +56,11 @@
         mainImage.hidden = selected.dataset.imageMissing === '1';
         const notice = gallery.querySelector('[data-variant-image-missing]');
         if (notice) notice.hidden = !mainImage.hidden;
-        mainImage.src = selected.dataset.image || defaultImage.src;
-        mainImage.alt = selected.dataset.alt || defaultImage.alt;
+        if (selected.dataset.image) mainImage.src = selected.dataset.image;
+        else mainImage.removeAttribute('src');
+        mainImage.alt = selected.dataset.alt || 'Photo required for this exact pack';
         gallery.querySelectorAll('[data-product-image]').forEach(button => {
+          button.hidden = !(selected.dataset.imageIds || '').split(',').includes(button.dataset.imageId);
           const active = button.dataset.productImage === mainImage.getAttribute('src');
           button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active));
         });
@@ -57,7 +74,13 @@
       submit.textContent = stock > 0 ? 'Add to Cart' : 'Out of Stock';
       document.querySelector('[data-product-stock]').textContent = stock > 0 ? 'In stock · ready to add' : 'Out of stock';
     };
-    productForm.querySelectorAll('[name="variant_id"]').forEach(input => input.addEventListener('change', syncVariant));
+    productForm.querySelectorAll('[name="variant_id"]').forEach(input => input.addEventListener('change', () => {
+      syncVariant();
+      document.querySelector('[data-selection-error]')?.setAttribute('hidden', '');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('variant_id'); url.searchParams.set('variant', input.value);
+      window.history.replaceState(null, '', url);
+    }));
     syncVariant();
     productForm.querySelectorAll('[data-quantity-step]').forEach(button => button.addEventListener('click', () => {
       const input = productForm.querySelector('[name="quantity"]');

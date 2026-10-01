@@ -2,6 +2,8 @@ from django.urls import path
 from . import crm_views as views
 from . import crm_catalog_views as catalog
 from . import crm_order_views as tracking
+from . import crm_catalog_review as review
+from . import crm_merchandising
 
 app_name = 'crm'
 urlpatterns = [
@@ -19,7 +21,9 @@ urlpatterns = [
     path('customers/<str:key>/', views.customer_detail, name='customer_detail'),
     path('customers/<str:key>/notes/', views.customer_note, name='customer_note'),
     path('inventory/', views.inventory, name='inventory'),
+    path('merchandising/', crm_merchandising.index, name='merchandising'),
     path('inventory/new/', catalog.product_create, name='product_create'),
+    path('inventory/<uuid:pk>/review/', review.review, name='catalog_review'),
     path('inventory/<uuid:pk>/edit/', catalog.product_edit, name='product_edit'),
     path('inventory/<uuid:pk>/archive/', catalog.product_archive, name='product_archive'),
     path('inventory/<uuid:pk>/packs/<int:variant_id>/edit/', catalog.variant_edit, name='variant_edit'),

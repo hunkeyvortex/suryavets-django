@@ -4,14 +4,18 @@
 {% block title %}Surya Vets | Pet Pharmacy, Food & Supplies{% endblock %}
 {% block meta_description %}Shop veterinary medicines, nutrition and trusted pet supplies at Surya Vets.{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/home.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/home-discovery.css' %}">{% endblock %}
+{% block extra_js %}<script src="{% static 'js/home-discovery.js' %}" defer></script>{% endblock %}
 
 {% block content %}
+<div class="sv-home">
+<h1 class="sr-only">Surya Vets — food, pharmacy and everyday pet care</h1>
 <section class="home-hero site-shell" aria-label="Featured offers" data-hero-slider>
   <div class="home-hero__slides">
     {% if banners %}
       {% for banner in banners %}<article class="home-hero__slide {% if forloop.first %}is-active{% endif %}">{% if banner.link %}<a href="{{ banner.link }}">{% endif %}<img src="{{ banner.image.url }}" alt="{{ banner.title|default:'Surya Vets offer' }}">{% if banner.link %}</a>{% endif %}</article>{% endfor %}
     {% else %}
-      <article class="home-hero__slide is-active"><img src="{% static 'images/Banner-1_jpg.jpg' %}" alt="Trusted pet nutrition at Surya Vets"></article>
+      <article class="home-hero__slide is-active"><img src="{% static 'images/Banner-1_jpg.jpg' %}" alt="Trusted pet nutrition at Surya Vets" fetchpriority="high" width="2000" height="664"></article>
       <article class="home-hero__slide"><img src="{% static 'images/Banner-2_jpg.jpg' %}" alt="Pet care offers at Surya Vets"></article>
       <article class="home-hero__slide"><img src="{% static 'images/Banner-3_jpg.jpg' %}" alt="Veterinary pet care at Surya Vets"></article>
     {% endif %}
@@ -19,6 +23,7 @@
   <button class="home-hero__arrow home-hero__arrow--previous" type="button" aria-label="Previous offer" data-hero-previous>‹</button>
   <button class="home-hero__arrow home-hero__arrow--next" type="button" aria-label="Next offer" data-hero-next>›</button>
   <div class="home-hero__dots" aria-label="Choose offer" data-hero-dots></div>
+  <button class="sv-hero-pause" type="button" data-hero-pause aria-label="Pause offers" aria-pressed="false">Pause</button>
 </section>
 
 <section class="trust-strip" aria-label="Why shop with Surya Vets"><div class="site-shell trust-strip__grid">
@@ -28,11 +33,23 @@
   <div><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.4 3 7.7 7 10 4-2.3 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Trusted Pharmacy</span></div>
 </div></section>
 
-<section class="home-section home-pet-section"><div class="site-shell"><header class="home-section__heading"><h1>Shop By Pets</h1><p>All pet categories, one click—find what your pet loves!</p></header><div class="pet-category-grid">
-  {% for category in categories %}<a class="pet-category-card" href="{% url 'shop:category_detail' category.slug %}">{% if category.reference_image %}<img src="{% static category.reference_image %}" alt="{{ category.name }}" loading="lazy">{% elif category.image %}<img src="{{ category.image.url }}" alt="{{ category.name }}">{% elif category.slug == 'cat' %}<img src="{% static 'images/Collection-Cat.png' %}" alt="Cat products">{% elif category.slug == 'dog' %}<img src="{% static 'images/Collection-Dog.png' %}" alt="Dog products">{% else %}<span class="pet-category-card__fallback"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 11h.01M15 11h.01M9.5 15c1.5 1 3.5 1 5 0"/></svg></span>{% endif %}<span>{{ category.name }}</span></a>{% empty %}<p class="home-empty">Pet categories will appear here once they are added in Django Admin.</p>{% endfor %}
+<section class="sv-home-section sv-home-pets"><div class="site-shell"><header class="sv-home-heading"><div><span class="sv-home-eyebrow">THEIR WORLD. OUR CARE.</span><h2>Shop by pet</h2><p>Everything they need, all in one place.</p></div><a class="sv-home-link" href="{% url 'shop:category_list' %}">Shop all {% include 'includes/ui_icon.html' with icon='arrow' %}</a></header><div class="sv-home-pet-grid">
+  {% for category in categories %}<a class="sv-home-pet" href="{{ category.get_absolute_url }}"><span class="sv-home-pet__image">{% if category.image %}<img src="{{ category.image.url }}" alt="" loading="lazy" width="220" height="220">{% elif category.reference_image %}<img src="{% static category.reference_image %}" alt="" loading="lazy" width="220" height="220">{% else %}{% include 'includes/ui_icon.html' with icon='paw' %}{% endif %}</span><strong>{{ category.name }}</strong><span class="sv-home-pet__action">Explore collection →</span></a>{% empty %}<p class="sv-home-empty">Our collections are being prepared. <a href="{% url 'shop:category_list' %}">Browse products</a></p>{% endfor %}
 </div></div></section>
 
-<div class="site-shell home-delivery-banner"><img src="{% static 'images/reference-delivery.jpg' %}" alt="Free delivery above ₹499 in selected locations" width="6250" height="1009" loading="lazy"></div>
+{% if home_food_tabs %}<section class="sv-home-section sv-home-section--soft" data-home-tabs aria-labelledby="home-food-title"><div class="site-shell">
+  <header class="sv-home-heading"><div><span class="sv-home-eyebrow">GOOD FOOD. HAPPY PETS.</span><h2 id="home-food-title">Mealtime favourites</h2><p>Find their next favourite bowl.</p></div><div class="sv-home-tabs" role="tablist" aria-label="Pet food">{% for tab in home_food_tabs %}<button type="button" id="food-tab-{{ tab.key }}" role="tab" aria-selected="{{ forloop.first|yesno:'true,false' }}" aria-controls="food-panel-{{ tab.key }}" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}" data-home-tab="{{ tab.key }}">{{ tab.category.name }}</button>{% endfor %}</div></header>
+  {% for tab in home_food_tabs %}<div id="food-panel-{{ tab.key }}" role="tabpanel" aria-labelledby="food-tab-{{ tab.key }}" data-home-panel="{{ tab.key }}" {% if not forloop.first %}hidden{% endif %}><div class="sv-home-food-grid">{% for product in tab.products %}{% include 'includes/product_card.html' %}{% empty %}<p class="sv-home-empty">More food options are on their way. Explore the collection below.</p>{% endfor %}</div><a class="sv-home-browse" href="{{ tab.category.get_absolute_url }}">Shop all {{ tab.category.name|lower }} {% include 'includes/ui_icon.html' with icon='arrow' %}</a></div>{% endfor %}
+  <noscript><p>{% for tab in home_food_tabs %}<a href="{{ tab.category.get_absolute_url }}">Browse {{ tab.category.name }}</a> {% endfor %}</p></noscript>
+</div></section>{% endif %}
 
-<section class="home-section home-products-section"><div class="site-shell"><header class="home-section__heading home-section__heading--products"><h2>Top Selling</h2><p>Products Frequently Bought</p></header><div class="home-product-showcase" data-product-carousel>{% if top_products %}<button class="home-product-showcase__arrow home-product-showcase__arrow--previous" type="button" aria-label="Previous products" data-product-previous>‹</button>{% endif %}<div class="home-product-grid" data-product-track>{% for product in top_products %}{% include 'includes/product_card.html' with product=product %}{% empty %}<div class="home-empty home-empty--products"><h3>Our catalogue is being prepared</h3><p>Top Selling products will appear here as soon as the Shopify catalogue is imported.</p></div>{% endfor %}</div>{% if top_products %}<button class="home-product-showcase__arrow home-product-showcase__arrow--next" type="button" aria-label="Next products" data-product-next>›</button>{% endif %}</div></div></section>
+{% if top_products %}{% include 'includes/home_product_section.html' with section_id='best-sellers' eyebrow='DISCOVER YOUR NEXT FAVOURITE' title=home_best_title subtitle='Handpicked by the SuryaVets team.' products=top_products %}{% endif %}
+
+{% if home_needs %}<section class="sv-home-section sv-home-section--soft" aria-labelledby="home-needs-title"><div class="site-shell"><header class="sv-home-heading"><div><span class="sv-home-eyebrow">LESS SEARCHING. MORE CARING.</span><h2 id="home-needs-title">Shop by need</h2><p>From their daily bowl to specialist care.</p></div></header><div class="sv-home-needs">{% for item in home_needs %}<a href="{{ item.category.get_absolute_url }}"><span class="sv-home-need-icon">{% include 'includes/ui_icon.html' with icon=item.icon %}</span><strong>{{ item.category.name }}</strong><small>{{ item.description }}</small><span class="sv-home-need-arrow" aria-hidden="true">↗</span></a>{% endfor %}</div><p class="sv-home-care-note">For medicines and specialist diets, follow your veterinarian's advice.</p></div></section>{% endif %}
+
+<div class="site-shell home-delivery-banner"><a href="{% url 'shop:shipping' %}"><img src="{% static 'images/reference-delivery.jpg' %}" alt="Free delivery above ₹499 in selected locations. View shipping information." width="6250" height="1009" loading="lazy"></a></div>
+
+{% if home_brands %}<section class="sv-home-section" aria-labelledby="home-brands-title"><div class="site-shell"><header class="sv-home-heading"><div><span class="sv-home-eyebrow">FIND THEIR FAVOURITE</span><h2 id="home-brands-title">Shop by brand</h2><p>Go straight to the names you know.</p></div></header><div class="sv-home-brands">{% for brand in home_brands %}<a href="{% url 'shop:category_list' %}?brand={{ brand.slug|urlencode }}"><span class="sv-home-brand-mark">{% if brand.image %}<img src="{{ brand.image.url }}" alt="{{ brand.name }}" loading="lazy" width="150" height="64">{% else %}{{ brand.name }}{% endif %}</span><span>{{ brand.product_count }} product{{ brand.product_count|pluralize }} {% include 'includes/ui_icon.html' with icon='arrow' %}</span></a>{% endfor %}</div></div></section>{% endif %}
+<section class="sv-home-help site-shell"><div><span class="sv-home-eyebrow">A LITTLE HELP GOES A LONG WAY</span><h2>Here for you. And your pet.</h2><p>Questions about an order or finding a product? Talk to our team.</p></div><a href="{% url 'shop:contact' %}">Contact Surya Vets {% include 'includes/ui_icon.html' with icon='arrow' %}</a></section>
+</div>
 {% endblock %}

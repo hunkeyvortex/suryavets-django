@@ -1,6 +1,7 @@
 {% extends 'auth_base.html' %}
 {% block title %}Welcome back | SuryaVets{% endblock %}
 {% block auth_content %}
+<p><a href="{% url 'shop:password_reset' %}">Forgot your password?</a></p>
 <p class="auth-kicker">GOOD TO HAVE YOU BACK</p><h1>Your pet's care,<br>all in one place.</h1><p class="auth-intro">Sign in with your email and SuryaVets password to see your orders and saved addresses.</p>
 <div class="auth-tabs"><a href="{% url 'shop:login' %}?next={{ next|urlencode }}" aria-current="page">Sign in</a><a href="{% url 'shop:register' %}?next={{ next|urlencode }}">Create account</a></div>
 <form method="post" class="auth-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{% include 'includes/auth_fields.html' %}<button class="auth-submit" type="submit">Sign in <span aria-hidden="true">→</span></button></form>

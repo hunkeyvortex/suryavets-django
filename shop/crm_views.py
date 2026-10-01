@@ -197,8 +197,31 @@ def customer_note(request, key):
 @staff_page()
 def inventory(request):
     qs = Product.objects.select_related('brand', 'category').prefetch_related('images').order_by('name', 'pk')
+    review_filter = request.GET.get('review', '')
+    safety_filter = request.GET.get('safety', '')
+    identity_filter = request.GET.get('identity', '')
+    from .services.pack_review_snapshot import snapshot
+    identity = snapshot() if identity_filter else {'generated_at': '', 'by_product': {}}
+    if identity_filter:
+        ids = [pk for pk, rows in identity['by_product'].items() if identity_filter == 'review' or any(r['Priority'] == identity_filter for r in rows)]
+        qs = qs.filter(pk__in=ids)
+    from .services.purchasing import effective_price
+    from .services.pricing import catalog_price_expression
+    from django.db.models import Exists, OuterRef
+    if safety_filter == 'zero':
+        zero = ProductVariant.objects.filter(product_id=OuterRef('pk')).alias(value=effective_price(variant=True)).filter(value__lte=0)
+        qs = qs.alias(zero_pack=Exists(zero), simple_price=effective_price()).filter(Q(zero_pack=True) | Q(variants__isnull=True, simple_price__lte=0))
+    elif safety_filter == 'blocked':
+        qs = qs.alias(purchasable_price=catalog_price_expression()).filter(purchasable_price__isnull=True)
+    if review_filter == 'pending':
+        qs = qs.filter(catalog_approved_digest='')
+    elif review_filter == 'recorded':
+        qs = qs.exclude(catalog_approved_digest='')
     visibility = request.GET.get('visibility', '')
     media_filter = request.GET.get('media', '')
+    if media_filter in ('placeholder', 'review', 'recovered'):
+        from .services.image_coverage_snapshot import matching_products
+        qs = qs.filter(pk__in=matching_products(media_filter))
     if media_filter == 'missing':
         qs = qs.exclude(pk__in=ProductImage.objects.filter(Q(image__gt='') | Q(source_url__gt='')).values('product_id'))
     elif media_filter == 'broken':
@@ -221,8 +244,12 @@ def inventory(request):
                        Q(variants__isnull=True, track_inventory=True, stock_quantity=0)).distinct()
     stats = Product.objects.aggregate(total=Count('pk'), active=Count('pk', filter=Q(is_active=True)),
         archived=Count('pk', filter=Q(is_active=False)))
-    return render(request, 'crm/catalog_inventory.html', {**page_context(request, qs), 'section': 'inventory',
-        'title': 'Products & inventory', 'stock': stock, 'visibility': visibility, 'stats': stats, 'media_filter': media_filter})
+    context = page_context(request, qs)
+    for product in context['page']:
+        product.identity_review = identity['by_product'].get(str(product.pk), [])
+    return render(request, 'crm/catalog_inventory.html', {**context, 'section': 'inventory',
+        'identity_filter': identity_filter, 'identity_generated_at': identity['generated_at'],
+        'title': 'Products & inventory', 'stock': stock, 'visibility': visibility, 'stats': stats, 'media_filter': media_filter, 'review_filter': review_filter, 'safety_filter': safety_filter})
 
 
 @staff_page()
