@@ -149,7 +149,7 @@ def image_edit(request, pk, image_id):
                     if not photo.is_active:
                         ProductVariant.objects.filter(product=product, image=photo).update(image=None, updated_at=timezone.now())
                     Product.objects.filter(pk=product.pk).update(updated_at=timezone.now())
-                    record_product_activity(request.user, product, f'Updated photo {photo.pk}; visible={photo.is_active}; order={photo.order}. {form.cleaned_data.get("reason", "")}')
+                    record_product_activity(request.user, product, f'Updated photo {photo.pk}; visible={photo.is_active}; order={photo.order}; family_reference={photo.family_reference_for_id}; evidence={photo.family_reference_note}. {form.cleaned_data.get("reason", "")}')
                     messages.success(request, 'Photo updated. Removed photos remain available to restore here; files were not deleted.')
                     return redirect('crm:product_edit', pk=product.pk)
         except (IntegrityError, OperationalError):

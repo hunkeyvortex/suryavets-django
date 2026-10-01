@@ -219,6 +219,8 @@ def inventory(request):
         qs = qs.exclude(catalog_approved_digest='')
     visibility = request.GET.get('visibility', '')
     media_filter = request.GET.get('media', '')
+    if media_filter == 'family':
+        qs = qs.filter(pk__in=ProductImage.objects.filter(family_reference_for__isnull=False, check_error='').exclude(family_reference_note='').values('family_reference_for_id'))
     if media_filter in ('placeholder', 'review', 'recovered'):
         from .services.image_coverage_snapshot import matching_products
         qs = qs.filter(pk__in=matching_products(media_filter))

@@ -114,12 +114,15 @@ class ImageEditorForm(forms.ModelForm):
 
     class Meta:
         model = ProductImage
-        fields = ['alt_text', 'order', 'is_primary', 'is_active']
+        fields = ['alt_text', 'order', 'is_primary', 'is_active', 'family_reference_for', 'family_reference_note']
         labels = {'is_active': 'Show photo in storefront', 'order': 'Display order (lowest first)'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['version'].initial = self.instance.product.updated_at.isoformat()
+        root_id = self.instance.product.variant_family_id or self.instance.product_id
+        self.fields['family_reference_for'].queryset = Product.objects.filter(pk=root_id, variant_family__isnull=True, is_active=True)
+        self.fields['family_reference_note'].help_text = 'Required evidence that this is suitable generic family artwork. Pack sizes will always be labeled as potentially different.'
 
     def clean(self):
         data = super().clean()
@@ -127,6 +130,10 @@ class ImageEditorForm(forms.ModelForm):
             raise forms.ValidationError('This product changed. Reload before saving.')
         if not data.get('is_active') and not data.get('reason'):
             self.add_error('reason', 'Explain why this photo should be removed.')
+        if data.get('family_reference_for') and (not data.get('family_reference_note', '').strip() or not data.get('reason', '').strip()):
+            self.add_error('reason', 'Record your family-image approval evidence and reason. Never approve a different formulation.')
+        if data.get('family_reference_for') and self.instance.check_error:
+            self.add_error('family_reference_for', 'Resolve the recorded image validation failure before approval.')
         return data
 
 

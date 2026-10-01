@@ -25,13 +25,9 @@ def eligibility(product, evidence=None):
     photos = pack_photos(selected) if selected else list(product.images.all())
     if not photos or photos[0].check_error:
         return 'Missing exact-pack image'
-    if photos[0].image:
-        try:
-            if not photos[0].image.storage.exists(photos[0].image.name):
-                return 'Missing exact-pack image'
-        except (OSError, ConnectionError):
-            return 'Missing exact-pack image'
-    elif not photos[0].source_url.startswith('https://'):
+    if photos[0].image and not photos[0].checked_at:
+        return 'Missing exact-pack image'
+    if not photos[0].image and not photos[0].source_url.startswith('https://'):
         return 'Missing exact-pack image'
     return ''
 

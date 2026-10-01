@@ -2,6 +2,7 @@
   <img {% if gallery_primary %}src="{{ gallery_primary.display_url }}"{% else %}hidden{% endif %} alt="{{ gallery_primary.alt_text|default:product.name }}" data-product-main-image decoding="async" fetchpriority="high">
   <p data-variant-image-missing {% if gallery_primary %}hidden{% endif %}><strong>SuryaVets</strong><span>Image coming soon</span><small>Photo for this exact pack</small></p>
 </div>
+{% if family_reference %}<figure data-family-reference {% if gallery_primary %}hidden{% endif %}><img src="{{ family_reference.thumbnail_url }}" alt="Generic family reference, not the selected pack" loading="lazy"><figcaption>Family reference image. Selected pack size and packaging may differ.</figcaption></figure>{% endif %}
 <div class="product-gallery__thumbnails" aria-label="Product photos">
 {% for entry in gallery_images %}{% with image=entry.photo %}{% if image.display_url %}<button type="button" {% if not entry.visible %}hidden{% endif %} data-image-id="{{ image.pk }}" data-product-image="{{ image.display_url }}" data-product-alt="{{ image.alt_text|default:product.name }}" aria-label="View product photo {{ forloop.counter }}" aria-pressed="{% if image.pk == gallery_primary.pk %}true{% else %}false{% endif %}"><img src="{{ image.thumbnail_url }}" alt="" loading="lazy" decoding="async"></button>{% endif %}{% endwith %}{% endfor %}
 </div>

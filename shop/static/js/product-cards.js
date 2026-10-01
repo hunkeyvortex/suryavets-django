@@ -16,6 +16,8 @@
     const select = input => {
       if (!input || input.disabled) return;
       const data = input.dataset;
+      const familyNote = card.querySelector('[data-card-family-note]');
+      if (familyNote) familyNote.hidden = data.familyReference !== '1';
       available = data.stock === '1';
       card.querySelector('[data-card-price]').textContent = data.price;
       const regular = card.querySelector('[data-card-regular]');

@@ -2,4 +2,5 @@
 <a href="{% url 'crm:product_edit' product.pk %}">← {{ product.name }}</a>
 <section class="panel catalog-compact"><h2>Product photo</h2><div class="catalog-gallery"><img src="{{ photo.thumbnail_url }}" alt="{{ photo.alt_text|default:product.name }}"></div><p class="muted">Set display order or make this the main photo. Uncheck visibility to remove an incorrect image. You can restore it later; no file is deleted.</p>
 <form method="post">{% csrf_token %}{{ form.version }}{{ form.non_field_errors }}{% for field in form.visible_fields %}{% include 'crm/catalog_field.html' %}{% endfor %}<button type="submit">Save photo</button></form></section>
+<section class="panel"><h2>Source and validation</h2><p>Imported source: {{ photo.source_url|default:'Staff upload / no imported URL' }}</p><p>Storage reference: {{ photo.image.name|default:'No local file' }}</p><p>Last check: {{ photo.checked_at|default:'Not recorded' }}</p><p>{{ photo.check_error|default:'No recorded validation failure. This does not certify pack identity.' }}</p></section>
 {% endblock %}

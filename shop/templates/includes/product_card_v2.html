@@ -9,6 +9,7 @@
     <span class="store-product-card__sale" data-card-badge {% if not card.selected.sale %}hidden{% endif %}>{% if card.selected.discount %}{{ card.selected.discount }}% OFF{% else %}Sale{% endif %}</span>
     {% if request.user.is_authenticated %}<form class="sv-card__wishlist" method="post" action="{% url 'shop:wishlist_save' product.pk %}">{% csrf_token %}<button type="submit" aria-label="Save {{ product.name }} to wishlist">{% include 'includes/card_heart.html' %}</button></form>{% else %}<a class="sv-card__wishlist" href="{% url 'shop:login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Sign in to save {{ product.name }} to wishlist">{% include 'includes/card_heart.html' %}</a>{% endif %}
   </div>
+  <small data-card-family-note {% if not card.selected.family_reference %}hidden{% endif %}>Family reference image · selected size may differ</small>
   <div class="store-product-card__body">
     <p class="store-product-card__eyebrow">{% if product.brand %}{{ product.brand.name }}{% else %}Surya Vets{% endif %}{% if product.product_type %} · {{ product.product_type.name }}{% endif %}</p>
     <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.family_name|default:product.name }}</a></h3>

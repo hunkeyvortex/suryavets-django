@@ -18,7 +18,15 @@ def product_card(product):
             choices.append(_choice(variant, photo, variant))
     choices.sort(key=lambda option: (option['variant'].display_order, option['variant'].name, option['variant'].pk))
     available = [option for option in choices if option['available']]
-    selected = min(available or choices, key=lambda option: option['price']) if choices else _choice(product, product.images.first(), None)
+    from .pack_images import product_photos, family_photo
+    selected = min(available or choices, key=lambda option: option['price']) if choices else _choice(product, next(iter(product_photos(product)), None), None)
+    reference = family_photo(product) if not selected['image'] else None
+    for choice in choices or [selected]:
+        choice['family_reference'] = False
+        if not choice['image']:
+            reference = reference or family_photo(product)
+            if reference:
+                choice.update(image=reference.thumbnail_url, alt='Family reference image; selected size may differ', family_reference=True)
     return {'choices': choices, 'selected': selected, 'multiple': len(choices) > 1}
 
 

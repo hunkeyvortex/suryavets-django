@@ -2,6 +2,8 @@
   const gallery = document.querySelector('[data-product-gallery]');
   if (gallery) {
     const mainImage = gallery.querySelector('[data-product-main-image]');
+    const reference = gallery.querySelector('[data-family-reference]');
+    reference?.querySelector('img')?.addEventListener('error', () => { reference.hidden = true; reference.dataset.failed = '1'; });
     const showMissing = () => {
       mainImage.hidden = true;
       gallery.querySelector('[data-variant-image-missing]').hidden = false;
@@ -53,7 +55,9 @@
       document.querySelector('[data-selected-pack]').textContent = selected.dataset.name;
       document.querySelector('[data-product-unit]').textContent = selected.dataset.unit;
       if (mainImage) {
+        const reference = gallery.querySelector('[data-family-reference]');
         mainImage.hidden = selected.dataset.imageMissing === '1';
+        if (reference) reference.hidden = !mainImage.hidden || reference.dataset.failed === '1';
         const notice = gallery.querySelector('[data-variant-image-missing]');
         if (notice) notice.hidden = !mainImage.hidden;
         if (selected.dataset.image) mainImage.src = selected.dataset.image;

@@ -393,6 +393,9 @@ class ProductImage(models.Model):
     thumbnail = models.ImageField(upload_to='products/thumbnails/', blank=True)
     checked_at = models.DateTimeField(null=True, blank=True)
     check_error = models.CharField(max_length=250, blank=True)
+    family_reference_for = models.ForeignKey('Product', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='approved_family_artwork', help_text='Staff-approved generic reference for this canonical family, never an exact-pack assignment.')
+    family_reference_note = models.CharField(max_length=500, blank=True)
     alt_text = models.CharField(max_length=200, blank=True)
     order = models.IntegerField(default=0)
     is_primary = models.BooleanField(default=False)
@@ -404,16 +407,29 @@ class ProductImage(models.Model):
     class Meta:
         ordering = ['order', '-is_primary']
 
+    def clean(self):
+        super().clean()
+        if self.family_reference_for_id:
+            root = self.family_reference_for
+            if root.variant_family_id or not root.is_active or (self.product.variant_family_id or self.product_id) != root.pk:
+                raise ValidationError({'family_reference_for': 'Choose this product’s active canonical family only.'})
+            if not self.family_reference_note.strip() or self.check_error:
+                raise ValidationError({'family_reference_note': 'Approval evidence and a valid image are required.'})
+
     def __str__(self):
         return f"{self.product.name} - Image {self.order}"
 
     @property
     def display_url(self):
         """Use locally stored media when present, otherwise the imported Shopify URL."""
+        if not self.is_active or self.check_error:
+            return ''
         return self.image.url if self.image else self.source_url
 
     @property
     def thumbnail_url(self):
+        if not self.display_url:
+            return ''
         return self.thumbnail.url if self.thumbnail else self.display_url
 
 
@@ -501,7 +517,8 @@ class CartItem(models.Model):
         if self.product_variant:
             from .services.pack_images import pack_photos
             return next(iter(pack_photos(self.product_variant)), None)
-        return next(iter(self.product.images.all()), None) if self.product else None
+        from .services.pack_images import product_photos
+        return next(iter(product_photos(self.product)), None) if self.product else None
 
     @property
     def total_price(self):

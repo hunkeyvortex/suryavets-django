@@ -11,6 +11,7 @@
 <label>Purchase safety<select name="safety"><option value="">All items</option><option value="zero" {% if safety_filter == 'zero' %}selected{% endif %}>Zero / negative price</option><option value="blocked" {% if safety_filter == 'blocked' %}selected{% endif %}>Nonpurchasable</option></select></label>
 <label>Catalog review<select name="review"><option value="">All review states</option><option value="pending" {% if review_filter == 'pending' %}selected{% endif %}>Needs review / held</option><option value="recorded" {% if review_filter == 'recorded' %}selected{% endif %}>Has approval record</option></select></label>
 <a href="?media=variant">Missing variant photos</a>
+<a href="?media=family">Approved family artwork</a>
 <a href="?media=placeholder">Placeholder packs (audit)</a>
 <a href="?media=review">Image review required (audit)</a>
 <a href="?media=recovered">Recovered images (audit)</a>

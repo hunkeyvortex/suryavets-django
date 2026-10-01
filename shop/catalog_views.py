@@ -228,14 +228,16 @@ def product_detail(request, product_slug):
     chosen = next((o for o in options if o['variant'] == selected_variant), None)
     if selected_variant and not buying_allowed:
         selection_error = 'The requested pack cannot currently be purchased. Choose another pack explicitly if suitable.'
-    primary = next(iter(chosen['photos']), None) if chosen else (next(iter(product.images.all()), None) if not variants and not selection_error else None)
-    visible_photos = chosen['photos'] if chosen else (list(product.images.all()) if not variants and not selection_error else [])
+    from .services.pack_images import product_photos, family_photo
+    primary = next(iter(chosen['photos']), None) if chosen else (next(iter(product_photos(product)), None) if not variants and not selection_error else None)
+    visible_photos = chosen['photos'] if chosen else (product_photos(product) if not variants and not selection_error else [])
     gallery_images = [{'photo': photo, 'visible': photo in visible_photos} for photo in family_photos]
     return render(request, 'catalog/product_detail.html', {
         'product': product,
         'selected_variant': selected_variant,
         'selection_error': selection_error,
         'gallery_primary': primary,
+        'family_reference': family_photo(product),
         'gallery_images': gallery_images,
         'buying_in_stock': buying_allowed,
         'variant_options': options,

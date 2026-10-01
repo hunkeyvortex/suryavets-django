@@ -83,6 +83,7 @@ class PetCategoryAdmin(admin.ModelAdmin):
 
 
 class ProductImageInline(admin.TabularInline):
+    fk_name = 'product'
     model = ProductImage
     extra = 1
     fields = ['image', 'source_url', 'alt_text', 'order', 'is_primary']
