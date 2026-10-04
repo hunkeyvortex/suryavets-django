@@ -1,3 +1,5 @@
-# Optional external-storage adapter. Install only when S3-compatible media is selected.
+# Optional external media adapters; static files remain on WhiteNoise.
 -r requirements.txt
 django-storages[s3]>=1.14,<2
+django-cloudinary-storage>=0.3,<1
+cloudinary>=1.44,<2

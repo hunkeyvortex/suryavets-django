@@ -214,6 +214,20 @@ X_FRAME_OPTIONS = 'DENY'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 MEDIA_STORAGE_BACKEND = os.environ.get('MEDIA_STORAGE_BACKEND', 'django.core.files.storage.FileSystemStorage')
 STORAGES['default']['BACKEND'] = MEDIA_STORAGE_BACKEND
+if MEDIA_STORAGE_BACKEND == 'cloudinary_storage.storage.MediaCloudinaryStorage':
+    # Keep these after staticfiles so Django's collectstatic command is unchanged.
+    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip(),
+        'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '').strip(),
+        'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', '').strip(),
+        'SECURE': True,
+    }
+    if not all(CLOUDINARY_STORAGE[key] for key in ('CLOUD_NAME', 'API_KEY', 'API_SECRET')):
+        raise ImproperlyConfigured(
+            'Cloudinary media requires CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY '
+            'and CLOUDINARY_API_SECRET.'
+        )
 if MEDIA_STORAGE_BACKEND == 'storages.backends.s3.S3Storage':
     STORAGES['default']['OPTIONS'] = {
         'bucket_name': os.environ.get('AWS_STORAGE_BUCKET_NAME', ''),
