@@ -27,7 +27,7 @@ class HomeDiscoveryTests(TestCase):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['top_products'], [self.product])
-        self.assertContains(response, 'Best sellers')
+        self.assertContains(response, 'Top Selling Products')
         self.assertContains(response, 'Mealtime favourites')
         self.assertContains(response, 'Shop by need')
         self.assertContains(response, 'Shop by brand')
@@ -85,7 +85,7 @@ class HomeDiscoveryTests(TestCase):
             ProductVariant.objects.create(product=p, name='Pack', stock_quantity=10)
         with CaptureQueriesContext(connection) as queries:
             response = self.client.get('/')
-        self.assertEqual(len(response.context['top_products']), 12)
+        self.assertEqual(len(response.context['top_products']), 8)
         self.assertEqual(len(response.context['home_food_tabs'][0]['products']), 4)
         self.assertLess(len(queries), 65)
 

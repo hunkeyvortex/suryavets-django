@@ -1,5 +1,6 @@
 """Bounded, database-driven homepage merchandising; no invented sales ranking."""
 from django.db.models import Count, Exists, OuterRef, Q
+from django.conf import settings
 from shop.models import Banner, Brand, Product
 from shop.catalog_views import _product_queryset
 from .navigation import navigation_tree
@@ -38,10 +39,11 @@ def homepage_context():
     for category in pets:
         category.reference_image = 'images/' + PET_ART[category.slug] if category.slug in PET_ART else ''
     products = _product_queryset().order_by('-is_featured', '-created_at', 'pk')
-    best = curated(products.filter(is_bestseller=True))
-    title = 'Best sellers' if best else 'Featured picks'
+    limit = max(1, min(8, int(getattr(settings, 'HOMEPAGE_MERCHANDISING_LIMIT', 8))))
+    best = curated(products.filter(is_bestseller=True), limit, require_image=False)
+    title = 'Top Selling Products' if best else 'Featured picks'
     if not best:
-        best = curated(products.filter(is_featured=True))
+        best = curated(products.filter(is_featured=True), limit, require_image=False)
     food_tabs = []
     for species in ('dog', 'cat'):
         category = by_slug.get(f'food-for-{species}s')

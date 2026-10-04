@@ -55,11 +55,15 @@ class MerchandisingTests(TestCase):
         self.evidence.return_value = {'generated_at': 'test', 'by_product': {str(child.pk): [{'Priority': 'P0'}]}}
         self.assertEqual(self.listed(), [])
 
-    def test_missing_image_and_missing_evidence_fail_closed(self):
+    def test_missing_image_does_not_hide_staff_selected_bestsellers(self):
         self.product.images.all().delete()
-        self.assertEqual(self.listed(), [])
+        self.assertEqual(self.listed(), [self.product])
         self.evidence.return_value = {'generated_at': '', 'by_product': {}}
-        self.make('Another')
+        self.assertEqual(self.listed(), [])
+        CatalogReviewEvent.objects.create(product=self.product, decision='approved', evidence='Staff checked pack identity')
+        self.assertEqual(self.listed(), [self.product])
+        self.product.merchandising_active = False
+        self.product.save()
         self.assertEqual(self.listed(), [])
 
     def test_no_mutation_on_render(self):
@@ -82,9 +86,9 @@ class MerchandisingTests(TestCase):
         self.assertTrue(self.product.is_featured)
         self.assertTrue(self.product.merchandising_active)
 
-    def test_broken_local_image_excluded(self):
+    def test_broken_local_image_does_not_hide_staff_selected_bestseller(self):
         self.product.images.update(image='missing-pack-file.webp', source_url='')
-        self.assertEqual(self.listed(), [])
+        self.assertEqual(self.listed(), [self.product])
 
     def test_crm_permissions_and_safe_bulk_fields(self):
         url = '/crm/merchandising/'
