@@ -4,17 +4,21 @@ from django.utils import timezone
 from shop.models import Order, OrderStatusHistory, OrderNotification
 
 STAGES = ['pending', 'confirmed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered']
-NOTIFIABLE = {'pending', 'confirmed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'}
 
 
+@transaction.atomic
 def record_event(order, status, *, kind='order', actor=None, internal_note='', customer_note=''):
+    # Serialize confirmation creation for one order; status history is still complete.
+    Order.objects.select_for_update().only('pk').get(pk=order.pk)
     event = OrderStatusHistory.objects.create(order=order, kind=kind, status=status,
         timestamp=timezone.now(), changed_by=actor, internal_note=internal_note, customer_note=customer_note)
-    if (kind == 'order' and status in NOTIFIABLE) or (kind == 'payment' and status == 'refunded'):
-        OrderNotification.objects.get_or_create(event=event, channel='email', audience='customer', defaults={'recipient': order.email})
-        if kind == 'order' and status == 'pending':
-            from django.conf import settings
-            OrderNotification.objects.get_or_create(event=event, channel='email', audience='admin', defaults={'recipient': settings.ORDER_NOTIFICATION_EMAIL})
+    if kind == 'order' and status == 'pending':
+        from django.conf import settings
+        for audience, recipient in [('customer', order.email), ('admin', settings.ORDER_NOTIFICATION_EMAIL)]:
+            previous = OrderNotification.objects.filter(event__order=order, event__kind='order',
+                event__status='pending', channel='email', audience=audience)
+            if not previous.exists():
+                OrderNotification.objects.create(event=event, channel='email', audience=audience, recipient=recipient)
         from .notifications import deliver_event_safely
         transaction.on_commit(lambda: deliver_event_safely(event.pk))
     return event

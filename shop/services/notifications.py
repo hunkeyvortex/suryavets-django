@@ -42,6 +42,7 @@ def deliver_pending(event_id=None, notification_id=None, limit=100):
         return
     from django.db.models import Q
     rows = OrderNotification.objects.filter(state='pending', channel='email', attempts__lt=settings.ORDER_EMAIL_MAX_ATTEMPTS).filter(Q(next_attempt_at__isnull=True) | Q(next_attempt_at__lte=timezone.now()))
+    rows = rows.filter(event__kind='order', event__status='pending')
     if event_id is not None:
         rows = rows.filter(event_id=event_id)
     if notification_id is not None:
@@ -49,6 +50,10 @@ def deliver_pending(event_id=None, notification_id=None, limit=100):
     for pk in list(rows.order_by('pk').values_list('pk', flat=True)[:max(1, min(500, limit))]):
         item = OrderNotification.objects.select_related('event__order').get(pk=pk)
         event, order = item.event, item.event.order
+        # Confirmation-only policy also suppresses status emails queued before
+        # this policy was introduced. Do not erase their audit records.
+        if event.kind != 'order' or event.status != 'pending':
+            continue
         if not event.customer_visible:
             continue
         if order.payment_method == 'online' and order.payment_status not in ('paid', 'refund_pending', 'partially_refunded', 'refunded'):

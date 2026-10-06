@@ -101,7 +101,7 @@ class AccountTrackingTests(TestCase):
         transition_order(self.manager, self.order.pk, 'pending', 'confirmed', 'Reviewed order')
         transition_order(self.manager, self.order.pk, 'pending', 'confirmed', 'Duplicate submit')
         self.assertEqual(self.order.events.count(), 2)
-        self.assertEqual(OrderNotification.objects.filter(event__order=self.order, audience='customer').count(), 2)
+        self.assertEqual(OrderNotification.objects.filter(event__order=self.order, audience='customer').count(), 1)
         self.assertEqual(OrderNotification.objects.filter(event__order=self.order, audience='admin').count(), 1)
         with self.assertRaises(CRMError):
             transition_order(self.manager, self.order.pk, 'pending', 'cancelled', 'Stale request')
@@ -251,5 +251,5 @@ class AccountTrackingTests(TestCase):
         transition_order(self.manager, self.order.pk, 'pending', 'confirmed', 'STAFF SECRET')
         call_command('send_order_notifications', stdout=io.StringIO())
         call_command('send_order_notifications', stdout=io.StringIO())
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
         self.assertNotIn('STAFF SECRET', ''.join(m.body for m in mail.outbox))

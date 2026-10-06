@@ -5,7 +5,8 @@ SURYA VETS — Pet's Lifeline
 Customer: {{ order.shipping_name }}
 Email: {{ order.email }}
 Phone: {{ order.phone }}{% else %}Hello {{ order.shipping_name }},
-{% if new_order %}Thank you for shopping with SuryaVets. Your order has been placed successfully.{% endif %}{% endif %}
+{% if new_order %}Thank you for shopping with SuryaVets. We have received your order successfully.
+Your order will be delivered to the address below. Delivery timing depends on your location and PIN code. You can check the latest order status in My Account.{% endif %}{% endif %}
 {{ customer_note }}
 
 Order: {{ order.order_number }}

@@ -59,7 +59,7 @@ Active staff plus `access_crm` are required. Operations can process orders, revi
 
 ## Notifications: deliberately disabled
 
-`OrderNotification` has one row per event/channel. Only actual placed/confirmed/shipped/out-for-delivery/delivered/cancelled transitions and completed refund events enqueue emails. Internal notes and ordinary page saves do not send anything. Future WhatsApp/SMS transports can consume the same events.
+Customer email policy: one order-confirmation email per order, plus one separate new-order alert to the configured admin. COD queues confirmation when placed; online orders queue it only after verified payment. Creation is serialized per order to avoid duplicate confirmations. Later confirmation/fulfillment/cancellation/refund events remain visible in My Account but do not queue customer emails. Legacy queued status emails are retained for audit and suppressed at delivery. Internal notes and ordinary page saves never send email. No address-specific delivery date is promised without configured delivery-time rules.
 
 `ORDER_EMAIL_ENABLED=False` is the default. No email was sent to real customers. Configure a verified backend/sender and review development outbox entries before enabling production delivery. The worker is explicit:
 

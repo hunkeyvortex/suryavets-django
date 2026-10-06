@@ -6,7 +6,7 @@
 <tr><td style="padding:26px;background:#00884a;color:white;font-size:28px;font-weight:bold">Surya<span style="color:#ffd371">Vets</span><br><span style="font-size:12px;font-weight:normal">Pet's Lifeline</span></td></tr>
 <tr><td style="padding:24px;overflow-wrap:anywhere;word-break:break-word">
 <h1 style="font-size:24px;margin:0 0 20px">{{ title }}</h1>
-{% if admin_email %}<p>A new order has been received.</p><p><strong>{{ order.shipping_name }}</strong><br>{{ order.email }}<br>{{ order.phone }}</p>{% else %}<p>Hello {{ order.shipping_name }},</p>{% if new_order %}<p>Thank you for shopping with SuryaVets. Your order has been placed successfully.</p>{% endif %}{% endif %}
+{% if admin_email %}<p>A new order has been received.</p><p><strong>{{ order.shipping_name }}</strong><br>{{ order.email }}<br>{{ order.phone }}</p>{% else %}<p>Hello {{ order.shipping_name }},</p>{% if new_order %}<p>Thank you for shopping with SuryaVets. We have received your order successfully.</p><p>Your order will be delivered to the address below. Delivery timing depends on your location and PIN code. You can check the latest order status in My Account.</p>{% endif %}{% endif %}
 {% if customer_note %}<p>{{ customer_note|linebreaksbr }}</p>{% endif %}
 <p style="padding:16px;background:#eff7f1;border-radius:10px"><strong>#{{ order.order_number }}</strong><br>{{ order.created_at|date:'d M Y, H:i e' }}<br>{{ order.get_status_display }}</p>
 <h2 style="font-size:18px">Your items</h2>

@@ -47,6 +47,28 @@ class BrevoOutboxTests(TestCase):
     def payloads(self):
         return [json.loads(call.args[0].data) for call in self.transport.return_value.open.call_args_list]
 
+    def test_only_one_confirmation_per_order_and_no_status_emails(self):
+        record_event(self.order, 'pending')
+        for status in ['confirmed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled']:
+            record_event(self.order, status)
+        record_event(self.order, 'refunded', kind='payment')
+        self.assertEqual(OrderNotification.objects.count(), 2)
+        deliver_pending()
+        self.assertEqual(len(self.payloads()), 2)
+        customer = next(p for p in self.payloads() if p['to'][0]['email'] == self.order.email)
+        for content in [customer['htmlContent'], customer['textContent']]:
+            self.assertIn('Delivery timing depends on your location and PIN code', content)
+            self.assertNotIn('3-7', content)
+
+    def test_legacy_status_email_is_not_delivered_or_deleted(self):
+        event = record_event(self.order, 'shipped')
+        legacy = OrderNotification.objects.create(event=event, audience='customer', recipient=self.order.email)
+        deliver_pending(notification_id=legacy.pk)
+        legacy.refresh_from_db()
+        self.assertEqual(legacy.state, 'pending')
+        self.assertEqual(legacy.attempts, 0)
+        self.assertEqual(self.payloads(), [])
+
     def test_two_recipients_exact_snapshot_and_private_absolute_links(self):
         self.assertEqual(OrderNotification.objects.count(), 2)
         deliver_pending()
