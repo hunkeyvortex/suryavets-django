@@ -43,9 +43,46 @@ class BrevoOutboxTests(TestCase):
         OrderItem.objects.create(order=self.order, product_name='Purchased food', variant_name='5 KG',
             sku='EXACT-5KG', quantity=1, unit_price='2950')
         self.event = record_event(self.order, 'pending', internal_note='PRIVATE STAFF NOTE')
+        record_event(self.order, 'confirmed', internal_note='PRIVATE STAFF NOTE')
 
     def payloads(self):
         return [json.loads(call.args[0].data) for call in self.transport.return_value.open.call_args_list]
+
+    def test_placement_then_confirmation_have_separate_single_recipients(self):
+        order = Order.objects.create(user=self.user, email='buyer@example.com',
+            payment_method='cash_on_delivery', total=10, subtotal=10, coupon_code='TEST10')
+        placed = record_event(order, 'pending')
+        self.assertEqual(order.events.filter(notifications__audience='admin').count(), 1)
+        self.assertFalse(order.events.filter(notifications__audience='customer').exists())
+        deliver_pending(event_id=placed.pk)
+        self.assertEqual([p['to'][0]['email'] for p in self.payloads()], ['admin@example.com'])
+        for part in ['htmlContent', 'textContent']:
+            self.assertIn('TEST10', self.payloads()[0][part])
+        order.status = 'confirmed'
+        order.save(update_fields=['status'])
+        confirmed = record_event(order, 'confirmed')
+        deliver_pending(event_id=confirmed.pk)
+        self.assertEqual([p['to'][0]['email'] for p in self.payloads()], ['admin@example.com', 'buyer@example.com'])
+        record_event(order, 'confirmed')
+        order.save()
+        for status in ['processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled']:
+            record_event(order, status)
+        record_event(order, 'refunded', kind='payment')
+        record_event(order, 'received', kind='return')
+        self.assertEqual(OrderNotification.objects.filter(event__order=order).count(), 2)
+        deliver_pending(event_id=confirmed.pk)
+        self.assertEqual(len(self.payloads()), 2)
+
+    def test_legacy_placement_rows_are_not_sent_or_reenrolled(self):
+        OrderNotification.objects.update(deduplication_key=None)
+        record_event(self.order, 'pending')
+        record_event(self.order, 'confirmed')
+        deliver_pending()
+        self.assertEqual(OrderNotification.objects.count(), 2)
+        self.assertEqual(self.payloads(), [])
+        output = io.StringIO()
+        call_command('send_order_notifications', dry_run=True, stdout=output)
+        self.assertIn('Eligible pending email notifications: 0', output.getvalue())
 
     def test_only_one_confirmation_per_order_and_no_status_emails(self):
         record_event(self.order, 'pending')
@@ -75,8 +112,8 @@ class BrevoOutboxTests(TestCase):
         messages = {p['to'][0]['email']: p for p in self.payloads()}
         self.assertEqual(set(messages), {'buyer@example.com', 'admin@example.com'})
         customer, admin = messages['buyer@example.com'], messages['admin@example.com']
-        self.assertEqual(customer['subject'], f'SuryaVets Order Confirmation – #{self.order.order_number}')
-        self.assertIn('₹2,950.00', admin['subject'])
+        self.assertEqual(customer['subject'], f'Your SuryaVets Order {self.order.order_number} is Confirmed')
+        self.assertEqual(admin['subject'], f'New SuryaVets Order — {self.order.order_number}')
         for message in messages.values():
             for content in [message['textContent'], message['htmlContent']]:
                 for value in ['5 KG', 'EXACT-5KG', '2950', '1 Test Street', self.order.order_number, 'Pending']:
@@ -118,7 +155,7 @@ class BrevoOutboxTests(TestCase):
         self.assertNotIn('RAW SECRET', str(logs.output)); self.assertNotIn(CONFIG['BREVO_API_KEY'], str(logs.output))
         row = OrderNotification.objects.get(audience='customer')
         self.assertEqual(row.state, 'failed'); self.assertTrue(row.retryable)
-        first_key = self.payloads()[0]['headers']['idempotencyKey']
+        first_key = next(p['headers']['idempotencyKey'] for p in self.payloads() if p['to'][0]['email'] == self.order.email)
         self.transport.return_value.open.side_effect = None
         call_command('send_order_notifications', retry_failed=row.pk, stdout=io.StringIO())
         row.refresh_from_db(); self.assertEqual(row.state, 'sent'); self.assertEqual(row.attempts, 2)

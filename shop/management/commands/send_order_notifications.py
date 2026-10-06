@@ -1,7 +1,7 @@
 """Explicit outbox worker. Disabled by default; no page-save email side effects."""
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from shop.services.notifications import deliver_pending
+from shop.services.notifications import deliver_pending, eligible_notifications
 from shop.models import OrderNotification
 
 
@@ -17,13 +17,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options['dry_run']:
-            self.stdout.write(f"Pending email notifications: {OrderNotification.objects.filter(state='pending', channel='email').count()}. No sends or state changes.")
+            self.stdout.write(f"Eligible pending email notifications: {eligible_notifications().filter(state='pending').count()}. Legacy rows excluded. No sends or state changes.")
             return
         if not getattr(settings, 'ORDER_EMAIL_ENABLED', False):
             raise CommandError('Order email delivery is disabled. Configure a verified email backend before enabling it.')
         notification_id = options['notification_id'] or options['retry_failed']
         if options['retry_failed']:
-            claimed = OrderNotification.objects.filter(pk=notification_id, channel='email', state='failed',
+            claimed = eligible_notifications().filter(pk=notification_id, state='failed',
                 retryable=True, attempts__lt=settings.ORDER_EMAIL_MAX_ATTEMPTS).update(state='pending', next_attempt_at=None)
             if not claimed:
                 raise CommandError('Not retryable: unknown outcomes, previews, accepted messages and exhausted attempts cannot be replayed.')

@@ -777,6 +777,8 @@ class OrderStatusHistory(models.Model):
 
 
 class OrderNotification(models.Model):
+    # NULL for legacy rows: deployment never enrolls the historical outbox.
+    deduplication_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
     event = models.ForeignKey(OrderStatusHistory, on_delete=models.PROTECT, related_name='notifications')
     channel = models.CharField(max_length=20, default='email')
     audience = models.CharField(max_length=10, default='customer', choices=[('customer', 'Customer'), ('admin', 'Admin')])

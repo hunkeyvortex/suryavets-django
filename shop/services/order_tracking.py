@@ -12,13 +12,16 @@ def record_event(order, status, *, kind='order', actor=None, internal_note='', c
     Order.objects.select_for_update().only('pk').get(pk=order.pk)
     event = OrderStatusHistory.objects.create(order=order, kind=kind, status=status,
         timestamp=timezone.now(), changed_by=actor, internal_note=internal_note, customer_note=customer_note)
-    if kind == 'order' and status == 'pending':
+    audience = ('admin' if status == 'pending' else 'customer' if status == 'confirmed' else None) if kind == 'order' else None
+    if audience:
         from django.conf import settings
-        for audience, recipient in [('customer', order.email), ('admin', settings.ORDER_NOTIFICATION_EMAIL)]:
-            previous = OrderNotification.objects.filter(event__order=order, event__kind='order',
-                event__status='pending', channel='email', audience=audience)
-            if not previous.exists():
-                OrderNotification.objects.create(event=event, channel='email', audience=audience, recipient=recipient)
+        # Preserve legacy audit rows without re-enrolling or replaying them.
+        legacy = OrderNotification.objects.filter(event__order=order, channel='email',
+            audience=audience, deduplication_key__isnull=True).exists()
+        if not legacy:
+            OrderNotification.objects.get_or_create(deduplication_key=f'v2:{order.pk}:{audience}', defaults={
+                'event': event, 'channel': 'email', 'audience': audience,
+                'recipient': settings.ORDER_NOTIFICATION_EMAIL if audience == 'admin' else order.email})
         from .notifications import deliver_event_safely
         transaction.on_commit(lambda: deliver_event_safely(event.pk))
     return event

@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
-from django.db.models import F
+from django.db.models import F, Q
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -15,6 +15,12 @@ from shop.models import OrderNotification
 from shop.mail_backends import DeliveryError
 
 logger = logging.getLogger(__name__)
+
+
+def eligible_notifications():
+    """Only the new policy's explicit outbox rows; never replay legacy mail."""
+    return OrderNotification.objects.filter(channel='email', deduplication_key__startswith='v2:', event__kind='order').filter(
+        Q(audience='admin', event__status='pending') | Q(audience='customer', event__status='confirmed'))
 
 
 def absolute_link(path):
@@ -40,9 +46,7 @@ def deliver_event_safely(event_id):
 def deliver_pending(event_id=None, notification_id=None, limit=100):
     if not settings.ORDER_EMAIL_ENABLED:
         return
-    from django.db.models import Q
-    rows = OrderNotification.objects.filter(state='pending', channel='email', attempts__lt=settings.ORDER_EMAIL_MAX_ATTEMPTS).filter(Q(next_attempt_at__isnull=True) | Q(next_attempt_at__lte=timezone.now()))
-    rows = rows.filter(event__kind='order', event__status='pending')
+    rows = eligible_notifications().filter(state='pending', attempts__lt=settings.ORDER_EMAIL_MAX_ATTEMPTS).filter(Q(next_attempt_at__isnull=True) | Q(next_attempt_at__lte=timezone.now()))
     if event_id is not None:
         rows = rows.filter(event_id=event_id)
     if notification_id is not None:
@@ -50,10 +54,6 @@ def deliver_pending(event_id=None, notification_id=None, limit=100):
     for pk in list(rows.order_by('pk').values_list('pk', flat=True)[:max(1, min(500, limit))]):
         item = OrderNotification.objects.select_related('event__order').get(pk=pk)
         event, order = item.event, item.event.order
-        # Confirmation-only policy also suppresses status emails queued before
-        # this policy was introduced. Do not erase their audit records.
-        if event.kind != 'order' or event.status != 'pending':
-            continue
         if not event.customer_visible:
             continue
         if order.payment_method == 'online' and order.payment_status not in ('paid', 'refund_pending', 'partially_refunded', 'refunded'):
@@ -67,14 +67,15 @@ def deliver_pending(event_id=None, notification_id=None, limit=100):
             continue
         try:
             admin = item.audience == 'admin'
-            new = event.kind == 'order' and event.status == 'pending'
-            title = 'New order received' if admin else 'Order confirmation' if new else event.label
+            new = True
+            title = 'New order received' if admin else 'Order Confirmed'
             path = reverse('crm:order_detail', args=[order.pk]) if admin else reverse('shop:order_number', args=[order.order_number]) if order.user_id else ''
             context = {'order': order, 'items': order.items.all(), 'title': title, 'admin_email': admin,
                 'new_order': new, 'customer_note': event.customer_note, 'order_url': absolute_link(path) if path else '',
                 'tracking_url': absolute_link(path) + '#tracking' if path and not admin and absolute_link(path) else '',
+                'support_email': parseaddr(settings.DEFAULT_FROM_EMAIL)[1],
                 'link_label': 'View order in CRM' if admin else 'View your order'}
-            subject = f'New SuryaVets Order – #{order.order_number} – ₹{order.total:,.2f}' if admin else f'SuryaVets {"Order Confirmation" if new else title} – #{order.order_number}'
+            subject = f'New SuryaVets Order — {order.order_number}' if admin else f'Your SuryaVets Order {order.order_number} is Confirmed'
             sender_name, sender_email = parseaddr(settings.DEFAULT_FROM_EMAIL)
             message = EmailMultiAlternatives(subject=subject,
                 body=render_to_string('emails/order.txt', context), from_email=formataddr((sender_name or settings.DEFAULT_FROM_NAME, sender_email)),

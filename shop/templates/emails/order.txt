@@ -5,7 +5,7 @@ SURYA VETS — Pet's Lifeline
 Customer: {{ order.shipping_name }}
 Email: {{ order.email }}
 Phone: {{ order.phone }}{% else %}Hello {{ order.shipping_name }},
-{% if new_order %}Thank you for shopping with SuryaVets. We have received your order successfully.
+{% if new_order %}Thank you for shopping with SuryaVets. Your order is confirmed.
 Your order will be delivered to the address below. Delivery timing depends on your location and PIN code. You can check the latest order status in My Account.{% endif %}{% endif %}
 {{ customer_note }}
 
@@ -19,6 +19,7 @@ Unit price: INR {{ item.unit_price }} | Line total: INR {{ item.line_total }}
 {% endfor %}
 Subtotal: INR {{ order.subtotal }}
 Discount: INR {{ order.discount_amount }}
+{% if order.coupon_code %}Coupon: {{ order.coupon_code }}{% endif %}
 Delivery: INR {{ order.shipping_cost }}
 Total: INR {{ order.total }}
 
@@ -37,3 +38,4 @@ Payment status: {{ order.get_payment_status_display }}
 
 Thank you,
 Team SuryaVets
+{% if not admin_email %}Need help? Contact {{ support_email }} and quote your order number.{% endif %}

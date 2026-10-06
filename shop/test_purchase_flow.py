@@ -55,7 +55,7 @@ class PurchaseFlowTests(TestCase):
             return {'id':'pay_fixture','order_id':'order_fixture','status':'captured','captured':True,'amount':295000,'currency':'INR'}
         return {'id':'order_fixture','status':'paid','amount':295000,'amount_paid':295000,'currency':'INR'}
 
-    def test_complete_verified_flow_exact_stock_two_emails_and_shared_order(self):
+    def test_verified_payment_sends_admin_only_until_staff_confirmation(self):
         self.prepare()
         self.assertEqual(self.order.status, 'awaiting_payment')
         self.assertEqual(OrderNotification.objects.count(), 0)
@@ -69,8 +69,8 @@ class PurchaseFlowTests(TestCase):
         self.pack.refresh_from_db(); self.small.refresh_from_db()
         self.assertEqual(self.pack.stock_quantity, 2); self.assertEqual(self.small.stock_quantity, 10)
         self.assertEqual(InventoryMovement.objects.filter(variant=self.pack).count(), 1)
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual({m.to[0] for m in mail.outbox}, {'buyer@example.com','admin@example.com'})
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual({m.to[0] for m in mail.outbox}, {'admin@example.com'})
         for message in mail.outbox:
             self.assertTrue(message.alternatives)
             self.assertIn('5 KG', message.body); self.assertIn('2950', message.body)
@@ -83,7 +83,7 @@ class PurchaseFlowTests(TestCase):
         with patch('shop.services.payments.api', side_effect=self.gateway), self.captureOnCommitCallbacks(execute=True):
             self.callback(); self.checkout(); self.client.get(response.url)
         deliver_pending()
-        self.assertEqual(Order.objects.count(), 1); self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(Order.objects.count(), 1); self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(self.order.events.filter(kind='order', status='pending').count(), 1)
         ProductVariant.objects.filter(pk=self.pack.pk).update(selling_price='4000')
         self.assertEqual(OrderItem.objects.get().unit_price, 2950)
@@ -145,14 +145,14 @@ class PurchaseFlowTests(TestCase):
             for _ in range(2):
                 self.assertEqual(self.client.post(url, body, content_type='application/json', HTTP_X_RAZORPAY_SIGNATURE=signature).status_code, 200)
             self.callback()
-        self.assertEqual(len(mail.outbox), 2); self.assertEqual(Order.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1); self.assertEqual(Order.objects.count(), 1)
 
     def test_cod_email_failure_keeps_order_and_does_not_blindly_resend(self):
         with patch('shop.services.notifications.EmailMultiAlternatives.send', side_effect=RuntimeError('SMTP SECRET')), self.captureOnCommitCallbacks(execute=True):
             response = self.checkout('cash_on_delivery')
         order = Order.objects.get()
         self.assertEqual(order.payment_status, 'pending')
-        self.assertEqual(OrderNotification.objects.filter(state='failed').count(), 2)
+        self.assertEqual(OrderNotification.objects.filter(state='failed').count(), 1)
         self.assertNotContains(self.client.get(response.url), 'SMTP SECRET')
         deliver_pending(); self.assertEqual(len(mail.outbox), 0)
         self.assertNotIn('SMTP SECRET', ''.join(OrderNotification.objects.values_list('error',flat=True)))

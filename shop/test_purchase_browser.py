@@ -16,7 +16,7 @@ from shop.test_purchase_flow import TEST_CONFIG
 @skipUnless(os.environ.get('SURYA_BROWSER_NODE'), 'Enable browser runtime for simulated payment UI test.')
 @override_settings(**TEST_CONFIG)
 class PurchaseBrowserTests(StaticLiveServerTestCase):
-    def test_signed_payment_ui_to_crm_account_and_two_emails(self):
+    def test_signed_payment_ui_to_crm_account_and_admin_email(self):
         get_user_model().objects.create_user('flow-buyer', email='flow@example.com', password='Flow-fixture-921!')
         get_user_model().objects.create_superuser('flow-staff', email='staff@example.com', password='Flow-fixture-921!')
         product = Product.objects.create(name='Complete flow fixture', slug='complete-flow-fixture', category=Category.objects.create(name='Dog'), base_price='3500')
@@ -37,8 +37,8 @@ class PurchaseBrowserTests(StaticLiveServerTestCase):
         self.assertEqual(order.items.get().product_variant_id, large.pk)
         large.refresh_from_db(); small.refresh_from_db()
         self.assertEqual(large.stock_quantity, 2); self.assertEqual(small.stock_quantity, 10)
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(OrderNotification.objects.filter(state='sent').count(), 2)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(OrderNotification.objects.filter(state='sent').count(), 1)
         preview = subprocess.run([os.environ['SURYA_BROWSER_NODE'], str(Path(__file__).with_name('email_browser_test.cjs'))],
             input=json.dumps([message.alternatives[0].content for message in mail.outbox]), capture_output=True, text=True, timeout=45)
         self.assertEqual(preview.returncode, 0, preview.stdout + preview.stderr)
