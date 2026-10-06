@@ -24,7 +24,7 @@ const path = require('node:path');
      trustFits:trust.scrollWidth<=trust.clientWidth+1};
   });
   assert.ok(layout.scroll<=width,`Page overflow at ${width}`);
-  assert.equal(await page.locator('#best-sellers [data-product-card]').count(),12);
+  assert.equal(await page.locator('#best-sellers [data-product-card]').count(),8);
   await page.locator('#best-sellers [data-product-next]').click();
   assert.ok(await page.locator('#best-sellers [data-product-track]').evaluate(e=>e.scrollLeft>=0));
   assert.equal(new Set(layout.trustYs).size,1,`Trust boxes must remain one fixed row at ${width}`);

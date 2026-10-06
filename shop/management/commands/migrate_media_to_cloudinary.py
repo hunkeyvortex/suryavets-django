@@ -19,7 +19,9 @@ def media_references():
     for model in apps.get_models():
         for field in model._meta.concrete_fields:
             if isinstance(field, FileField):
-                for pk, name in model._default_manager.exclude(**{field.name: ''}).exclude(
+                # A default manager may hide archived/inactive rows. They still
+                # own media that must remain available if staff restore them.
+                for pk, name in model._base_manager.exclude(**{field.name: ''}).exclude(
                         **{field.name: None}).values_list('pk', field.name).iterator():
                     yield model, field, pk, str(name)
 
@@ -116,7 +118,7 @@ class Command(BaseCommand):
                     self.stdout.write(f'MISSING {label} {name}')
                 elif not dry:
                     # Compare-and-set: never overwrite a concurrent staff edit.
-                    changed = model._default_manager.filter(pk=pk, **{field.name: name}).update(**{field.name: target})
+                    changed = model._base_manager.filter(pk=pk, **{field.name: name}).update(**{field.name: target})
                     if not changed:
                         raise ValueError('Reference changed concurrently; rerun to reconcile')
                     counts['updated_references'] += changed

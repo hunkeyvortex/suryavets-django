@@ -66,6 +66,34 @@ class CloudinaryMigrationTests(TestCase):
         self.category.refresh_from_db()
         self.assertEqual(self.category.image.name, target)
 
+    def test_inactive_image_and_thumbnail_are_migrated_without_reactivating(self):
+        product = Product.objects.create(name='Archived artwork product', category=self.category, base_price=123)
+        photo = ProductImage.all_objects.create(
+            product=product, image='categories/cat.png', thumbnail='categories/cat.png', is_active=False,
+        )
+        self.assertFalse(ProductImage.objects.filter(pk=photo.pk).exists())
+
+        dry = self.run_command(True)
+        self.assertEqual(dry['total_references'], 3)
+        self.assertEqual(dry['would_upload'], 1)
+        self.uploader.save.assert_not_called()
+        photo.refresh_from_db()
+        self.assertEqual(photo.image.name, 'categories/cat.png')
+        self.assertEqual(photo.thumbnail.name, 'categories/cat.png')
+
+        applied = self.run_command()
+        self.assertEqual(applied['updated_references'], 3)
+        self.assertEqual(applied['uploaded'], 1)
+        photo.refresh_from_db()
+        self.category.refresh_from_db()
+        self.assertEqual(photo.image.name, self.category.image.name)
+        self.assertEqual(photo.thumbnail.name, self.category.image.name)
+        self.assertFalse(photo.is_active)
+        product.refresh_from_db()
+        self.assertEqual(product.base_price, 123)
+        self.assertEqual(self.run_command()['already_cloud_hosted'], 3)
+        self.assertEqual(self.uploader.save.call_count, 1)
+
     def test_missing_file_unchanged(self):
         self.category.image = 'missing.png'; self.category.save()
         self.assertEqual(self.run_command()['missing_local'], 1)
